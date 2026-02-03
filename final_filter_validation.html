@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Fix Validation - FINAL TEST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- EMERGENCY FILTER FIX - Maximum specificity override -->
+    <style>
+        /* FORCE light theme colors with maximum specificity */
+        html body:not(.dark) label.text-sm.font-medium,
+        html body:not(.dark) .text-sm.font-medium,
+        html body:not(.dark) [class*="text-sm"][class*="font-medium"],
+        html body:not(.dark) label {
+            color: #374151 !important;
+            background-color: transparent !important;
+        }
+        
+        html body:not(.dark) select {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+        }
+        
+        /* FORCE dark theme colors with maximum specificity */
+        html body.dark label.text-sm.font-medium,
+        html body.dark .text-sm.font-medium,
+        html body.dark [class*="text-sm"][class*="font-medium"],
+        html body.dark label {
+            color: #f3f4f6 !important;
+            background-color: transparent !important;
+        }
+        
+        html body.dark select {
+            background-color: #374151 !important;
+            color: #f3f4f6 !important;
+            border-color: #6b7280 !important;
+        }
+        
+        /* Additional nuclear option for stubborn elements */
+        [data-theme="dark"] label,
+        [data-theme="dark"] .text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        [data-theme="light"] label,
+        [data-theme="light"] .text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* Test indication */
+        .working {
+            border: 2px solid green !important;
+        }
+        .broken {
+            border: 2px solid red !important;
+        }
+    </style>
+    
+    <!-- JAVASCRIPT FORCE FIX FOR FILTER LABELS -->
+    <script>
+        function forceFilterLabelColors() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium, .text-sm.font-medium');
+            const selects = document.querySelectorAll('select.filter-dropdown, select');
+            const isDark = document.body.classList.contains('dark');
+            
+            console.log(`Forcing colors for ${labels.length} labels and ${selects.length} selects. Theme: ${isDark ? 'dark' : 'light'}`);
+            
+            labels.forEach(label => {
+                const color = isDark ? '#f3f4f6' : '#374151';
+                label.style.setProperty('color', color, 'important');
+                console.log(`Set label "${label.textContent.trim()}" to ${color}`);
+            });
+            
+            selects.forEach(select => {
+                if (isDark) {
+                    select.style.setProperty('background-color', '#374151', 'important');
+                    select.style.setProperty('color', '#f3f4f6', 'important');
+                    select.style.setProperty('border-color', '#6b7280', 'important');
+                } else {
+                    select.style.setProperty('background-color', '#ffffff', 'important');
+                    select.style.setProperty('color', '#374151', 'important');
+                    select.style.setProperty('border-color', '#d1d5db', 'important');
+                }
+            });
+            
+            // Verify and mark as working/broken
+            validateFilterColors();
+        }
+        
+        function validateFilterColors() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const isDark = document.body.classList.contains('dark');
+            const expectedColor = isDark ? 'rgb(243, 244, 246)' : 'rgb(55, 65, 81)';
+            
+            labels.forEach(label => {
+                const computedColor = window.getComputedStyle(label).color;
+                if (computedColor === expectedColor) {
+                    label.classList.add('working');
+                    label.classList.remove('broken');
+                } else {
+                    label.classList.add('broken');
+                    label.classList.remove('working');
+                    console.error(`Label "${label.textContent.trim()}" has wrong color: ${computedColor}, expected: ${expectedColor}`);
+                }
+            });
+        }
+        
+        // Apply on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(forceFilterLabelColors, 100);
+            
+            // Also reapply when theme changes
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        setTimeout(forceFilterLabelColors, 50);
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        });
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="p-8">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">🔧 FINAL FILTER FIX VALIDATION</h1>
+            <div class="flex gap-4 mb-4">
+                <button onclick="toggleTheme()" class="bg-blue-500 text-white px-4 py-2 rounded">Toggle Theme</button>
+                <button onclick="forceFilterLabelColors()" class="bg-red-500 text-white px-4 py-2 rounded">Force Fix</button>
+                <button onclick="validateFilterColors()" class="bg-green-500 text-white px-4 py-2 rounded">Validate</button>
+            </div>
+            <div id="status" class="p-4 bg-white dark:bg-gray-800 rounded mb-4"></div>
+        </div>
+        
+        <!-- EXACT COPY OF YOUR FILTER STRUCTURE -->
+        <div class="flex flex-wrap gap-4 items-center mb-6" id="filterBar">
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium">Solutions:</label>
+                <select id="solutionsFilter" data-filter-type="solutions" class="filter-dropdown">
+                    <option value="all">All</option>
+                    <option value="automation">Automation Solutions</option>
+                    <option value="digitalization">Digitalization</option>
+                    <option value="electrification">Electrification</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium">Account Mgr:</label>
+                <select id="accountMgrFilter" data-filter-type="accountMgr" class="filter-dropdown">
+                    <option value="all">All</option>
+                    <option value="john">John Smith</option>
+                    <option value="jane">Jane Doe</option>
+                    <option value="mike">Mike Johnson</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium">PIC:</label>
+                <select id="picFilter" data-filter-type="pic" class="filter-dropdown">
+                    <option value="all">All</option>
+                    <option value="alice">Alice Brown</option>
+                    <option value="bob">Bob Wilson</option>
+                    <option value="carol">Carol Davis</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Results panel -->
+        <div class="mt-8 p-4 bg-white dark:bg-gray-800 rounded">
+            <h3 class="text-lg font-semibold mb-4">Test Results</h3>
+            <div id="results"></div>
+            <button onclick="runFullTest()" class="bg-purple-500 text-white px-4 py-2 rounded mt-4">Run Full Test</button>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            updateStatus();
+        }
+        
+        function updateStatus() {
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('status').innerHTML = `
+                <p><strong>Current Theme:</strong> ${isDark ? 'Dark Mode' : 'Light Mode'}</p>
+                <p><strong>Body Classes:</strong> <code>${document.body.className}</code></p>
+                <p><strong>Expected Label Color:</strong> <code>${isDark ? '#f3f4f6 (light gray)' : '#374151 (dark gray)'}</code></p>
+            `;
+        }
+        
+        function runFullTest() {
+            const results = document.getElementById('results');
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const selects = document.querySelectorAll('select.filter-dropdown');
+            const isDark = document.body.classList.contains('dark');
+            
+            let html = '<h4>Label Analysis:</h4>';
+            labels.forEach((label, i) => {
+                const computedStyle = window.getComputedStyle(label);
+                const color = computedStyle.color;
+                const expectedColor = isDark ? 'rgb(243, 244, 246)' : 'rgb(55, 65, 81)';
+                const isCorrect = color === expectedColor;
+                
+                html += `<div class="mb-2 p-2 rounded ${isCorrect ? 'bg-green-100' : 'bg-red-100'}">
+                    <strong>Label ${i + 1} ("${label.textContent.trim()}"):</strong><br>
+                    Color: <code>${color}</code><br>
+                    Expected: <code>${expectedColor}</code><br>
+                    Status: <span class="${isCorrect ? 'text-green-600' : 'text-red-600'}">${isCorrect ? '✅ CORRECT' : '❌ WRONG'}</span>
+                </div>`;
+            });
+            
+            html += '<h4>Select Analysis:</h4>';
+            selects.forEach((select, i) => {
+                const computedStyle = window.getComputedStyle(select);
+                const bgColor = computedStyle.backgroundColor;
+                const color = computedStyle.color;
+                
+                html += `<div class="mb-2 p-2 rounded bg-gray-100">
+                    <strong>Select ${i + 1}:</strong><br>
+                    Background: <code>${bgColor}</code><br>
+                    Color: <code>${color}</code>
+                </div>`;
+            });
+            
+            results.innerHTML = html;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+        });
+        
+        // Monitor theme changes
+        const observer = new MutationObserver(() => {
+            updateStatus();
+        });
+        
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    </script>
+</body>
+</html>

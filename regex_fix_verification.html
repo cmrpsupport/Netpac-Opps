@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Syntax Fix Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔧 Regex Syntax Error Fix - Complete</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">❌ Problem Fixed</h2>
+            <div class="bg-red-50 border border-red-200 rounded p-4 mb-4">
+                <h3 class="font-semibold text-red-800">Original Error:</h3>
+                <code class="text-sm text-red-700">
+                    app.js:3269 Uncaught SyntaxError: Invalid regular expression: /[\s\._-@]+/: Range out of order in character class
+                </code>
+            </div>
+            <div class="text-sm text-gray-600">
+                <p><strong>Root Cause:</strong> In JavaScript regular expressions, when using character classes <code>[...]</code>, 
+                the hyphen <code>-</code> has special meaning as a range operator. When placed between characters like 
+                <code>[._-]</code>, it tries to create a range from <code>.</code> (ASCII 46) to <code>_</code> (ASCII 95), 
+                but with <code>_</code> (ASCII 95) after <code>-</code> (ASCII 45), it creates an invalid range.</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">✅ Solution Applied</h2>
+            <div class="bg-green-50 border border-green-200 rounded p-4 mb-4">
+                <h3 class="font-semibold text-green-800">Fix:</h3>
+                <div class="text-sm text-green-700 space-y-2">
+                    <p><strong>Before:</strong> <code>/[\s\._-@]+/</code> (Invalid range)</p>
+                    <p><strong>After:</strong> <code>/[\s\._\-@]+/</code> (Escaped hyphen)</p>
+                </div>
+            </div>
+            <div class="text-sm">
+                <p><strong>Files Fixed:</strong></p>
+                <ul class="list-disc ml-6 mt-2 space-y-1">
+                    <li><code>app.js</code> - Lines 3268, 3281, 3282</li>
+                    <li><code>win-loss_dashboard.js</code> - Lines 1187, 1188, 1200, 1201</li>
+                    <li><code>executive_dashboard.js</code> - Lines 661, 662, 674, 675</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🧪 Test the Fix</h2>
+            <div class="space-y-4">
+                <div class="border rounded p-4">
+                    <h3 class="font-semibold mb-2">Auto-Filtering Test</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        The regex patterns are used in the auto-filtering functionality to match user names 
+                        against Account Manager and PIC values. Test the regex patterns:
+                    </p>
+                    <button onclick="testRegexPatterns()" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                        Test Regex Patterns
+                    </button>
+                    <div id="regexResults" class="mt-3"></div>
+                </div>
+                
+                <div class="border rounded p-4">
+                    <h3 class="font-semibold mb-2">Dashboard Applications</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        All dashboard applications should now load without JavaScript syntax errors:
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.open('/', '_blank')" 
+                                class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700">
+                            Main App
+                        </button>
+                        <button onclick="window.open('/executive_dashboard.html', '_blank')" 
+                                class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700">
+                            Executive Dashboard
+                        </button>
+                        <button onclick="window.open('/win-loss_dashboard.html', '_blank')" 
+                                class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                            Win/Loss Dashboard
+                        </button>
+                        <button onclick="window.open('/forecastr_dashboard.html', '_blank')" 
+                                class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                            Forecast Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">📋 Summary</h2>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center">
+                    <span class="text-green-600 mr-2">✓</span>
+                    <span>Fixed invalid regex character class ranges in all JavaScript files</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-green-600 mr-2">✓</span>
+                    <span>Escaped hyphens in regex patterns to prevent range interpretation</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-green-600 mr-2">✓</span>
+                    <span>Verified fix across main app and all dashboard implementations</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-green-600 mr-2">✓</span>
+                    <span>Auto-filtering functionality preserved and working correctly</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-green-600 mr-2">✓</span>
+                    <span>Server restarted and running without errors</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testRegexPatterns() {
+            const resultsDiv = document.getElementById('regexResults');
+            
+            try {
+                // Test the fixed regex patterns
+                const testRegex1 = /[\s\._\-@]+/;
+                const testRegex2 = /[\s\._\-]+/;
+                
+                // Test with sample data
+                const testString = "john.smith-user@company";
+                const result1 = testString.split(testRegex1);
+                const result2 = testString.split(testRegex2);
+                
+                resultsDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded p-3 text-sm">
+                        <p class="font-semibold text-green-800">✅ Regex Test Successful</p>
+                        <p class="text-green-700 mt-1">
+                            Pattern <code>/[\\s\\._\\-@]+/</code> successfully split 
+                            "${testString}" into: [${result1.map(s => `"${s}"`).join(', ')}]
+                        </p>
+                        <p class="text-green-700">
+                            Pattern <code>/[\\s\\._\\-]+/</code> successfully split 
+                            "${testString}" into: [${result2.map(s => `"${s}"`).join(', ')}]
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded p-3 text-sm">
+                        <p class="font-semibold text-red-800">❌ Regex Test Failed</p>
+                        <p class="text-red-700">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+/* Direct CSS overrides for proposal workbench */
+
+/* Fix filter labels in dark mode */
+.flex.items-center.gap-2 label {
+    color: #f3f4f6 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* Fix board headers */
+.kanban-column-header {
+    border-top: 1px solid transparent !important;
+    border-bottom: 1px solid transparent !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    color: white !important;
+}
+#notStartedColumn .kanban-column-header { background: #64748b !important; }
+#ongoingColumn .kanban-column-header { background: #f59e0b !important; }
+#forApprovalColumn .kanban-column-header { background: #3b82f6 !important; }
+#submittedColumn .kanban-column-header { background: #10b981 !important; }
+
+/* Fix main proposal cards for light theme */
+html:not(.dark) .proposal-card,
+body:not(.dark) .proposal-card {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+}
+html:not(.dark) .proposal-card .text-gray-900 { color: #111827 !important; }
+html:not(.dark) .proposal-card .text-gray-500 { color: #6b7280 !important; }
+
+/* Fix main proposal cards for dark theme */
+html.dark .proposal-card,
+.dark .proposal-card {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+}
+html.dark .proposal-card .dark\:text-white { color: #ffffff !important; }
+html.dark .proposal-card .dark\:text-gray-300 { color: #d1d5db !important; }
+
+/* Fix kanban columns */
+.kanban-column {
+    border-width: 1px !important;
+}
+.today-column {
+    border-width: 1px !important;
+}
+
+/* Fix calendar task cards */
+.schedule-task.proposal-task,
+.schedule-task.general-task {
+    border-left-width: 1px !important;
+}
+.weekend-day {
+    border-left-width: 1px !important;
+}
+
+/* Fix kanban cards for light theme - use white background */
+html:not(.dark) .kanban-card,
+body:not(.dark) .kanban-card {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+html:not(.dark) .kanban-card-title,
+body:not(.dark) .kanban-card-title {
+    color: #111827 !important;
+}
+
+html:not(.dark) .kanban-card-client,
+html:not(.dark) .kanban-card-details,
+html:not(.dark) .kanban-card-comment,
+body:not(.dark) .kanban-card-client,
+body:not(.dark) .kanban-card-details,
+body:not(.dark) .kanban-card-comment {
+    color: #6b7280 !important;
+}
+
+/* Fix kanban cards for dark theme */
+html.dark .kanban-card,
+.dark .kanban-card {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+    border-color: #374151 !important;
+}
+
+html.dark .kanban-card-title,
+.dark .kanban-card-title {
+    color: #ffffff !important;
+}
+
+html.dark .kanban-card-client,
+html.dark .kanban-card-details,
+html.dark .kanban-card-comment,
+.dark .kanban-card-client,
+.dark .kanban-card-details,
+.dark .kanban-card-comment {
+    color: #d1d5db !important;
+}
+
+/* Fix Today column in calendar */
+.today-column {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-color: #3b82f6 !important;
+    border-width: 1px !important;
+}
+
+.today-column::after {
+    background-color: #3b82f6 !important;
+}
+
+/* Fix task text readability in light mode */
+html:not(.dark) .schedule-task .task-title,
+html:not(.dark) .schedule-task .task-description,
+html:not(.dark) .schedule-task .task-comment,
+html:not(.dark) .schedule-task .task-time {
+    color: #111827 !important; /* Dark text for light mode */
+}
+
+html.dark .schedule-task .task-title,
+html.dark .schedule-task .task-description,
+html.dark .schedule-task .task-comment,
+html.dark .schedule-task .task-time {
+    color: #f3f4f6 !important; /* Light text for dark mode */
+} 

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Auto-Filter Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+        }
+        .test-result { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 3px; 
+        }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 3px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background-color: #0056b3; }
+        #dashboard-stats { 
+            margin: 20px 0; 
+            padding: 15px; 
+            background-color: #f8f9fa; 
+            border-radius: 5px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Auto-Filter Initialization Test</h1>
+    
+    <div class="test-section">
+        <h3>Test Instructions</h3>
+        <p>This test verifies that the dashboard respects auto-filtering on initial load:</p>
+        <ol>
+            <li>Login as a user with SALES role (should auto-filter to their opportunities)</li>
+            <li>Check that dashboard cards show filtered counts, not total counts</li>
+            <li>Verify that manual filter changes update dashboard correctly</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>User Authentication Test</h3>
+        <div id="auth-status" class="test-result info">Not authenticated</div>
+        <button onclick="testSalesLogin()">Test Sales User Login</button>
+        <button onclick="testAdminLogin()">Test Admin User Login</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Dashboard Statistics</h3>
+        <div id="dashboard-stats">
+            <div>Total Opportunities: <span id="total-count">-</span></div>
+            <div>Filtered Opportunities: <span id="filtered-count">-</span></div>
+            <div>Dashboard Card Count: <span id="dashboard-count">-</span></div>
+            <div>User Role: <span id="user-role">-</span></div>
+            <div>Auto-Filter Applied: <span id="auto-filter-status">-</span></div>
+        </div>
+        <button onclick="checkDashboardStats()">Check Dashboard Stats</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Results</h3>
+        <div id="test-results"></div>
+        <button onclick="runAutoFilterTest()">Run Auto-Filter Test</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <script>
+        // Test user credentials
+        const testUsers = {
+            sales: { username: 'sales_user', password: 'sales123', role: 'SALES' },
+            admin: { username: 'admin_user', password: 'admin123', role: 'ADMIN' }
+        };
+
+        function addTestResult(message, isPass) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${isPass ? 'pass' : 'fail'}`;
+            resultDiv.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function updateAuthStatus(message) {
+            document.getElementById('auth-status').textContent = message;
+        }
+
+        async function testSalesLogin() {
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUsers.sales)
+                });
+                
+                if (response.ok) {
+                    updateAuthStatus('Sales user logged in successfully');
+                    addTestResult('Sales login successful', true);
+                    // Wait a moment for auto-filtering to apply
+                    setTimeout(checkDashboardStats, 1000);
+                } else {
+                    updateAuthStatus('Sales login failed');
+                    addTestResult('Sales login failed', false);
+                }
+            } catch (error) {
+                updateAuthStatus('Login error: ' + error.message);
+                addTestResult('Login error: ' + error.message, false);
+            }
+        }
+
+        async function testAdminLogin() {
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUsers.admin)
+                });
+                
+                if (response.ok) {
+                    updateAuthStatus('Admin user logged in successfully');
+                    addTestResult('Admin login successful', true);
+                    setTimeout(checkDashboardStats, 1000);
+                } else {
+                    updateAuthStatus('Admin login failed');
+                    addTestResult('Admin login failed', false);
+                }
+            } catch (error) {
+                updateAuthStatus('Login error: ' + error.message);
+                addTestResult('Login error: ' + error.message, false);
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                updateAuthStatus('Logged out');
+                addTestResult('Logout successful', true);
+            } catch (error) {
+                addTestResult('Logout error: ' + error.message, false);
+            }
+        }
+
+        function checkDashboardStats() {
+            // Access parent window's data if available
+            if (window.parent && window.parent.opportunities) {
+                const totalOpps = window.parent.opportunities.length;
+                const filteredOpps = window.parent.getCurrentFilteredData ? 
+                    window.parent.getCurrentFilteredData().length : 'N/A';
+                const userRole = window.parent.currentUserRole || 'Unknown';
+                
+                document.getElementById('total-count').textContent = totalOpps;
+                document.getElementById('filtered-count').textContent = filteredOpps;
+                document.getElementById('user-role').textContent = userRole;
+                
+                // Check if auto-filter is applied for SALES users
+                if (userRole === 'SALES' && totalOpps !== filteredOpps) {
+                    document.getElementById('auto-filter-status').textContent = 'Yes';
+                    addTestResult('Auto-filter correctly applied for SALES user', true);
+                } else if (userRole === 'ADMIN' && totalOpps === filteredOpps) {
+                    document.getElementById('auto-filter-status').textContent = 'N/A (Admin sees all)';
+                    addTestResult('Admin correctly sees all opportunities', true);
+                } else {
+                    document.getElementById('auto-filter-status').textContent = 'No';
+                    addTestResult('Auto-filter may not be working correctly', false);
+                }
+                
+                // Check dashboard card count
+                const dashboardCountElement = window.parent.document.getElementById('total-opps-count');
+                if (dashboardCountElement) {
+                    const dashboardCount = dashboardCountElement.textContent;
+                    document.getElementById('dashboard-count').textContent = dashboardCount;
+                    
+                    if (dashboardCount == filteredOpps) {
+                        addTestResult('Dashboard shows correct filtered count', true);
+                    } else {
+                        addTestResult(`Dashboard count (${dashboardCount}) doesn't match filtered count (${filteredOpps})`, false);
+                    }
+                }
+            } else {
+                addTestResult('Cannot access parent window data - open this test in an iframe', false);
+            }
+        }
+
+        function runAutoFilterTest() {
+            addTestResult('Starting comprehensive auto-filter test...', true);
+            
+            // Test sequence
+            setTimeout(() => {
+                addTestResult('Step 1: Testing initial load with auto-filtering', true);
+                checkDashboardStats();
+            }, 500);
+            
+            setTimeout(() => {
+                addTestResult('Step 2: Test completed - check results above', true);
+            }, 1500);
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+
+        // Auto-check stats on load
+        window.addEventListener('load', () => {
+            setTimeout(checkDashboardStats, 1000);
+        });
+    </script>
+</body>
+</html>

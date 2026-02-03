@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Initialization Debug</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .test-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .log {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #66bb6a; }
+        .warning { color: #ffa726; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Quick Initialization Debug</h1>
+    
+    <div class="test-panel">
+        <h3>Step 1: Test Authentication</h3>
+        <button onclick="testAuth()">Test Auth Token</button>
+        <button onclick="testApiEndpoint()">Test API Endpoint</button>
+        <button onclick="clearAndLogin()">Clear & Login</button>
+    </div>
+
+    <div class="test-panel">
+        <h3>Step 2: Test App Components</h3>
+        <button onclick="testDOMElements()">Test DOM Elements</button>
+        <button onclick="testInitializeTable()">Test Initialize Table</button>
+        <button onclick="testFullInit()">Test Full Init</button>
+    </div>
+
+    <div class="test-panel">
+        <h3>Debug Log</h3>
+        <div id="log" class="log">Waiting for tests...\n</div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                error: '#ff6b6b',
+                success: '#66bb6a', 
+                warning: '#ffa726',
+                info: '#00ff00'
+            };
+            
+            const coloredMessage = `<span style="color: ${colors[type]}">[${timestamp}] ${message}</span>\n`;
+            logEl.innerHTML += coloredMessage;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearLog() {
+            logEl.innerHTML = 'Log cleared...\n';
+        }
+
+        // Copy the getAuthToken function for testing
+        function getAuthToken() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return null;
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const now = Date.now() / 1000;
+                if (payload.exp && payload.exp < now) {
+                    localStorage.removeItem('authToken');
+                    return null;
+                }
+                return token;
+            } catch (error) {
+                localStorage.removeItem('authToken');
+                return null;
+            }
+        }
+
+        async function testAuth() {
+            log('Testing authentication...', 'info');
+            
+            const token = getAuthToken();
+            if (!token) {
+                log('❌ No valid token found', 'error');
+                return;
+            }
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                log(`✅ Token valid for user: ${payload.email}`, 'success');
+                log(`Token expires: ${new Date(payload.exp * 1000).toLocaleString()}`, 'info');
+                return token;
+            } catch (error) {
+                log(`❌ Token parsing error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiEndpoint() {
+            log('Testing API endpoint...', 'info');
+            
+            const token = getAuthToken();
+            if (!token) {
+                log('❌ No token for API test', 'error');
+                return;
+            }
+
+            try {
+                log('Calling /api/opportunities...', 'info');
+                const response = await fetch('/api/opportunities', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                log(`API Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`API Error response: ${errorText}`, 'error');
+                    return;
+                }
+
+                const data = await response.json();
+                log(`✅ API Success: Received ${data.length} opportunities`, 'success');
+                log(`Sample data: ${JSON.stringify(data[0] || {}, null, 2)}`, 'info');
+                
+            } catch (error) {
+                log(`❌ API Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAndLogin() {
+            log('Clearing storage and testing login...', 'info');
+            localStorage.clear();
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'reuelrivera@gmail.com', 
+                        password: 'password123' 
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    localStorage.setItem('authToken', data.token);
+                    log('✅ Login successful, token stored', 'success');
+                } else {
+                    log(`❌ Login failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        function testDOMElements() {
+            log('Testing DOM elements...', 'info');
+            
+            const elements = [
+                'opportunitiesTable',
+                'loadingText', 
+                'searchInput',
+                'statusFilterButtons',
+                'accountMgrFilter',
+                'picFilter',
+                'createOpportunityButton',
+                'exportExcelButton',
+                'toggleColumnsButton'
+            ];
+            
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                log(`${id}: ${el ? '✅ Found' : '❌ Missing'}`, el ? 'success' : 'error');
+            });
+        }
+
+        async function testInitializeTable() {
+            log('Testing table initialization...', 'info');
+            
+            const token = getAuthToken();
+            if (!token) {
+                log('❌ No token for table test', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/opportunities', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch opportunities');
+                }
+
+                const opportunities = await response.json();
+                log(`✅ Data fetched: ${opportunities.length} opportunities`, 'success');
+                
+                if (opportunities.length > 0) {
+                    const headers = Object.keys(opportunities[0]);
+                    log(`Sample headers: ${headers.slice(0, 5).join(', ')}...`, 'info');
+                    log(`Total headers: ${headers.length}`, 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ Table init error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFullInit() {
+            log('Testing full initialization process...', 'info');
+            
+            try {
+                // Test auth
+                const token = await testAuth();
+                if (!token) return;
+                
+                // Test API
+                await testApiEndpoint();
+                
+                // Test DOM
+                testDOMElements();
+                
+                log('✅ Full initialization test completed', 'success');
+                
+            } catch (error) {
+                log(`❌ Full init error: ${error.message}`, 'error');
+                log(`Error stack: ${error.stack}`, 'error');
+            }
+        }
+
+        // Auto-run auth test on load
+        window.addEventListener('load', () => {
+            log('Debug page loaded', 'info');
+            testAuth();
+        });
+    </script>
+</body>
+</html>

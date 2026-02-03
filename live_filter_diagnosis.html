@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Filter Label Diagnosis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        
+        .diagnosis-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        
+        body.dark .diagnosis-section {
+            background: #2a2a2a;
+            border-color: #666;
+            color: white;
+        }
+        
+        .filter-test {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        body.dark .filter-test {
+            background: #333;
+            border-color: #666;
+        }
+        
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 300px;
+        }
+        
+        body.dark pre {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #1d4ed8;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .working { background: green; }
+        .broken { background: red; }
+        .unknown { background: orange; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Live Filter Label Diagnosis</h1>
+    
+    <div class="diagnosis-section">
+        <h2>Theme Toggle Test</h2>
+        <button id="themeToggle" onclick="toggleTheme()">Toggle Theme (Current: <span id="currentTheme">Light</span>)</button>
+        <p>Use this to switch between light and dark themes while testing.</p>
+    </div>
+    
+    <div class="diagnosis-section">
+        <h2>Live Filter Labels Test</h2>
+        <p>These are actual filter labels using the exact same HTML structure as your dashboards:</p>
+        
+        <!-- Exact copy from index.html -->
+        <div class="filter-test">
+            <h3>Main Dashboard Structure:</h3>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Solutions:</label>
+                    <select id="solutionsFilter" data-filter-type="solutions" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Account Mgr:</label>
+                    <select id="accountMgrFilter" data-filter-type="accountMgr" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">PIC:</label>
+                    <select id="picFilter" data-filter-type="pic" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Exact copy from win-loss_dashboard.html -->
+        <div class="filter-test">
+            <h3>Win-Loss Dashboard Structure:</h3>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Solution:</label>
+                    <select id="solutionFilter" class="filter-dropdown">
+                        <option value="all">All Solutions</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Account Mgr:</label>
+                    <select id="accountMgrFilter2" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Client:</label>
+                    <select id="clientFilter" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="diagnosis-section">
+        <h2>Computed Style Analysis</h2>
+        <button onclick="analyzeStyles()">🔍 Analyze Current Styles</button>
+        <button onclick="forceFix()">🛠️ Force Apply Fix</button>
+        <button onclick="showCSSRules()">📋 Show CSS Rules</button>
+        <pre id="analysisOutput"></pre>
+    </div>
+    
+    <div class="diagnosis-section">
+        <h2>Real-Time Status</h2>
+        <div id="statusOutput">
+            <p>Click "Analyze Current Styles" to see live diagnosis...</p>
+        </div>
+    </div>
+
+    <script>
+        let isDark = false;
+        
+        function toggleTheme() {
+            isDark = !isDark;
+            const body = document.body;
+            const themeSpan = document.getElementById('currentTheme');
+            
+            if (isDark) {
+                body.classList.add('dark');
+                themeSpan.textContent = 'Dark';
+            } else {
+                body.classList.remove('dark');
+                themeSpan.textContent = 'Light';
+            }
+            
+            // Auto-analyze after theme change
+            setTimeout(analyzeStyles, 100);
+        }
+        
+        function analyzeStyles() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const output = document.getElementById('analysisOutput');
+            const statusOutput = document.getElementById('statusOutput');
+            
+            let analysis = `LIVE STYLE ANALYSIS - ${new Date().toLocaleTimeString()}\n`;
+            analysis += `=================================================\n\n`;
+            analysis += `Current Theme: ${isDark ? 'DARK' : 'LIGHT'}\n`;
+            analysis += `Body Classes: "${document.body.className}"\n`;
+            analysis += `Found ${labels.length} filter labels\n\n`;
+            
+            let statusHTML = '<h3>Label Status:</h3>';
+            let allWorking = true;
+            
+            labels.forEach((label, index) => {
+                const computed = window.getComputedStyle(label);
+                const color = computed.color;
+                const text = label.textContent.trim();
+                
+                // Parse RGB color
+                const rgbMatch = color.match(/rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)/);
+                let isCorrectColor = false;
+                
+                if (rgbMatch) {
+                    const [, r, g, b] = rgbMatch.map(Number);
+                    
+                    if (isDark) {
+                        // Should be light: #f3f4f6 = rgb(243, 244, 246)
+                        isCorrectColor = (r > 200 && g > 200 && b > 200);
+                    } else {
+                        // Should be dark: #374151 = rgb(55, 65, 81)
+                        isCorrectColor = (r < 100 && g < 100 && b < 100);
+                    }
+                }
+                
+                if (!isCorrectColor) allWorking = false;
+                
+                analysis += `Label ${index + 1}: "${text}"\n`;
+                analysis += `  Classes: "${label.className}"\n`;
+                analysis += `  Computed Color: ${color}\n`;
+                analysis += `  Expected for ${isDark ? 'dark' : 'light'}: ${isDark ? 'rgb(243, 244, 246)' : 'rgb(55, 65, 81)'}\n`;
+                analysis += `  Status: ${isCorrectColor ? '✅ CORRECT' : '❌ WRONG'}\n\n`;
+                
+                statusHTML += `<div>
+                    <span class="status-indicator ${isCorrectColor ? 'working' : 'broken'}"></span>
+                    <strong>"${text}"</strong> - ${isCorrectColor ? 'Working' : 'Broken'}
+                    <small>(${color})</small>
+                </div>`;
+            });
+            
+            output.textContent = analysis;
+            statusOutput.innerHTML = statusHTML;
+            
+            if (allWorking) {
+                statusOutput.innerHTML += '<p style="color: green; font-weight: bold;">🎉 ALL LABELS WORKING CORRECTLY!</p>';
+            } else {
+                statusOutput.innerHTML += '<p style="color: red; font-weight: bold;">⚠️ SOME LABELS HAVE INCORRECT COLORS</p>';
+            }
+        }
+        
+        function forceFix() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const isDarkTheme = document.body.classList.contains('dark');
+            
+            labels.forEach(label => {
+                if (isDarkTheme) {
+                    label.style.color = '#f3f4f6';
+                } else {
+                    label.style.color = '#374151';
+                }
+                label.style.setProperty('color', isDarkTheme ? '#f3f4f6' : '#374151', 'important');
+            });
+            
+            alert(\`Force-applied \${isDarkTheme ? 'dark' : 'light'} theme colors to \${labels.length} labels.\`);
+            setTimeout(analyzeStyles, 100);
+        }
+        
+        function showCSSRules() {
+            const output = document.getElementById('analysisOutput');
+            let rules = 'CSS RULES ANALYSIS\n';
+            rules += '===================\n\n';
+            
+            try {
+                const sheets = Array.from(document.styleSheets);
+                rules += \`Found \${sheets.length} stylesheets:\n\n\`;
+                
+                sheets.forEach((sheet, i) => {
+                    rules += \`Stylesheet \${i + 1}: \${sheet.href || 'inline styles'}\n\`;
+                    try {
+                        const cssRules = Array.from(sheet.cssRules || []);
+                        rules += \`  Rules: \${cssRules.length}\n\`;
+                        
+                        // Look for relevant rules
+                        const relevantRules = cssRules.filter(rule => 
+                            rule.selectorText && 
+                            (rule.selectorText.includes('text-sm') || 
+                             rule.selectorText.includes('font-medium'))
+                        );
+                        
+                        if (relevantRules.length > 0) {
+                            rules += \`  Relevant rules for filter labels:\n\`;
+                            relevantRules.forEach(rule => {
+                                rules += \`    \${rule.selectorText}: \${rule.style.color || '(no color)'}\n\`;
+                            });
+                        }
+                    } catch (e) {
+                        rules += \`  (Cannot access rules: \${e.message})\n\`;
+                    }
+                    rules += \`\n\`;
+                });
+            } catch (e) {
+                rules += \`Error analyzing CSS: \${e.message}\n\`;
+            }
+            
+            output.textContent = rules;
+        }
+        
+        // Auto-analyze on page load
+        setTimeout(analyzeStyles, 1000);
+    </script>
+</body>
+</html>

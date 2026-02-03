@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Test - UI Exposure Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-container { max-width: 800px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; border-left: 4px solid #28a745; }
+        .error { color: #721c24; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; border-left: 4px solid #dc3545; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; border-left: 4px solid #ffc107; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 4px; margin: 10px 0; border-left: 4px solid #17a2b8; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        iframe { width: 100%; height: 400px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔒 CMRP Security Test - UI Exposure Check</h1>
+        
+        <div class="info">
+            <strong>Security Issue:</strong> Previously, the main dashboard template was visible to anyone visiting the URL before authentication, 
+            potentially exposing business processes and data structure to unauthorized users.
+        </div>
+
+        <div class="test-section">
+            <h3>Test 1: Unauthenticated Access</h3>
+            <p>This test verifies that no sensitive UI elements are exposed to unauthenticated users.</p>
+            <button onclick="testUnauthenticatedAccess()">Clear Token & Test Unauthenticated Access</button>
+            <div id="unauth-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Authentication Screen Display</h3>
+            <p>Verifies that the loading/authentication screen is properly shown instead of the main UI.</p>
+            <button onclick="testAuthenticationScreen()">Test Authentication Screen</button>
+            <div id="auth-screen-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Quick Visual Check</h3>
+            <p>Open the main application in an iframe to visually verify the security fix.</p>
+            <button onclick="showVisualTest()">Load Main App (No Token)</button>
+            <div id="visual-test-container"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Security Validation</h3>
+            <p>Comprehensive check for exposed sensitive elements.</p>
+            <button onclick="runSecurityValidation()">Run Security Validation</button>
+            <div id="security-validation-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 5: Login Flow Test</h3>
+            <p>Test that the login redirect works correctly.</p>
+            <button onclick="testLoginFlow()">Test Login Flow</button>
+            <div id="login-flow-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function clearAuthToken() {
+            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('authToken');
+            console.log('Auth tokens cleared');
+        }
+
+        async function testUnauthenticatedAccess() {
+            const resultDiv = document.getElementById('unauth-result');
+            resultDiv.innerHTML = '<div class="info">Testing unauthenticated access...</div>';
+            
+            // Clear any existing tokens
+            clearAuthToken();
+            
+            try {
+                const response = await fetch('/');
+                const html = await response.text();
+                
+                // Check if sensitive elements are present in the initial HTML
+                const sensitiveElements = [
+                    'opportunities management',
+                    'nav-square-btn',
+                    'logoutBtn',
+                    'userMgmtNavBtn',
+                    'table',
+                    'filter-dropdown',
+                    'dashboard',
+                    'material-icons'
+                ];
+                
+                const foundSensitive = [];
+                const protectedElements = [];
+                
+                sensitiveElements.forEach(element => {
+                    if (html.toLowerCase().includes(element.toLowerCase())) {
+                        foundSensitive.push(element);
+                    }
+                });
+                
+                // Check for security elements
+                const securityElements = [
+                    'authLoadingScreen',
+                    'auth-loading-screen',
+                    'Authentication required',
+                    'Verifying authentication'
+                ];
+                
+                securityElements.forEach(element => {
+                    if (html.toLowerCase().includes(element.toLowerCase())) {
+                        protectedElements.push(element);
+                    }
+                });
+                
+                let result = '';
+                
+                if (protectedElements.length > 0) {
+                    result += `<div class="success">✅ <strong>Security Elements Found:</strong> ${protectedElements.join(', ')}</div>`;
+                } else {
+                    result += `<div class="error">❌ <strong>No Security Elements Found!</strong></div>`;
+                }
+                
+                if (foundSensitive.length > 0) {
+                    result += `<div class="warning">⚠️ <strong>Potentially Exposed Elements:</strong> ${foundSensitive.join(', ')}</div>`;
+                    result += `<div class="info"><strong>Note:</strong> These elements should be hidden by CSS or JavaScript, not removed from HTML.</div>`;
+                } else {
+                    result += `<div class="success">✅ <strong>No Sensitive Elements Exposed</strong></div>`;
+                }
+                
+                resultDiv.innerHTML = result;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test failed: ${error.message}</div>`;
+            }
+        }
+
+        function testAuthenticationScreen() {
+            const resultDiv = document.getElementById('auth-screen-result');
+            clearAuthToken();
+            
+            // Open the main app in a new window to test
+            const testWindow = window.open('/', '_blank', 'width=800,height=600');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    ✅ Test window opened. Please verify:
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>You see "CMRP Opportunities Management" with a loading spinner</li>
+                        <li>You see "Verifying authentication..." message</li>
+                        <li>After a few seconds, it shows "Authentication required" with a login button</li>
+                        <li>You do NOT see the main dashboard, table, or navigation buttons</li>
+                    </ul>
+                    <p><strong>Expected Result:</strong> No dashboard UI should be visible - only the authentication screen.</p>
+                </div>
+            `;
+        }
+
+        function showVisualTest() {
+            const container = document.getElementById('visual-test-container');
+            clearAuthToken();
+            
+            container.innerHTML = `
+                <div class="info">Visual test iframe loaded below. You should see ONLY the authentication screen:</div>
+                <iframe src="/" title="Security Test - Main App Without Authentication"></iframe>
+                <div class="warning">
+                    <strong>What you should see:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>CMRP logo and title</li>
+                        <li>"Verifying authentication..." with spinner</li>
+                        <li>After 3 seconds: "Authentication required" with login button</li>
+                    </ul>
+                    <strong>What you should NOT see:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Dashboard navigation buttons</li>
+                        <li>Data table or opportunity listings</li>
+                        <li>Filter dropdowns</li>
+                        <li>Any business data or structure</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        async function runSecurityValidation() {
+            const resultDiv = document.getElementById('security-validation-result');
+            resultDiv.innerHTML = '<div class="info">Running comprehensive security validation...</div>';
+            
+            clearAuthToken();
+            
+            try {
+                // Test 1: Check if protected elements are hidden by default
+                const response = await fetch('/');
+                const html = await response.text();
+                
+                const securityChecks = [
+                    {
+                        name: 'Auth Loading Screen Present',
+                        check: html.includes('authLoadingScreen') || html.includes('auth-loading-screen'),
+                        critical: true
+                    },
+                    {
+                        name: 'App Content Hidden by Default',
+                        check: html.includes('app-content') && html.includes('display: none'),
+                        critical: true
+                    },
+                    {
+                        name: 'No Visible Table Structure',
+                        check: !html.includes('<table') || html.includes('style="display: none"'),
+                        critical: false
+                    },
+                    {
+                        name: 'No Navigation Buttons Visible',
+                        check: html.includes('appContent') && html.includes('display: none'),
+                        critical: true
+                    }
+                ];
+                
+                let results = '<h4>Security Validation Results:</h4>';
+                let allCriticalPassed = true;
+                
+                securityChecks.forEach(check => {
+                    const status = check.check ? '✅' : '❌';
+                    const severity = check.critical ? 'CRITICAL' : 'INFO';
+                    const className = check.check ? 'success' : (check.critical ? 'error' : 'warning');
+                    
+                    results += `<div class="${className}">${status} ${check.name} (${severity})</div>`;
+                    
+                    if (check.critical && !check.check) {
+                        allCriticalPassed = false;
+                    }
+                });
+                
+                if (allCriticalPassed) {
+                    results += '<div class="success"><strong>🎉 All critical security checks passed!</strong></div>';
+                } else {
+                    results += '<div class="error"><strong>⚠️ Critical security issues found!</strong></div>';
+                }
+                
+                resultDiv.innerHTML = results;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Security validation failed: ${error.message}</div>`;
+            }
+        }
+
+        function testLoginFlow() {
+            const resultDiv = document.getElementById('login-flow-result');
+            clearAuthToken();
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    Testing login redirect flow:
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>Tokens cleared ✅</li>
+                        <li>Opening main app without authentication...</li>
+                        <li>Should redirect to login page after 3 seconds</li>
+                    </ol>
+                </div>
+            `;
+            
+            // Open the main app and track the redirect
+            setTimeout(() => {
+                window.open('/', '_blank');
+                resultDiv.innerHTML += `
+                    <div class="success">
+                        ✅ Test initiated. Verify that:
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>The page shows authentication screen first</li>
+                            <li>After 3 seconds, it redirects to login.html</li>
+                            <li>No dashboard content is visible during this process</li>
+                        </ul>
+                    </div>
+                `;
+            }, 500);
+        }
+
+        // Auto-run initial test on page load
+        window.addEventListener('load', function() {
+            console.log('Security test page loaded');
+        });
+    </script>
+</body>
+</html>

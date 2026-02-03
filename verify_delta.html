@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Delta Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #005a8b;
+        }
+        .results {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .positive { color: #28a745; }
+        .negative { color: #dc3545; }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px;
+            display: inline-block;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Dashboard Delta Functionality Verification</h1>
+    
+    <div class="test-section">
+        <h2>📊 Current Dashboard Values</h2>
+        <div class="dashboard-cards">
+            <div class="card">
+                <div class="card-title">Total Opportunities</div>
+                <div id="totalOpportunities" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">OP100 Summary</div>
+                <div id="op100Summary" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">OP90 Summary</div>
+                <div id="op90Summary" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Inactive</div>
+                <div id="totalInactive" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Submitted</div>
+                <div id="totalSubmitted" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Declined</div>
+                <div id="totalDeclined" class="card-value">--</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Test Controls</h2>
+        <button class="button" onclick="runFullTest()">Run Full Delta Test</button>
+        <button class="button" onclick="clearStorageAndTest()">Clear Storage & Test</button>
+        <button class="button" onclick="createSampleData()">Create Sample Last Week Data</button>
+        <button class="button" onclick="showStorageData()">Show localStorage Data</button>
+        <button class="button" onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Test Results</h2>
+        <div id="results" class="results">Click "Run Full Delta Test" to begin verification...\n</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Status Summary</h2>
+        <div id="status-summary">
+            <span class="status warning">⏳ Ready to test</span>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const formattedMessage = `[${timestamp}] ${message}`;
+            testResults.push({ message: formattedMessage, type });
+            updateResults();
+            console.log(formattedMessage);
+        }
+        
+        function updateResults() {
+            const resultsEl = document.getElementById('results');
+            resultsEl.textContent = testResults.map(r => r.message).join('\n') + '\n';
+            resultsEl.scrollTop = resultsEl.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'warning') {
+            const statusEl = document.getElementById('status-summary');
+            const statusClass = type === 'success' ? 'success' : type === 'error' ? 'error' : 'warning';
+            statusEl.innerHTML = `<span class="status ${statusClass}">${message}</span>`;
+        }
+        
+        function clearResults() {
+            testResults = [];
+            updateResults();
+            updateStatus('⏳ Ready to test');
+        }
+        
+        function showStorageData() {
+            const data = localStorage.getItem('dashboardLastWeek');
+            if (data) {
+                log('📊 Current localStorage data found:');
+                try {
+                    const parsed = JSON.parse(data);
+                    log(JSON.stringify(parsed, null, 2));
+                    updateStatus('✅ localStorage data exists', 'success');
+                } catch (e) {
+                    log('❌ Error parsing localStorage data: ' + e.message);
+                    updateStatus('❌ localStorage data corrupted', 'error');
+                }
+            } else {
+                log('❌ No dashboard data found in localStorage');
+                updateStatus('⚠️ No stored data found', 'warning');
+            }
+        }
+        
+        function createSampleData() {
+            const sampleData = {
+                totalOpportunities: 414,
+                op100Count: 88,
+                op90Count: 42,
+                totalInactive: 17,
+                totalSubmitted: 35,
+                totalDeclined: 8
+            };
+            
+            localStorage.setItem('dashboardLastWeek', JSON.stringify(sampleData));
+            log('✅ Created sample last week data:');
+            log(JSON.stringify(sampleData, null, 2));
+            updateStatus('✅ Sample data created', 'success');
+        }
+        
+        function clearStorageAndTest() {
+            localStorage.removeItem('dashboardLastWeek');
+            log('🗑️ Cleared dashboardLastWeek from localStorage');
+            
+            // Wait a moment then test
+            setTimeout(() => {
+                log('🔄 Testing delta calculation without previous data...');
+                testDeltaLogic();
+            }, 500);
+        }
+        
+        function testDeltaLogic() {
+            // Simulate the delta calculation function from the main app
+            function withDelta(current, last) {
+                if (typeof last === 'number') {
+                    const diff = current - last;
+                    if (diff === 0) return `${current}`;
+                    const sign = diff > 0 ? '+' : '';
+                    return `${current} (${sign}${diff})`;
+                }
+                return `${current}`;
+            }
+            
+            // Test with sample current values
+            const currentValues = {
+                totalOpportunities: 440,
+                op100Count: 100,
+                op90Count: 50,
+                totalInactive: 20,
+                totalSubmitted: 40,
+                totalDeclined: 10
+            };
+            
+            // Get stored last week data
+            const lastWeekData = JSON.parse(localStorage.getItem('dashboardLastWeek') || '{}');
+            
+            log('🧮 Testing delta calculations:');
+            log(`Current values: ${JSON.stringify(currentValues)}`);
+            log(`Last week values: ${JSON.stringify(lastWeekData)}`);
+            
+            // Test each value
+            const results = {
+                totalOpportunities: withDelta(currentValues.totalOpportunities, lastWeekData.totalOpportunities),
+                op100Count: withDelta(currentValues.op100Count, lastWeekData.op100Count),
+                op90Count: withDelta(currentValues.op90Count, lastWeekData.op90Count),
+                totalInactive: withDelta(currentValues.totalInactive, lastWeekData.totalInactive),
+                totalSubmitted: withDelta(currentValues.totalSubmitted, lastWeekData.totalSubmitted),
+                totalDeclined: withDelta(currentValues.totalDeclined, lastWeekData.totalDeclined)
+            };
+            
+            log('📊 Delta calculation results:');
+            Object.entries(results).forEach(([key, value]) => {
+                log(`  ${key}: ${value}`);
+                // Update the display
+                const element = document.getElementById(key === 'op100Count' ? 'op100Summary' : 
+                                                     key === 'op90Count' ? 'op90Summary' : key);
+                if (element) {
+                    element.textContent = key.includes('Count') && !key.includes('total') ? 
+                        `${value} / $XXXk` : value;
+                    element.className = 'card-value' + (value.includes('(+') ? ' positive' : 
+                                                       value.includes('(-') ? ' negative' : '');
+                }
+            });
+            
+            return results;
+        }
+        
+        function runFullTest() {
+            log('🚀 Starting full dashboard delta verification test...');
+            updateStatus('🔄 Running tests...', 'warning');
+            
+            // Step 1: Check current storage state
+            log('\n=== STEP 1: Check localStorage ===');
+            showStorageData();
+            
+            // Step 2: Test delta logic
+            log('\n=== STEP 2: Test Delta Logic ===');
+            const results = testDeltaLogic();
+            
+            // Step 3: Verify if deltas are showing
+            log('\n=== STEP 3: Verify Delta Display ===');
+            let deltasFound = 0;
+            Object.values(results).forEach(value => {
+                if (typeof value === 'string' && (value.includes('(+') || value.includes('(-'))) {
+                    deltasFound++;
+                }
+            });
+            
+            if (deltasFound > 0) {
+                log(`✅ Found ${deltasFound} values with delta indicators`);
+                updateStatus(`✅ Test passed - ${deltasFound} deltas showing`, 'success');
+            } else {
+                log('⚠️ No delta indicators found - this might be expected if no previous data exists');
+                updateStatus('⚠️ No deltas found - create sample data first', 'warning');
+            }
+            
+            // Step 4: Integration check
+            log('\n=== STEP 4: Integration Check ===');
+            if (typeof window.testDashboardDelta === 'function') {
+                log('✅ Global test function available (testDashboardDelta)');
+                log('🔧 You can run window.testDashboardDelta() in the main app console');
+            } else {
+                log('ℹ️ Global test function not available (normal for this test page)');
+            }
+            
+            log('\n=== TEST COMPLETED ===');
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            log('🎯 Dashboard Delta Verification Tool Initialized');
+            log('📝 This tool verifies the delta calculation functionality');
+            log('🔧 Use the buttons above to test different scenarios\n');
+        };
+    </script>
+</body>
+</html>

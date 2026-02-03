@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMRP Bug Fixes - Final Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #007bff; font-weight: bold; }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        #log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .status-header {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-header">
+        <h1>🔧 CMRP Opportunities Management - Bug Fix Verification</h1>
+        <p><strong>Server Status:</strong> <span id="serverStatus">Checking...</span></p>
+        <p><strong>Time:</strong> <span id="currentTime"></span></p>
+    </div>
+
+    <div class="test-container">
+        <h2>🎯 Critical Bug Fix Summary</h2>
+        <div id="bugSummary">
+            <h3>Issues Fixed:</h3>
+            <ul>
+                <li><strong>Issue #1:</strong> ReferenceError: getCurrentUserName is not defined (line 1921 in app.js)</li>
+                <li><strong>Issue #2:</strong> New opportunities not saving after save action</li>
+            </ul>
+            <h3>Solution Implemented:</h3>
+            <ul>
+                <li>✅ Added <code>getCurrentUserName()</code> function to app.js</li>
+                <li>✅ Added <code>getCurrentUserName()</code> function to bypass_validation.js</li>
+                <li>✅ Function extracts user name from JWT token payload</li>
+                <li>✅ Includes proper error handling and fallbacks</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🧪 Live Function Tests</h2>
+        
+        <h3>Test 1: getCurrentUserName Function Availability</h3>
+        <button class="test-button" onclick="testFunctionExists()">Test Function Exists</button>
+        <div id="functionTest"></div>
+
+        <h3>Test 2: JWT Token Parsing</h3>
+        <button class="test-button" onclick="testJWTTokenParsing()">Test JWT Parsing</button>
+        <div id="tokenTest"></div>
+
+        <h3>Test 3: Application Integration</h3>
+        <button class="test-button" onclick="testApplicationIntegration()">Test App Integration</button>
+        <div id="appTest"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>🌐 Application Access</h2>
+        <p>Main application: <a href="/" target="_blank">http://localhost:3000</a></p>
+        <p>Win/Loss Dashboard: <a href="/win-loss_dashboard.html" target="_blank">http://localhost:3000/win-loss_dashboard.html</a></p>
+        <p>Forecast Dashboard: <a href="/forecast_dashboard.html" target="_blank">http://localhost:3000/forecast_dashboard.html</a></p>
+    </div>
+
+    <div class="test-container">
+        <h2>📝 Test Log</h2>
+        <div id="log"></div>
+        <button class="test-button" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        // Update current time
+        function updateTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Check server status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/');
+                if (response.ok) {
+                    document.getElementById('serverStatus').innerHTML = '<span class="success">✅ Running (Port 3000)</span>';
+                } else {
+                    document.getElementById('serverStatus').innerHTML = '<span class="warning">⚠️ Responsive but may have issues</span>';
+                }
+            } catch (error) {
+                document.getElementById('serverStatus').innerHTML = '<span class="error">❌ Not responding</span>';
+            }
+        }
+        checkServerStatus();
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Test function exists
+        function testFunctionExists() {
+            const resultDiv = document.getElementById('functionTest');
+            log('Testing if getCurrentUserName function exists...');
+            
+            // First try to load app.js if not already loaded
+            if (typeof getCurrentUserName === 'undefined') {
+                const script = document.createElement('script');
+                script.src = '/app.js';
+                script.onload = () => {
+                    setTimeout(() => {
+                        if (typeof getCurrentUserName !== 'undefined') {
+                            resultDiv.innerHTML = '<div class="success">✅ Function successfully loaded from app.js</div>';
+                            log('getCurrentUserName function loaded successfully', 'success');
+                        } else {
+                            resultDiv.innerHTML = '<div class="error">❌ Function not found even after loading app.js</div>';
+                            log('getCurrentUserName function not found after loading app.js', 'error');
+                        }
+                    }, 100);
+                };
+                script.onerror = () => {
+                    resultDiv.innerHTML = '<div class="error">❌ Failed to load app.js</div>';
+                    log('Failed to load app.js', 'error');
+                };
+                document.head.appendChild(script);
+                resultDiv.innerHTML = '<div class="info">⏳ Loading app.js...</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="success">✅ Function is already available</div>';
+                log('getCurrentUserName function already available', 'success');
+            }
+        }
+
+        // Test JWT token parsing
+        function testJWTTokenParsing() {
+            const resultDiv = document.getElementById('tokenTest');
+            log('Testing JWT token parsing...');
+            
+            try {
+                // Create a test JWT token
+                const testPayload = { name: 'Test User', email: 'test@example.com' };
+                const testToken = 'header.' + btoa(JSON.stringify(testPayload)) + '.signature';
+                
+                // Store it temporarily
+                localStorage.setItem('authToken', testToken);
+                
+                // Test our function (if it exists)
+                if (typeof getCurrentUserName !== 'undefined') {
+                    const userName = getCurrentUserName();
+                    if (userName === 'Test User') {
+                        resultDiv.innerHTML = '<div class="success">✅ JWT parsing works correctly - returned "Test User"</div>';
+                        log('JWT token parsing test passed', 'success');
+                    } else {
+                        resultDiv.innerHTML = `<div class="warning">⚠️ Function returned: "${userName}" (expected "Test User")</div>`;
+                        log(`JWT parsing returned unexpected value: "${userName}"`, 'warning');
+                    }
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Cannot test - function not loaded</div>';
+                    log('Cannot test JWT parsing - function not available', 'error');
+                }
+                
+                // Clean up
+                localStorage.removeItem('authToken');
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test failed: ${error.message}</div>`;
+                log(`JWT parsing test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test application integration
+        function testApplicationIntegration() {
+            const resultDiv = document.getElementById('appTest');
+            log('Testing application integration...');
+            
+            // Check if we can access the main application
+            fetch('/')
+                .then(response => response.text())
+                .then(html => {
+                    if (html.includes('CMRP Opportunities Management')) {
+                        resultDiv.innerHTML = '<div class="success">✅ Main application accessible and contains expected content</div>';
+                        log('Application integration test passed', 'success');
+                    } else {
+                        resultDiv.innerHTML = '<div class="warning">⚠️ Application accessible but content may be different</div>';
+                        log('Application accessible but content differs from expected', 'warning');
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = '<div class="error">❌ Cannot access main application</div>';
+                    log(`Application integration test failed: ${error.message}`, 'error');
+                });
+        }
+
+        // Initial log entry
+        log('Final verification page loaded - ready for testing');
+    </script>
+</body>
+</html>

@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com https://cdn.jsdelivr.net;">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Project Detail - oppX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="styles.css?v=1750741890">
+    <link rel="stylesheet" href="proposal-story.css">
+    
+    <!-- Load configuration and utilities -->
+    <script src="config.js"></script>
+    <script src="api-utils.js"></script>
+    
+    <!-- Shared Navigation Scripts -->
+    <script src="shared-navigation.js"></script>
+    <script src="user-info-system.js"></script>
+
+    <style>
+        /* CSS Variables for Theme Support - Match main page exactly */
+        :root {
+            /* Light Theme Variables - Match main page styles.css */
+            --bg-body: #00529B; /* Prominent blue from image background */
+            --text-body: #FFFFFF; /* White text on blue body */
+            --bg-container: #ffffff; /* White container, as per image */
+            --border-container: #dadce0; /* Light gray border for white container */
+            --border-container-subtle: #e8e9ea; /* Very subtle border for body container */
+            --text-title: #202124; /* Dark text for titles in white container */
+            --text-primary: #202124; /* Primary text color for light mode */
+            --text-label: #5f6368; /* Dark text for labels in white container */
+            --text-secondary: #5f6368; /* Secondary text color */
+            --bg-secondary: #f8f9fa;
+            --bg-hover: #e8f0fe;
+            
+            /* Sidebar Variables */
+            --sidebar-width: 280px;
+            --sidebar-width-collapsed: 50px;
+        }
+
+        html.dark {
+            /* Dark Theme Variables - Match main page styles.css exactly */
+            --bg-body: #1e1e1e;
+            --text-body: #e0e0e0;
+            --bg-container: #1a1a1a; /* Match styles.css - darker container */
+            --border-container: #404040;
+            --border-container-subtle: #2a2a2a; /* Match styles.css */
+            --text-title: #ffffff;
+            --text-primary: #ffffff; /* Match styles.css - white text for dark mode */
+            --text-label: #c0c0c0; /* Match styles.css */
+            --text-secondary: #c0c0c0;
+            --bg-secondary: #374151;
+            --bg-hover: #4b5563;
+        }
+
+        /* Project Detail Page Specific Styles - Use shared body styling */
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--bg-body);
+            color: var(--text-body);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Main content wrapper */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width-collapsed);
+            background-color: var(--bg-body);
+            min-height: calc(100vh - 3rem);
+            transition: margin-left 0.2s ease;
+            /* Use CSS clamp() for fluid padding based on viewport width */
+            padding: 0 clamp(1rem, 2vw, 6rem);
+            /* Container width adapts to viewport with reasonable bounds */
+            width: min(100%, 100vw - var(--sidebar-width-collapsed));
+        }
+
+        .project-header {
+            background: var(--bg-body);
+            color: var(--text-body);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .project-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,0 1000,0 900,100 0,100"/></svg>') no-repeat;
+            background-size: cover;
+            pointer-events: none;
+        }
+
+        .section-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-container);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-container);
+        }
+
+        .section-header h2 {
+            color: var(--text-title);
+            margin: 0;
+        }
+
+        /* Dark mode overrides for section cards */
+        html.dark .section-card {
+            background: var(--bg-container);
+            border-color: var(--border-container);
+        }
+
+        html.dark .section-header {
+            background: var(--bg-secondary);
+            border-bottom-color: var(--border-container);
+        }
+
+        html.dark .section-header h2 {
+            color: var(--text-title);
+        }
+
+        /* Enhanced Timeline Styles */
+        .timeline-container {
+            position: relative;
+        }
+
+        .timeline-date-group {
+            @apply mb-6;
+        }
+
+        .timeline-date-header {
+            @apply sticky top-0 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm z-10;
+        }
+
+        .timeline-item {
+            @apply relative pl-8 pb-6 border-l-2 border-gray-200 dark:border-gray-600 transition-all duration-300 hover:border-blue-400 dark:hover:border-blue-500;
+        }
+
+        .timeline-item:last-child {
+            @apply pb-0;
+        }
+
+        .timeline-dot {
+            @apply absolute -left-2 top-2 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 shadow-sm;
+        }
+
+        .timeline-dot.comment { @apply bg-blue-500 shadow-blue-200; }
+        .timeline-dot.milestone { @apply bg-green-500 shadow-green-200; }
+        .timeline-dot.note { @apply bg-yellow-500 shadow-yellow-200; }
+        .timeline-dot.status_update { @apply bg-purple-500 shadow-purple-200; }
+        .timeline-dot.meeting { @apply bg-orange-500 shadow-orange-200; }
+        .timeline-dot.decision { @apply bg-red-500 shadow-red-200; }
+
+        .timeline-entry {
+            background: var(--bg-container);
+            border: 1px solid var(--border-container);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-entry:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: var(--bg-hover);
+        }
+
+        .timeline-entry-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .timeline-entry-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .timeline-entry:hover .timeline-entry-actions {
+            opacity: 1;
+        }
+
+        .timeline-entry-content {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .timeline-entry-attachments {
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .timeline-entry-attachment {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .timeline-entry-attachment:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Dark mode specific overrides for timeline */
+        html.dark .timeline-entry {
+            background: var(--bg-container);
+            border-color: var(--border-container);
+            color: var(--text-primary);
+        }
+
+        html.dark .timeline-entry:hover {
+            background: var(--bg-hover);
+        }
+
+        html.dark .timeline-entry-content {
+            color: var(--text-primary);
+        }
+
+        html.dark .timeline-entry-meta {
+            color: var(--text-secondary);
+        }
+
+        html.dark .timeline-entry-attachment {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        html.dark .timeline-entry-attachment:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Additional Dark Mode Timeline Fixes */
+        html.dark .timeline-content {
+            background: var(--bg-container) !important;
+            color: var(--text-primary) !important;
+        }
+
+        html.dark .date-header {
+            background: var(--bg-secondary) !important;
+            color: var(--text-secondary) !important;
+        }
+
+        html.dark .entry-type-badge {
+            color: inherit !important;
+        }
+
+        html.dark .timeline-item .timeline-content {
+            background: var(--bg-container) !important;
+            border-color: var(--border-container) !important;
+        }
+
+        /* Fix any Tailwind overrides */
+        html.dark .text-gray-500 {
+            color: var(--text-secondary) !important;
+        }
+
+        html.dark .text-gray-700 {
+            color: var(--text-primary) !important;
+        }
+
+        html.dark .bg-white {
+            background-color: var(--bg-container) !important;
+        }
+
+        html.dark .border-gray-200 {
+            border-color: var(--border-container) !important;
+        }
+
+        /* Enhanced Schedule Styles */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: auto repeat(7, 1fr);
+            gap: 1px;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .schedule-grid {
+            background-color: #374151;
+        }
+
+        .schedule-cell {
+            background: var(--bg-container);
+            padding: 0.75rem;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.2s ease;
+        }
+
+        .schedule-cell:hover {
+            background: var(--bg-hover);
+        }
+
+        .schedule-day-header {
+            background: var(--bg-secondary);
+            color: var(--text-title);
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* Dark mode overrides for schedule */
+        html.dark .schedule-cell {
+            background: var(--bg-container);
+            color: var(--text-primary);
+        }
+
+        html.dark .schedule-cell:hover {
+            background: var(--bg-hover);
+        }
+
+        html.dark .schedule-day-header {
+            background: var(--bg-secondary);
+            color: var(--text-title);
+        }
+
+        .schedule-task {
+            @apply bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs p-2 rounded mb-1 border-l-2 border-blue-400 transition-all duration-200 hover:bg-blue-200 dark:hover:bg-blue-800 cursor-pointer;
+        }
+
+        .schedule-task.priority-high {
+            @apply bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-400;
+        }
+
+        .schedule-task.priority-medium {
+            @apply bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-400;
+        }
+
+        .schedule-task.priority-low {
+            @apply bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-400;
+        }
+
+        /* Enhanced File Browser Styles */
+        .file-item {
+            @apply flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-600;
+        }
+
+        .file-icon {
+            @apply w-8 h-8 mr-3 flex items-center justify-center rounded-lg text-white text-sm font-semibold;
+        }
+
+        .file-icon.doc { @apply bg-blue-500; }
+        .file-icon.pdf { @apply bg-red-500; }
+        .file-icon.img { @apply bg-green-500; }
+        .file-icon.xls { @apply bg-green-600; }
+        .file-icon.ppt { @apply bg-orange-500; }
+        .file-icon.folder { @apply bg-yellow-500; }
+        .file-icon.default { @apply bg-gray-500; }
+
+        .file-info {
+            @apply flex-1 min-w-0;
+        }
+
+        .file-name {
+            @apply text-sm font-medium text-gray-900 dark:text-gray-100 truncate;
+        }
+
+        .file-meta {
+            @apply text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2;
+        }
+
+        /* Enhanced Status Badges */
+        .status-badge {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase;
+        }
+
+        .status-op100 { 
+            @apply bg-gradient-to-r from-green-100 to-green-200 text-green-800 dark:from-green-900 dark:to-green-800 dark:text-green-300 shadow-green-100; 
+        }
+        .status-op90 { 
+            @apply bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 dark:from-blue-900 dark:to-blue-800 dark:text-blue-300 shadow-blue-100; 
+        }
+        .status-submitted { 
+            @apply bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 dark:from-purple-900 dark:to-purple-800 dark:text-purple-300 shadow-purple-100; 
+        }
+        .status-declined { 
+            @apply bg-gradient-to-r from-red-100 to-red-200 text-red-800 dark:from-red-900 dark:to-red-800 dark:text-red-300 shadow-red-100; 
+        }
+        .status-awarded { 
+            @apply bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 dark:from-yellow-900 dark:to-yellow-800 dark:text-yellow-300 shadow-yellow-100; 
+        }
+
+        .loading-spinner {
+            @apply inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-current;
+        }
+
+        /* Enhanced animations and transitions */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .stagger-delay-1 { animation-delay: 0.1s; }
+        .stagger-delay-2 { animation-delay: 0.2s; }
+        .stagger-delay-3 { animation-delay: 0.3s; }
+
+        /* Interactive Elements */
+        .interactive-button {
+            @apply transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+        }
+
+        .glass-effect {
+            @apply bg-white/10 backdrop-blur-sm border border-white/20;
+        }
+
+        /* Responsive enhancements */
+        @media (max-width: 768px) {
+            .project-header {
+                @apply py-6;
+            }
+            
+            .project-header h1 {
+                @apply text-2xl;
+            }
+            
+            .section-header {
+                @apply px-4 py-3;
+            }
+            
+            .section-card .p-6 {
+                @apply p-4;
+            }
+            
+            .timeline-item {
+                @apply pl-6;
+            }
+            
+            .schedule-grid {
+                grid-template-columns: auto repeat(7, minmax(60px, 1fr));
+            }
+            
+            .schedule-cell {
+                @apply min-h-[80px] p-2;
+            }
+        }
+
+        /* CRITICAL FIX: Ensure all content areas have solid backgrounds - Match main page */
+        .w-full.max-w-none.p-6.rounded-lg.shadow-md.border,
+        .main-content .w-full,
+        .main-content > div {
+            background-color: var(--bg-container) !important;
+            color: var(--text-title) !important;
+            border: 1px solid var(--border-container-subtle) !important;
+        }
+
+        /* Additional text color fixes for consistency with main page */
+        h2, h3, h4, .text-lg, .font-semibold {
+            color: var(--text-title) !important;
+        }
+
+        /* Fix label colors - override Tailwind classes with maximum specificity */
+        label.text-sm.font-medium.text-gray-500,
+        .text-sm.font-medium.text-gray-500 {
+            color: var(--text-label) !important;
+        }
+
+        /* Dark mode label color overrides with maximum specificity */
+        html.dark label.text-sm.font-medium.text-gray-500,
+        html.dark .text-sm.font-medium.text-gray-500,
+        .dark label.text-sm.font-medium.text-gray-500,
+        .dark .text-sm.font-medium.text-gray-500 {
+            color: var(--text-label) !important;
+        }
+
+        /* Additional dark mode overrides for the dark:text-gray-400 class */
+        @media (prefers-color-scheme: dark) {
+            html.dark label.text-sm.font-medium,
+            html.dark .text-sm.font-medium {
+                color: var(--text-label) !important;
+            }
+        }
+
+        /* Force override all gray text in dark mode - nuclear option */
+        html.dark .text-gray-500,
+        html.dark .text-gray-400,
+        .dark .text-gray-500,
+        .dark .text-gray-400,
+        html.dark label,
+        html.dark .text-sm,
+        html.dark .font-medium {
+            color: var(--text-label) !important;
+        }
+
+        /* Override specific Tailwind dark mode classes */
+        html.dark *[class*="dark:text-gray-400"],
+        html.dark *[class*="dark:text-gray-500"] {
+            color: var(--text-label) !important;
+        }
+
+        /* Fix content text colors */
+        .font-medium, 
+        .mt-1, 
+        .mt-1.font-medium,
+        .space-y-4 .font-medium,
+        #projectManager,
+        #projectPic,
+        #projectSolutions,
+        #projectIndustries,
+        #projectForecast,
+        #projectDeadline,
+        #projectMargin,
+        #projectDecision,
+        #projectRemarks {
+            color: var(--text-primary) !important;
+        }
+
+        /* Dark mode content text colors */
+        html.dark .font-medium,
+        html.dark .mt-1,
+        html.dark .mt-1.font-medium,
+        html.dark #projectManager,
+        html.dark #projectPic,
+        html.dark #projectSolutions,
+        html.dark #projectIndustries,
+        html.dark #projectForecast,
+        html.dark #projectDeadline,
+        html.dark #projectMargin,
+        html.dark #projectDecision,
+        html.dark #projectRemarks {
+            color: var(--text-primary) !important;
+        }
+
+        /* Ensure section cards follow main page styling */
+        .section-card {
+            background: var(--bg-container) !important;
+            border: 1px solid var(--border-container) !important;
+            color: var(--text-title) !important;
+        }
+
+        /* Timeline specific color fixes */
+        .timeline-entry {
+            background: var(--bg-container) !important;
+            border: 1px solid var(--border-container) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .timeline-entry-content {
+            color: var(--text-primary) !important;
+        }
+
+        .timeline-entry-meta {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Story Card Action Buttons */
+        .story-card-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .story-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+        }
+
+        .story-action-btn:hover {
+            opacity: 1;
+            background: var(--bg-hover);
+        }
+
+        .story-action-btn.edit-story-btn:hover {
+            color: #2563eb;
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .story-action-btn.delete-story-btn:hover {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        /* Dark mode story action buttons */
+        html.dark .story-action-btn {
+            color: var(--text-secondary);
+        }
+
+        html.dark .story-action-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Print styles */
+        @media print {
+            .project-header {
+                background: #4c51bf !important;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .section-card {
+                @apply shadow-none border-gray-300;
+                break-inside: avoid;
+            }
+            
+            .timeline-entry-actions {
+                @apply hidden;
+            }
+        }
+        
+        /* Story Edit Form Styles */
+        .story-card-edit-form {
+            padding: 16px;
+            border: 1px solid var(--border-container);
+            border-radius: 8px;
+            background: var(--bg-container);
+        }
+        .edit-form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-container);
+        }
+        .edit-form-header h4 {
+            margin: 0;
+            color: var(--text-title);
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .edit-form-actions {
+            display: flex;
+            gap: 4px;
+        }
+        .edit-form-body .form-group {
+            margin-bottom: 16px;
+        }
+        .edit-form-body label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-label);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .edit-form-body .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-container);
+            border-radius: 6px;
+            background: var(--bg-container);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .edit-form-body .form-control:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .edit-form-body textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .edit-form-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+        .edit-form-buttons .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        .edit-form-buttons .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .edit-form-buttons .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .edit-form-buttons .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-container);
+        }
+        .edit-form-buttons .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <div id="loading-screen" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="loading-spinner w-8 h-8 mx-auto mb-4"></div>
+            <p class="text-gray-600 dark:text-gray-400">Loading project details...</p>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Toggle -->
+    <button id="mobileSidebarToggle" class="mobile-sidebar-toggle">
+        <span class="material-icons">menu</span>
+    </button>
+    
+    <!-- SECURITY: Main application content - Hidden by default -->
+    <div id="appContent" class="app-content hidden">
+        <!-- Shared Top Bar -->
+        <div id="shared-topbar"></div>
+        
+        <!-- Layout Container -->
+        <div class="layout-container">
+            <!-- Shared Sidebar Container -->
+            <div id="shared-sidebar"></div>
+            
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Project Header -->
+                <div class="project-header shadow-lg">
+                    <div class="container mx-auto px-6 py-6">
+                        <!-- Navigation Bar -->
+                        <div class="flex items-center justify-between mb-6">
+                            <button id="backToDashboard" class="interactive-button flex items-center text-white hover:text-gray-200 transition-colors">
+                                <span class="material-icons mr-2">arrow_back</span>
+                                <span>Back to Dashboard</span>
+                            </button>
+                            
+                            <div class="flex items-center space-x-4">
+                                <button id="editProject" class="interactive-button glass-effect hover:bg-white/30 px-4 py-2 rounded-lg transition-colors flex items-center">
+                                    <span class="material-icons mr-2">edit</span>
+                                    <span>Edit Project</span>
+                                </button>
+                                <button id="scheduleProject" class="interactive-button glass-effect hover:bg-white/30 px-4 py-2 rounded-lg transition-colors flex items-center">
+                                    <span class="material-icons mr-2">schedule</span>
+                                    <span>Schedule</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Project Title and Key Info -->
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                            <div class="mb-4 lg:mb-0">
+                                <h1 id="projectTitle" class="text-3xl lg:text-4xl font-bold mb-2"></h1>
+                                <div class="flex flex-wrap items-center space-x-4 text-white/80">
+                                    <span id="projectCode" class="flex items-center">
+                                        <span class="material-icons mr-1 text-sm">tag</span>
+                                        <span></span>
+                                    </span>
+                                    <span id="projectClient" class="flex items-center">
+                                        <span class="material-icons mr-1 text-sm">business</span>
+                                        <span></span>
+                                    </span>
+                                    <span id="projectRevision" class="flex items-center">
+                                        <span class="material-icons mr-1 text-sm">history</span>
+                                        <span>Rev: </span>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-6 text-right">
+                                <div>
+                                    <div class="text-white/80 text-sm">Final Amount</div>
+                                    <div id="projectAmount" class="text-2xl font-bold"></div>
+                                </div>
+                                <div>
+                                    <div class="text-white/80 text-sm">Status</div>
+                                    <div id="projectStatus" class="status-badge"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Container Body - Following standard format -->
+                <div class="w-full max-w-none p-6 rounded-lg shadow-md border" style="margin-top: 2rem;">
+                    
+                    <!-- Project Details Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        
+                        <!-- Left Column: Project Overview -->
+                        <div class="space-y-6">
+                            <!-- Project Overview Section -->
+                            <div>
+                                <h2 class="text-lg font-semibold flex items-center mb-4">
+                                    <span class="material-icons mr-2">info</span>
+                                    Project Overview
+                                </h2>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Manager</label>
+                                            <div id="projectManager" class="mt-1 font-medium"></div>
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">PIC</label>
+                                            <div id="projectPic" class="mt-1 font-medium"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Solutions</label>
+                                        <div id="projectSolutions" class="mt-1 font-medium"></div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Industries</label>
+                                        <div id="projectIndustries" class="mt-1 font-medium"></div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Forecast Date</label>
+                                            <div id="projectForecast" class="mt-1 font-medium"></div>
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Client Deadline</label>
+                                            <div id="projectDeadline" class="mt-1 font-medium"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Margin</label>
+                                            <div id="projectMargin" class="mt-1 font-medium"></div>
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Decision</label>
+                                            <div id="projectDecision" class="mt-1 font-medium"></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Remarks</label>
+                                        <div id="projectRemarks" class="mt-1 font-medium min-h-[20px]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Google Drive Files -->
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h2 class="text-lg font-semibold flex items-center">
+                                        <span class="material-icons mr-2">folder</span>
+                                        Google Drive Files
+                                    </h2>
+                                    <button id="refreshDriveFiles" class="interactive-button text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <span class="material-icons">refresh</span>
+                                    </button>
+                                </div>
+                                <div id="driveFilesContainer">
+                                    <div class="text-center py-4">
+                                        <div class="loading-spinner mx-auto mb-2"></div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Loading Drive files...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Storyboard Section -->
+                    <div class="mt-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold flex items-center">
+                                <span class="material-icons mr-3">timeline</span>
+                                Proposal Storyboard
+                            </h2>
+                            <div class="flex items-center space-x-4">
+                                <button id="addStoryboardEntry" class="interactive-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                                    <span class="material-icons mr-2">add</span>
+                                    <span>Add Entry</span>
+                                </button>
+                                <button id="storyboardSettings" class="interactive-button text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                                    <span class="material-icons">settings</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Storyboard Timeline Container -->
+                        <div id="storyboardContainer" class="section-card">
+                            <!-- Add Story Entry Section -->
+                            <div id="addStorySection" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hidden">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0 mt-1">
+                                        <span class="material-icons text-blue-500">add_circle</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="mb-3">
+                                            <select id="storyEntryType" class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                                <option value="comment">💬 Comment</option>
+                                                <option value="client_feedback">📝 Client Feedback</option>
+                                                <option value="milestone">🎯 Milestone</option>
+                                                <option value="meeting">🤝 Meeting</option>
+                                                <option value="decision">⚖️ Decision</option>
+                                            </select>
+                                        </div>
+                                        <div id="storyTitleSection" class="mb-3 hidden">
+                                            <input type="text" id="storyEntryTitle" placeholder="Entry title..." 
+                                                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400">
+                                        </div>
+                                        <div class="mb-3">
+                                            <textarea id="storyEntryContent" rows="3" placeholder="Add your story entry..."
+                                                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none"></textarea>
+                                        </div>
+                                        <div class="flex justify-end items-center gap-2">
+                                            <button id="cancelStoryEntryBtn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors duration-200">
+                                                Cancel
+                                            </button>
+                                            <button id="addStoryEntryBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors duration-200 flex items-center gap-2">
+                                                <span class="material-icons" style="font-size: 16px;">add</span>
+                                                Add Entry
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Container -->
+                            <div id="storyTimelineContainer" class="p-4">
+                                <div id="storyTimelineLoading" class="text-center py-8 text-gray-500">
+                                    <span class="material-icons animate-spin text-2xl mb-2">sync</span>
+                                    <p>Loading proposal story...</p>
+                                </div>
+                                
+                                <!-- Timeline will be populated by JavaScript -->
+                                <div id="storyTimeline" class="hidden">
+                                    <!-- Story cards will be inserted here -->
+                                </div>
+                                
+                                <div id="storyTimelineEmpty" class="text-center py-8 text-gray-500 hidden">
+                                    <span class="material-icons text-4xl mb-2 text-gray-300">timeline</span>
+                                    <p>No story entries yet</p>
+                                    <p class="text-sm">Add the first entry above to start tracking this proposal's journey</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JavaScript -->
+    <script src="mention-system.js"></script>
+    <script src="notifications.js"></script>
+    <script src="proposal-story.js"></script>
+    <script src="project-detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com https://cdn.jsdelivr.net;">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>oppX</title>
+    <!-- Load Tailwind CSS first, then custom styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    
+    <!-- Load configuration and utilities -->
+    <script src="config.js"></script>
+    <script src="api-utils.js"></script>
+    
+    <!-- Shared Navigation Script -->
+    <script src="shared-navigation.js?v=1750741456"></script>
+    
+    <!-- EMERGENCY FILTER FIX - Maximum specificity override -->
+    <style>
+        /* FORCE light theme colors with maximum specificity */
+        html body:not(.dark) label.text-sm.font-medium,
+        html body:not(.dark) .text-sm.font-medium,
+        html body:not(.dark) [class*="text-sm"][class*="font-medium"],
+        html body:not(.dark) label {
+            color: #374151 !important;
+            background-color: transparent !important;
+        }
+        
+        html body:not(.dark) select {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+        }
+        
+        /* FORCE dark theme colors with maximum specificity - FIXED FOR HTML.DARK */
+        html.dark body label.text-sm.font-medium,
+        html.dark body .text-sm.font-medium,
+        html.dark body [class*="text-sm"][class*="font-medium"],
+        html.dark body label,
+        html.dark label.text-sm.font-medium,
+        html.dark .text-sm.font-medium,
+        html.dark [class*="text-sm"][class*="font-medium"],
+        html.dark label {
+            color: #f3f4f6 !important;
+            background-color: transparent !important;
+        }
+        
+        html.dark body select,
+        html.dark select,
+        html.dark select.filter-dropdown,
+        html.dark body select.filter-dropdown {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+            border-color: var(--border-control) !important;
+        }
+        
+        /* Dark mode dropdown options */
+        html.dark select option,
+        html.dark select.filter-dropdown option,
+        html.dark body select option,
+        html.dark body select.filter-dropdown option {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+        }
+        
+        /* Additional nuclear option for stubborn elements */
+        [data-theme="dark"] label,
+        [data-theme="dark"] .text-sm.font-medium,
+        html.dark label,
+        html.dark .text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        [data-theme="light"] label,
+        [data-theme="light"] .text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* Enhanced User Info and Online Users Styles - Match Forecast Dashboard */
+        .top-bar-user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+        
+        .user-info-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .user-info-display:hover {
+            background: var(--bg-hover);
+        }
+        
+        .user-avatar {
+            font-size: 1.5rem !important;
+            color: var(--text-secondary);
+        }
+        
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+        
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .online-users-container {
+            position: relative;
+        }
+        
+        .online-users-display {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .online-users-display:hover {
+            background: var(--bg-hover);
+        }
+        
+        .online-indicator {
+            font-size: 0.875rem !important;
+            color: #10b981; /* Green for online status */
+            animation: pulse 2s infinite;
+        }
+        
+        .online-count {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            min-width: 1rem;
+            text-align: center;
+        }
+        
+        /* Enhanced Glassmorphism Effect for Online Users Dropdown */
+        .online-users-list {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: rgba(255, 255, 255, 0.6); /* Light mode: 60% white transparency */
+            border: 1px solid var(--border-primary);
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px); /* Glass effect with 10px blur */
+        }
+        
+        /* Dark mode glassmorphism with enhanced contrast */
+        html.dark .online-users-list {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: rgba(17, 24, 39, 0.75); /* Dark mode: 75% dark gray transparency */
+            border-color: rgba(55, 65, 81, 0.5);
+        }
+        
+        .online-users-display:hover .online-users-list,
+        .online-users-list:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .online-user-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-primary);
+            transition: background-color 0.15s ease;
+        }
+        
+        .online-user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .online-user-item:hover {
+            background: var(--bg-hover);
+        }
+        
+        .online-user-item .material-icons {
+            font-size: 1.25rem !important;
+            color: var(--text-secondary);
+        }
+        
+        .online-user-name {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* Pulse animation for online indicator */
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .top-bar-user-section {
+                gap: 0.5rem;
+            }
+            
+            .user-details {
+                display: none;
+            }
+            
+            .user-info-display {
+                padding: 0.5rem;
+            }
+            
+            .online-users-list {
+                right: -1rem;
+                min-width: 180px;
+            }
+        }
+        
+        /* Override dashboard cards to use lighter shade in dark mode */
+        html.dark .dashboard-card {
+            background-color: #2d2d2d !important; /* Lighter than body container */
+            color: var(--text-title) !important;
+            border: 1px solid #404040 !important;
+        }
+        
+        /* Light mode dashboard cards */
+        html:not(.dark) .dashboard-card {
+            background-color: #ffffff !important;
+            color: var(--text-title) !important;
+            border: 1px solid #e5e7eb !important;
+        }
+        
+        /* Override table headers to use lighter shade in dark mode */
+        html.dark table th,
+        html.dark .table-container th,
+        html.dark .sticky-header th {
+            background-color: #2d2d2d !important; /* Lighter than body container */
+            color: var(--text-title) !important;
+            border-color: #404040 !important;
+        }
+        
+        /* Light mode table headers */
+        html:not(.dark) table th,
+        html:not(.dark) .table-container th,
+        html:not(.dark) .sticky-header th {
+            background-color: #ffffff !important;
+            color: var(--text-title) !important;
+            border-color: #e5e7eb !important;
+        }
+        
+        /* Main content container styling */
+        .main-content > div {
+            background-color: var(--bg-container) !important;
+            color: var(--text-title) !important;
+            border: 1px solid var(--border-container-subtle) !important;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+        }
+    </style>
+    
+    <!-- CRITICAL SECURITY: Pre-authentication styles -->
+    <style>
+        /* Hide all content initially until authentication is verified */
+        .app-content {
+            display: none;
+        }
+        
+        /* Loading/Authentication screen */
+        .auth-loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-primary, #ffffff);
+            color: var(--text-primary, #1f2937);
+            font-family: system-ui, -apple-system, sans-serif;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .auth-loading-logo {
+            height: 3rem;
+            width: auto;
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+        
+        .auth-loading-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-loading-message {
+            font-size: 1rem;
+            opacity: 0.7;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-loading-spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .auth-login-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        
+        .auth-login-btn:hover {
+            background: #2563eb;
+        }
+        
+        /* Dark theme support for auth screen */
+        .dark .auth-loading-screen {
+            background: var(--bg-primary, #1f2937);
+            color: var(--text-primary, #f9fafb);
+        }
+    </style>
+
+</head>
+<body class="min-h-screen">
+    <div id="authLoadingScreen" class="auth-loading-screen">
+        <img id="authLoadingLogo" src="Logo/CMRP Logo Dark.svg" alt="CMRP Logo" class="auth-loading-logo">
+        <h1 class="auth-loading-title">CMRP Win-Loss Dashboard</h1>
+        <p class="auth-loading-message">Verifying authentication...</p>
+        <div class="auth-loading-spinner"></div>
+        <div id="authLoadingRedirect" style="display: none;">
+            <p style="color: #dc2626; margin-bottom: 1rem;">Authentication required</p>
+            <button id="authLoginRedirectBtn" class="auth-login-btn">
+                <span class="material-icons" style="font-size: 1rem;">login</span>
+                Go to Login
+            </button>
+        </div>
+    </div>
+    
+    <!-- SECURITY: Main application content - Hidden by default -->
+    <div id="appContent" class="app-content">
+        <!-- Shared Top Bar Container -->
+        <div id="shared-topbar"></div>
+    
+    <!-- Layout Container -->
+    <div class="layout-container">
+        <!-- Shared Sidebar Container -->
+        <div id="shared-sidebar"></div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+    <div class="main-container container mx-auto p-6 rounded-lg shadow-md">
+
+            
+            <div class="flex flex-wrap gap-4 items-center mb-6" id="filterBar">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Solution:</label>
+                    <select id="solutionFilter" class="filter-dropdown">
+                        <option value="all">All Solutions</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Account Mgr:</label>
+                    <select id="accountMgrFilter" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Client:</label>
+                    <select id="clientFilter" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4" id="quarterFilterButtons">
+                <button data-quarter="1" class="filter-button quarter-filter-btn px-3 py-1 rounded text-xs" style="opacity: 1;">Q1</button>
+                <button data-quarter="2" class="filter-button quarter-filter-btn px-3 py-1 rounded text-xs" style="opacity: 1;">Q2</button>
+                <button data-quarter="3" class="filter-button quarter-filter-btn px-3 py-1 rounded text-xs" style="opacity: 1;">Q3</button>
+                <button data-quarter="4" class="filter-button quarter-filter-btn px-3 py-1 rounded text-xs" style="opacity: 1;">Q4</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="dashboard-card">
+                    <div id="op100-total-count-title" class="dashboard-title">Total OP100 Count</div>
+                    <div id="op100-total-count" class="dashboard-value">0</div>
+                </div>
+                <div class="dashboard-card">
+                     <div id="op100-total-amount-title" class="dashboard-title">Total OP100 Amount</div>
+                    <div id="op100-total-amount" class="dashboard-value">₱0</div>
+                </div>
+                 <div class="dashboard-card">
+                    <div id="loss-total-count-title" class="dashboard-title">Total Lost Opportunity Count</div>
+                    <div id="loss-total-count" class="dashboard-value">0</div>
+                </div>
+                <div class="dashboard-card">
+                     <div id="loss-total-amount-title" class="dashboard-title">Total Lost Opportunity Amount</div>
+                    <div id="loss-total-amount" class="dashboard-value">₱0</div>
+                </div>
+            </div>
+
+            <div class="chart-section-container p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Monthly Wins (OP100)</h3>
+                        <div class="chart-container" style="position: relative; height: 500px;">
+                            <canvas id="winMonthlyChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Monthly Lost Opportunities</h3>
+                        <div class="chart-container" style="position: relative; height: 500px;">
+                            <canvas id="lossMonthlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opportunities Table Section -->
+            <div class="mt-10">
+                <h3 class="text-lg font-semibold mb-4">Opportunities List</h3>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button id="filterOP100Btn" class="filter-button table-status-btn px-3 py-1 rounded text-xs active">OP100</button> <!-- Set OP100 as active by default -->
+                    <button id="filterLOSTBtn" class="filter-button table-status-btn px-3 py-1 rounded text-xs">LOST</button>
+                </div>
+                <div class="table-container">
+                    <table id="opportunitiesTable" class="min-w-full">
+                        <thead>
+                            <tr>
+                                <th class="project-name-cell px-3 py-2 text-left text-xs font-semibold bg-header">Project Name</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold bg-header">Client</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold bg-header">Account Mgr</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold bg-header">Date Awarded</th>
+                                <th class="px-3 py-2 text-right text-xs font-semibold bg-header">Final Amt</th>
+                                <th class="px-3 py-2 text-right text-xs font-semibold bg-header">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="opportunitiesTableBody">
+                            <!-- Rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </div>
+    </div> <!-- End appContent -->
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="filter-label-fix.js"></script>
+    <script src="win-loss_dashboard.js" defer></script>
+
+    <!-- External Scripts for User Info and Navigation -->
+
+    <script src="sidebar-toggle.js"></script>
+</body>
+</html>

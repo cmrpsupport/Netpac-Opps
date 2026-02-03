@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Storage and Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .success {
+            color: #2d5a2d;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #1a5490;
+            background: #e8f2ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear Storage and Test Default Columns</h1>
+        
+        <div class="info">
+            <strong>This tool will:</strong>
+            <ul>
+                <li>Clear all localStorage data</li>
+                <li>Open the main application</li>
+                <li>Test that default hidden columns are working</li>
+            </ul>
+        </div>
+        
+        <button onclick="clearStorageAndTest()">🧹 Clear Storage & Test Application</button>
+        
+        <div id="result"></div>
+        
+        <h3>📋 Expected Default Column Behavior:</h3>
+        <ul>
+            <li>✅ <strong>Visible by default:</strong> Project Name, Manager, Stage, Value, Close Date, Actions, etc.</li>
+            <li>❌ <strong>Hidden by default:</strong> encoded_date, A, C, R, U, D, description, comments, uid, created_at, updated_at</li>
+        </ul>
+    </div>
+
+    <script>
+        function clearStorageAndTest() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">🔄 Clearing storage...</div>';
+            
+            try {
+                // Clear all localStorage
+                localStorage.clear();
+                
+                // Also clear sessionStorage for good measure
+                sessionStorage.clear();
+                
+                resultDiv.innerHTML = '<div class="success">✅ Storage cleared successfully!</div>';
+                
+                // Wait a moment then redirect to main app
+                setTimeout(() => {
+                    resultDiv.innerHTML += '<div class="info">🔄 Opening main application...</div>';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                }, 1000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: red; background: #ffe8e8; padding: 10px; border-radius: 4px;">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Show current localStorage status
+        window.addEventListener('load', () => {
+            const hasColumnVisibility = localStorage.getItem('columnVisibility');
+            const resultDiv = document.getElementById('result');
+            
+            if (hasColumnVisibility) {
+                resultDiv.innerHTML = '<div class="info">ℹ️ Found existing columnVisibility settings in localStorage. Click the button to clear and test fresh defaults.</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="success">✅ No existing columnVisibility settings found. Ready to test defaults.</div>';
+            }
+        });
+    </script>
+</body>
+</html>

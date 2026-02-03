@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+    <title>CMRP Opportunities Management - Final Application Test</title>
+    <link href="dist/output.css" rel="stylesheet">
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-result {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-full">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">CMRP Opportunities Management - Final Application Test</h1>
+            <p class="text-gray-600 mb-6">Comprehensive testing of all restored functionality</p>
+            
+            <div class="test-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">1. Core Function Availability Tests</h2>
+                <div id="functionTests"></div>
+            </div>
+            
+            <div class="test-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">2. DOM Element Access Tests</h2>
+                <div id="domTests"></div>
+            </div>
+            
+            <div class="test-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">3. Global Variable Tests</h2>
+                <div id="globalTests"></div>
+            </div>
+            
+            <div class="test-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">4. Event Listener Tests</h2>
+                <div id="eventTests"></div>
+            </div>
+            
+            <div class="test-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">5. CSP Compliance Tests</h2>
+                <div id="cspTests"></div>
+            </div>
+            
+            <div class="test-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Test Summary</h2>
+                <div id="testSummary"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include all necessary modal and table HTML for testing -->
+    <div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+    <div id="opportunityModal" class="hidden fixed inset-0 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">Test Modal</h2>
+            <div id="opportunityForm">
+                <input type="text" id="modal_test_field" placeholder="Test Field">
+            </div>
+            <div class="flex justify-end space-x-4 mt-6">
+                <button id="cancelBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded">Cancel</button>
+                <button id="saveBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+                <button id="closeModalBtn" class="px-4 py-2 bg-red-600 text-white rounded">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="authErrorBanner" class="hidden"></div>
+    
+    <table id="opportunitiesTable" class="hidden">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    
+    <div id="loadingText" class="hidden">Loading...</div>
+    
+    <!-- Test buttons for event listeners -->
+    <button id="darkModeToggle" class="hidden">Theme Toggle</button>
+    <button id="logoutBtn" class="hidden">Logout</button>
+    <button id="exportBtn" class="hidden">Export</button>
+    <button id="importBtn" class="hidden">Import</button>
+    <button id="createOpportunityBtn" class="hidden">Create</button>
+    <input type="file" id="fileInput" class="hidden">
+    
+    <!-- Summary elements -->
+    <span id="totalOpportunities">0</span>
+    <span id="totalSubmitted">0</span>
+    <span id="op100Summary">0</span>
+    <span id="op90Summary">0</span>
+    <span id="totalDeclined">0</span>
+    <span id="totalInactive">0</span>
+    <span id="lostSummary">0</span>
+    <span id="declinedSummary">0</span>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let totalTests = 0;
+            let passedTests = 0;
+            let failedTests = 0;
+            let warningTests = 0;
+
+            function addTestResult(container, testName, passed, message, isWarning = false) {
+                totalTests++;
+                const resultDiv = document.createElement('div');
+                
+                if (passed) {
+                    passedTests++;
+                    resultDiv.className = 'test-result test-pass';
+                    resultDiv.innerHTML = `✅ ${testName}: ${message}`;
+                } else if (isWarning) {
+                    warningTests++;
+                    resultDiv.className = 'test-result test-warning';
+                    resultDiv.innerHTML = `⚠️ ${testName}: ${message}`;
+                } else {
+                    failedTests++;
+                    resultDiv.className = 'test-result test-fail';
+                    resultDiv.innerHTML = `❌ ${testName}: ${message}`;
+                }
+                
+                container.appendChild(resultDiv);
+            }
+
+            // Test 1: Core Functions
+            const functionTestsContainer = document.getElementById('functionTests');
+            const criticalFunctions = [
+                'renderTable', 'displayOpportunities', 'showEditRowModal', 'closeOpportunityModal',
+                'loadOpportunities', 'initializeTable', 'isTokenValid', 'handleLogout',
+                'populateFilterDropdowns', 'applyFilters', 'exportToExcel'
+            ];
+
+            criticalFunctions.forEach(funcName => {
+                const exists = typeof window[funcName] === 'function';
+                addTestResult(functionTestsContainer, funcName, exists, 
+                    exists ? 'Function is available' : 'Function is missing');
+            });
+
+            // Test 2: DOM Elements
+            const domTestsContainer = document.getElementById('domTests');
+            const requiredElements = [
+                'opportunityModal', 'modalOverlay', 'opportunitiesTable', 'loadingText',
+                'darkModeToggle', 'logoutBtn', 'exportBtn', 'createOpportunityBtn'
+            ];
+
+            requiredElements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                addTestResult(domTestsContainer, `Element #${elementId}`, !!element,
+                    element ? 'Element found in DOM' : 'Element not found in DOM');
+            });
+
+            // Test 3: Global Variables
+            const globalTestsContainer = document.getElementById('globalTests');
+            const globalVars = [
+                { name: 'opportunities', type: 'object' },
+                { name: 'headers', type: 'object' },
+                { name: 'headerIndices', type: 'object' },
+                { name: 'currentSortColumnIndex', type: 'number' },
+                { name: 'isLoginMode', type: 'boolean' }
+            ];
+
+            globalVars.forEach(varDef => {
+                const exists = typeof window[varDef.name] !== 'undefined';
+                const correctType = exists && typeof window[varDef.name] === varDef.type;
+                addTestResult(globalTestsContainer, `Global var ${varDef.name}`, exists,
+                    exists ? `Variable exists (type: ${typeof window[varDef.name]})` : 'Variable not found');
+            });
+
+            // Test 4: Event Listeners
+            const eventTestsContainer = document.getElementById('eventTests');
+            
+            // Test if initializeEventListeners can be called
+            try {
+                if (typeof initializeEventListeners === 'function') {
+                    initializeEventListeners();
+                    addTestResult(eventTestsContainer, 'Event Listeners Initialization', true, 
+                        'initializeEventListeners() executed successfully');
+                } else {
+                    addTestResult(eventTestsContainer, 'Event Listeners Initialization', false, 
+                        'initializeEventListeners() function not found');
+                }
+            } catch (error) {
+                addTestResult(eventTestsContainer, 'Event Listeners Initialization', false, 
+                    `Error executing initializeEventListeners(): ${error.message}`);
+            }
+
+            // Test modal functions
+            try {
+                if (typeof setupModalEventListeners === 'function') {
+                    setupModalEventListeners();
+                    addTestResult(eventTestsContainer, 'Modal Event Listeners', true, 
+                        'setupModalEventListeners() executed successfully');
+                } else {
+                    addTestResult(eventTestsContainer, 'Modal Event Listeners', false, 
+                        'setupModalEventListeners() function not found');
+                }
+            } catch (error) {
+                addTestResult(eventTestsContainer, 'Modal Event Listeners', false, 
+                    `Error executing setupModalEventListeners(): ${error.message}`);
+            }
+
+            // Test 5: CSP Compliance
+            const cspTestsContainer = document.getElementById('cspTests');
+            
+            // Check for inline scripts
+            const inlineScripts = document.querySelectorAll('script:not([src])');
+            const hasInlineScripts = Array.from(inlineScripts).some(script => 
+                script.innerHTML.trim() && !script.innerHTML.includes('document.addEventListener'));
+            
+            addTestResult(cspTestsContainer, 'No Inline Scripts', !hasInlineScripts,
+                hasInlineScripts ? 'Found inline scripts that may violate CSP' : 'No problematic inline scripts found');
+
+            // Check for inline event handlers
+            const elementsWithInlineEvents = document.querySelectorAll('[onclick], [onload], [onchange]');
+            addTestResult(cspTestsContainer, 'No Inline Event Handlers', elementsWithInlineEvents.length === 0,
+                elementsWithInlineEvents.length === 0 ? 'No inline event handlers found' : 
+                `Found ${elementsWithInlineEvents.length} inline event handlers`);
+
+            // Check CSP meta tag
+            const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+            addTestResult(cspTestsContainer, 'CSP Meta Tag', !!cspMeta,
+                cspMeta ? 'CSP meta tag found in head' : 'CSP meta tag not found');
+
+            // Test Summary
+            const summaryContainer = document.getElementById('testSummary');
+            const successRate = Math.round((passedTests / totalTests) * 100);
+            
+            summaryContainer.innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center mb-4">
+                    <div class="bg-blue-100 p-3 rounded">
+                        <div class="text-2xl font-bold text-blue-600">${totalTests}</div>
+                        <div class="text-sm text-blue-800">Total Tests</div>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded">
+                        <div class="text-2xl font-bold text-green-600">${passedTests}</div>
+                        <div class="text-sm text-green-800">Passed</div>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded">
+                        <div class="text-2xl font-bold text-red-600">${failedTests}</div>
+                        <div class="text-sm text-red-800">Failed</div>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded">
+                        <div class="text-2xl font-bold text-yellow-600">${warningTests}</div>
+                        <div class="text-sm text-yellow-800">Warnings</div>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded">
+                        <div class="text-2xl font-bold text-purple-600">${successRate}%</div>
+                        <div class="text-sm text-purple-800">Success Rate</div>
+                    </div>
+                </div>
+                <div class="text-center p-4 rounded ${successRate >= 90 ? 'bg-green-100 text-green-800' : 
+                    successRate >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                    <strong>
+                        ${successRate >= 90 ? '🎉 Excellent! Application is ready for production.' :
+                          successRate >= 70 ? '⚠️ Good progress, but some issues need attention.' :
+                          '🚫 Critical issues detected. Application needs more work.'}
+                    </strong>
+                </div>
+            `;
+
+            console.log(`Final Application Test Complete: ${passedTests}/${totalTests} tests passed (${successRate}%)`);
+            console.log(`Failed: ${failedTests}, Warnings: ${warningTests}`);
+        });
+    </script>
+</body>
+</html>

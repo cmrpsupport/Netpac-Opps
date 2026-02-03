@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+    <title>Missing Functions Quick Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { padding: 8px; margin: 4px 0; border-radius: 4px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Missing Functions Quick Test</h1>
+    <div id="results"></div>
+
+    <!-- Minimal DOM elements for testing -->
+    <div id="loadingText" style="display: none;">Loading...</div>
+    <table id="opportunitiesTable" style="display: none;">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    <div id="modalOverlay" style="display: none;"></div>
+    <div id="opportunityModal" style="display: none;"></div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const requiredFunctions = [
+                'initializeTable',
+                'filterAndSortData', 
+                'getCurrentFilteredData',
+                'updateSummaryCounters',
+                'loadDashboardData',
+                'updateUserMgmtNavVisibility',
+                'renderTable',
+                'displayOpportunities',
+                'loadOpportunities',
+                'isTokenValid',
+                'handleLogout'
+            ];
+
+            const resultsDiv = document.getElementById('results');
+            let missingCount = 0;
+
+            requiredFunctions.forEach(funcName => {
+                const exists = typeof window[funcName] === 'function';
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `test-result ${exists ? 'pass' : 'fail'}`;
+                resultDiv.textContent = `${funcName}: ${exists ? 'EXISTS' : 'MISSING'}`;
+                resultsDiv.appendChild(resultDiv);
+                
+                if (!exists) {
+                    missingCount++;
+                    console.error(`Missing function: ${funcName}`);
+                }
+            });
+
+            const summaryDiv = document.createElement('div');
+            summaryDiv.style.marginTop = '20px';
+            summaryDiv.style.fontWeight = 'bold';
+            summaryDiv.textContent = `Summary: ${missingCount} functions still missing`;
+            resultsDiv.appendChild(summaryDiv);
+
+            console.log(`Function check complete. ${missingCount} functions still missing.`);
+        });
+    </script>
+</body>
+</html>

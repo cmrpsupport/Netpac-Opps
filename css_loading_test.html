@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Loading Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Test if our overrides work */
+        body { 
+            background: white; 
+            color: black; 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+        }
+        body.dark { 
+            background: #1a1a1a; 
+            color: white; 
+        }
+        
+        .test-label {
+            border: 3px solid blue;
+            padding: 10px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        
+        /* Exactly matching the main dashboard CSS */
+        html body:not(.dark) label.text-sm.font-medium,
+        html body:not(.dark) span.text-sm.font-medium,
+        body:not(.dark) label.text-sm.font-medium,
+        body:not(.dark) span.text-sm.font-medium {
+            color: #374151 !important;
+            background: lime !important;
+        }
+        
+        html body.dark label.text-sm.font-medium,
+        html body.dark span.text-sm.font-medium,
+        body.dark label.text-sm.font-medium,
+        body.dark span.text-sm.font-medium,
+        .dark label.text-sm.font-medium,
+        .dark span.text-sm.font-medium {
+            color: #f3f4f6 !important;
+            background: orange !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS Loading & Override Test</h1>
+    
+    <button onclick="toggleTheme()" style="padding: 10px; margin: 10px; font-size: 16px;">
+        Toggle Theme
+    </button>
+    
+    <div>
+        <h2>Test Labels</h2>
+        <label class="test-label">Regular Label (should have blue border)</label><br>
+        <label class="text-sm font-medium">Filter Label (should have colored background)</label><br>
+        <span class="text-sm font-medium">Filter Span (should have colored background)</span>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h2>Computed Styles Debug</h2>
+        <button onclick="debugStyles()" style="padding: 10px;">Check Computed Styles</button>
+        <pre id="debug-output" style="background: #f0f0f0; padding: 10px; margin: 10px 0;"></pre>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h2>CSS Loading Status</h2>
+        <div id="css-status"></div>
+    </div>
+
+    <script>
+        let isDark = false;
+        
+        function toggleTheme() {
+            isDark = !isDark;
+            if (isDark) {
+                document.body.classList.add('dark');
+                document.body.style.background = '#1a1a1a';
+                document.body.style.color = 'white';
+            } else {
+                document.body.classList.remove('dark');
+                document.body.style.background = 'white';
+                document.body.style.color = 'black';
+            }
+            console.log('Theme toggled. isDark:', isDark, 'Body classes:', document.body.className);
+        }
+        
+        function debugStyles() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium, span.text-sm.font-medium');
+            let output = 'CSS Debug Results:\n\n';
+            
+            output += `Current theme: ${isDark ? 'dark' : 'light'}\n`;
+            output += `Body classes: "${document.body.className}"\n\n`;
+            
+            labels.forEach((el, i) => {
+                const computed = window.getComputedStyle(el);
+                output += `Element ${i + 1} (${el.tagName.toLowerCase()}):\n`;
+                output += `  Text: "${el.textContent.trim()}"\n`;
+                output += `  Classes: "${el.className}"\n`;
+                output += `  Computed color: ${computed.color}\n`;
+                output += `  Computed background: ${computed.backgroundColor}\n`;
+                output += `  Computed border: ${computed.border}\n\n`;
+            });
+            
+            document.getElementById('debug-output').textContent = output;
+        }
+        
+        // Check if CSS files loaded
+        function checkCSSLoading() {
+            const styleSheets = Array.from(document.styleSheets);
+            let status = 'CSS Loading Status:\n\n';
+            
+            styleSheets.forEach((sheet, i) => {
+                try {
+                    status += `Stylesheet ${i + 1}: ${sheet.href || 'inline'}\n`;
+                    status += `  Rules: ${sheet.cssRules ? sheet.cssRules.length : 'N/A'}\n`;
+                } catch (e) {
+                    status += `Stylesheet ${i + 1}: ${sheet.href || 'inline'} (access blocked)\n`;
+                }
+            });
+            
+            document.getElementById('css-status').textContent = status;
+        }
+        
+        // Check CSS loading when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkCSSLoading, 1000); // Wait for CSS to load
+        });
+    </script>
+</body>
+</html>

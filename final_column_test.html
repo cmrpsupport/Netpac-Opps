@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Column Visibility Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #005a87;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .visible-col {
+            background-color: #e8f5e8;
+        }
+        .hidden-col {
+            background-color: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Final Column Visibility Verification</h1>
+        <p><strong>Test Purpose:</strong> Verify that our fix for redundant column initialization is working correctly.</p>
+        
+        <div class="test-section">
+            <h3>1. Clear Storage & Load Fresh Data</h3>
+            <button class="button" onclick="clearAndTest()">Clear Storage & Test Fresh Defaults</button>
+            <div id="clear-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Test Results</h3>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Load Main Application</h3>
+            <button class="button" onclick="openMainApp()">Open Main App in New Tab</button>
+            <p><em>After clearing storage above, the main app should show the correct default column visibility.</em></p>
+        </div>
+
+        <div class="test-section">
+            <h3>Debug Log</h3>
+            <button class="button" onclick="clearLog()">Clear Log</button>
+            <div class="log-output" id="debug-log"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logElement = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').textContent = '';
+        }
+
+        function openMainApp() {
+            window.open('http://localhost:3000', '_blank');
+            log('🚀 Main app opened in new tab');
+        }
+
+        async function clearAndTest() {
+            try {
+                // Clear all storage
+                localStorage.removeItem('columnVisibility');
+                localStorage.removeItem('tableState');
+                localStorage.removeItem('filterState');
+                sessionStorage.clear();
+                
+                log('🧹 Storage cleared');
+                
+                document.getElementById('clear-result').innerHTML = 
+                    '<div class="result info">✅ Storage cleared. Testing fresh column visibility defaults...</div>';
+                
+                // Fetch data to get actual headers
+                const response = await fetch('/api/opportunities');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const opportunities = await response.json();
+                
+                if (!opportunities || opportunities.length === 0) {
+                    throw new Error('No opportunities data returned from API');
+                }
+                
+                log(`📊 Loaded ${opportunities.length} opportunities from API`);
+                
+                // Get headers from first opportunity (same logic as app.js)
+                const rawHeaders = Object.keys(opportunities[0]);
+                
+                // Reorder headers (same logic as app.js)
+                const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const projectNameHeader = rawHeaders.find(h => norm(h) === 'projectname');
+                const otherHeaders = rawHeaders.filter(h => norm(h) !== 'projectname' && norm(h) !== 'uid');
+                const headers = [projectNameHeader, ...otherHeaders].filter(Boolean);
+                
+                log(`📋 Headers extracted: ${headers.join(', ')}`);
+                
+                // Apply the same column visibility logic as initializeColumnVisibility()
+                const defaultHiddenColumns = [
+                    'description', 'comments', 'uid', 'created_at', 'updated_at', 'encoded_date', 'a', 'c', 'r', 'u', 'd'
+                ];
+                
+                let visibilitySettings = {};
+                
+                // Set defaults (same logic as app.js)
+                headers.forEach(header => {
+                    const shouldHide = defaultHiddenColumns.some(col => 
+                        header.toLowerCase().includes(col.toLowerCase())
+                    );
+                    visibilitySettings[header] = !shouldHide;
+                });
+                
+                // Save to localStorage (same as app.js)
+                localStorage.setItem('columnVisibility', JSON.stringify(visibilitySettings));
+                
+                log('💾 Default visibility settings saved to localStorage');
+                
+                // Analyze results
+                const visibleColumns = Object.entries(visibilitySettings)
+                    .filter(([col, visible]) => visible)
+                    .map(([col, visible]) => col);
+                
+                const hiddenColumns = Object.entries(visibilitySettings)
+                    .filter(([col, visible]) => !visible)
+                    .map(([col, visible]) => col);
+                
+                log(`✅ Visible columns (${visibleColumns.length}): ${visibleColumns.join(', ')}`);
+                log(`🙈 Hidden columns (${hiddenColumns.length}): ${hiddenColumns.join(', ')}`);
+                
+                // Display results
+                let html = '<div class="result success">';
+                html += '<h4>✅ Column Visibility Test Completed Successfully</h4>';
+                html += `<p><strong>Total Columns:</strong> ${headers.length}</p>`;
+                html += `<p><strong>Visible Columns (${visibleColumns.length}):</strong><br>${visibleColumns.join(', ')}</p>`;
+                html += `<p><strong>Hidden Columns (${hiddenColumns.length}):</strong><br>${hiddenColumns.join(', ')}</p>`;
+                
+                // Check if expected columns are hidden
+                const expectedHidden = ['encoded_date', 'a', 'c', 'r', 'u', 'd', 'uid'];
+                const actuallyHiddenExpected = hiddenColumns.filter(col => 
+                    expectedHidden.some(expected => col.toLowerCase().includes(expected.toLowerCase()))
+                );
+                
+                if (actuallyHiddenExpected.length > 0) {
+                    html += `<p class="success">✅ Expected columns are correctly hidden: ${actuallyHiddenExpected.join(', ')}</p>`;
+                } else {
+                    html += '<p class="warning">⚠️ No expected columns are hidden - this may indicate an issue</p>';
+                }
+                
+                // Check if important columns are visible
+                const importantColumns = ['project_name', 'client', 'solutions', 'account_mgr', 'final_amt', 'opp_status'];
+                const visibleImportant = visibleColumns.filter(col => 
+                    importantColumns.some(important => col.toLowerCase().includes(important.toLowerCase()))
+                );
+                
+                html += `<p class="success">✅ Important columns visible: ${visibleImportant.join(', ')}</p>`;
+                
+                html += '<p><strong>Next Step:</strong> Open the main application to verify the behavior matches this test.</p>';
+                html += '</div>';
+                
+                // Create detailed table
+                html += '<table>';
+                html += '<tr><th>Column</th><th>Visibility</th><th>Matches Logic</th></tr>';
+                headers.forEach(header => {
+                    const shouldHide = defaultHiddenColumns.some(col => 
+                        header.toLowerCase().includes(col.toLowerCase())
+                    );
+                    const actualVisibility = visibilitySettings[header];
+                    const expectedVisibility = !shouldHide;
+                    const isCorrect = actualVisibility === expectedVisibility;
+                    
+                    const rowClass = actualVisibility ? 'visible-col' : 'hidden-col';
+                    html += `<tr class="${rowClass}">`;
+                    html += `<td>${header}</td>`;
+                    html += `<td>${actualVisibility ? 'Visible' : 'Hidden'}</td>`;
+                    html += `<td>${isCorrect ? '✅' : '❌'}</td>`;
+                    html += '</tr>';
+                });
+                html += '</table>';
+                
+                document.getElementById('test-results').innerHTML = html;
+                
+            } catch (error) {
+                log('❌ Error in test: ' + error.message);
+                document.getElementById('clear-result').innerHTML = 
+                    '<div class="result error">❌ Error: ' + error.message + '</div>';
+                document.getElementById('test-results').innerHTML = 
+                    '<div class="result error">Test failed due to error above.</div>';
+            }
+        }
+
+        // Auto-run test on page load
+        window.onload = function() {
+            log('🔄 Page loaded, ready for testing');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Admin Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--bg-modal, #ffffff);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .test-button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 1rem 0;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+        .test-button:hover {
+            background: #1557b0;
+        }
+        .result {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="test-container">
+        <h1>Quick Admin Account Test</h1>
+        <p>Testing admin access for: <strong>reuel.rivera@cmrpautomation.com</strong></p>
+        
+        <button class="test-button" onclick="quickTest()">Run Quick Admin Test</button>
+        
+        <div id="result"></div>
+        
+        <hr style="margin: 2rem 0;">
+        
+        <h2>Manual Test Links</h2>
+        <p>After the quick test passes, try these links:</p>
+        <ul>
+            <li><a href="login.html" target="_blank">Login Page</a> - Test with admin credentials</li>
+            <li><a href="user_management.html" target="_blank">User Management</a> - Should work after login</li>
+            <li><a href="index.html" target="_blank">Main Dashboard</a> - Test theme toggle</li>
+        </ul>
+        
+        <h3>Expected Results:</h3>
+        <ul>
+            <li>✅ Login should work with reuel.rivera@cmrpautomation.com / cmrp0601</li>
+            <li>✅ User Management should show users list (no 403 error)</li>
+            <li>✅ Theme toggle should always show sun icon</li>
+            <li>✅ Header should always use light logo</li>
+            <li>✅ Login button should be blue (#1a73e8)</li>
+        </ul>
+    </div>
+
+    <script>
+        async function quickTest() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                // Step 1: Test login
+                console.log('Testing login...');
+                const loginResponse = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error(`Login failed: ${loginResponse.status}`);
+                }
+
+                const loginResult = await loginResponse.json();
+                const token = loginResult.token;
+                
+                if (!token) {
+                    throw new Error('No token received from login');
+                }
+
+                // Step 2: Test user management access
+                console.log('Testing User Management access...');
+                const usersResponse = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!usersResponse.ok) {
+                    throw new Error(`User Management access failed: ${usersResponse.status}`);
+                }
+
+                const users = await usersResponse.json();
+                
+                // Decode token to show user details
+                const tokenParts = token.split('.');
+                const payload = JSON.parse(atob(tokenParts[1]));
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ Admin Account Test PASSED!</h3>
+                        <p><strong>Login:</strong> Successful</p>
+                        <p><strong>User Management Access:</strong> Successful (${users.length} users found)</p>
+                        <p><strong>Account Type:</strong> ${payload.accountType}</p>
+                        <p><strong>Roles:</strong> ${payload.roles ? payload.roles.join(', ') : 'None'}</p>
+                        <hr>
+                        <p><strong>Next:</strong> Try the manual test links above to verify the complete functionality.</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Admin Account Test FAILED</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Please check the server logs for more details.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

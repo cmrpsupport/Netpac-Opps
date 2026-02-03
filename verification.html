@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Fix Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .success { color: green; font-weight: bold; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .code { background: #f5f5f5; padding: 10px; border-radius: 3px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>✅ Status Filter Fix Verification</h1>
+    
+    <div class="section">
+        <h2>🔧 Issues Fixed</h2>
+        <div class="success">
+            ✅ Filter mapping logic updated in app.js<br>
+            ✅ Dashboard cards now use unfiltered data<br>
+            ✅ Server running on localhost:3000<br>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📋 Filter Mappings Applied</h2>
+        <div class="code">
+            • "On-Going" button (data-filter-value="ongoing") → matches status="on-going"<br>
+            • "Not Yet Started" button (data-filter-value="not_yet_started") → matches status="not yet started"<br>
+            • "No Decision Yet" button (data-filter-value="no_decision") → matches decision="pending"
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Expected Behavior</h2>
+        <ol>
+            <li><strong>Status Filters:</strong> "On-Going", "Not Yet Started", and "No Decision Yet" buttons should now show relevant data instead of blank tables</li>
+            <li><strong>Dashboard Cards:</strong> Always display totals from complete dataset, regardless of active filters</li>
+            <li><strong>Other Filters:</strong> Continue to work as before (OP100, OP90, OP60, etc.)</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>🚀 Next Steps</h2>
+        <p>
+            1. Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a><br>
+            2. Test the "On-Going", "Not Yet Started", and "No Decision Yet" filter buttons<br>
+            3. Verify that dashboard cards maintain their values when filters are applied<br>
+            4. Confirm that other status filters continue to work properly
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>📝 Code Changes Summary</h2>
+        <div class="code">
+            <strong>File:</strong> app.js<br>
+            <strong>Lines:</strong> ~1025-1033 (Filter mapping logic)<br>
+            <strong>Lines:</strong> ~1102 (Dashboard cards fix)<br><br>
+            
+            <strong>Change 1:</strong> Fixed case-sensitive status matching<br>
+            <strong>Change 2:</strong> Changed updateSummaryCounters(filteredData) to updateSummaryCounters(opportunities)
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Label Theme Fix Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- CRITICAL: Filter dropdown label theme fix - must load AFTER Tailwind -->
+    <style>
+        /* Ultra high specificity to override Tailwind CSS utility classes */
+        html body label.text-sm.font-medium.mr-1,
+        html body span.text-sm.font-medium.mr-1,
+        html body .text-sm.font-medium.mr-1,
+        body label.text-sm.font-medium.mr-1,
+        body span.text-sm.font-medium.mr-1,
+        body .text-sm.font-medium.mr-1,
+        label.text-sm.font-medium.mr-1,
+        span.text-sm.font-medium.mr-1,
+        .text-sm.font-medium.mr-1 {
+            color: #202124 !important; /* Dark text for light theme */
+            border: 2px solid red !important; /* Visual indicator for testing */
+        }
+        
+        /* Dark theme overrides */
+        html body.dark label.text-sm.font-medium.mr-1,
+        html body.dark span.text-sm.font-medium.mr-1,
+        html body.dark .text-sm.font-medium.mr-1,
+        body.dark label.text-sm.font-medium.mr-1,
+        body.dark span.text-sm.font-medium.mr-1,
+        body.dark .text-sm.font-medium.mr-1,
+        .dark label.text-sm.font-medium.mr-1,
+        .dark span.text-sm.font-medium.mr-1,
+        .dark .text-sm.font-medium.mr-1 {
+            color: #e0e0e0 !important; /* Light text for dark theme */
+            border: 2px solid lime !important; /* Visual indicator for testing */
+        }
+    </style>
+</head>
+<body class="container">
+    <div class="simple-header">
+        <div class="header-left">
+            <h1>🧪 Filter Label Theme Fix Test</h1>
+        </div>
+        <div class="header-right">
+            <button id="themeToggle" class="nav-square-btn" title="Toggle theme">
+                <span class="material-icons">light_mode</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="mb-8 p-6 border rounded">
+            <h2>Filter Labels Test</h2>
+            <p>These labels should have visible borders and appropriate text colors:</p>
+            
+            <div class="flex flex-wrap gap-4 items-center mt-4">
+                <div>
+                    <label for="solutionsFilter" class="text-sm font-medium mr-1">Solutions:</label>
+                    <select id="solutionsFilter" class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="test">Test Option</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="accountMgrFilter" class="text-sm font-medium mr-1">Account Mgr:</label>
+                    <select id="accountMgrFilter" class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="test">Test Option</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="picFilter" class="text-sm font-medium mr-1">PIC:</label>
+                    <select id="picFilter" class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="test">Test Option</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8 p-6 border rounded">
+            <h2>Expected Results</h2>
+            <ul>
+                <li><strong>Light Theme:</strong> Labels should have RED borders and DARK text (#202124)</li>
+                <li><strong>Dark Theme:</strong> Labels should have LIME borders and LIGHT text (#e0e0e0)</li>
+                <li><strong>Test:</strong> Click the theme toggle to switch between modes</li>
+            </ul>
+        </div>
+
+        <div class="mb-8 p-6 border rounded">
+            <h2>Debug Information</h2>
+            <button onclick="debugLabels()" class="bg-blue-500 text-white px-4 py-2 rounded">
+                Debug Label Styles
+            </button>
+            <div id="debugOutput" class="mt-4 p-4 bg-gray-100 rounded text-sm font-mono"></div>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const themeIcon = themeToggle.querySelector('.material-icons');
+
+        let isDark = localStorage.getItem('theme') === 'dark';
+        updateTheme();
+
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            updateTheme();
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        function updateTheme() {
+            if (isDark) {
+                body.classList.add('dark');
+                themeIcon.textContent = 'dark_mode';
+            } else {
+                body.classList.remove('dark');
+                themeIcon.textContent = 'light_mode';
+            }
+        }
+
+        function debugLabels() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium.mr-1');
+            const output = document.getElementById('debugOutput');
+            let debugInfo = `Found ${labels.length} labels:\\n\\n`;
+            
+            labels.forEach((label, index) => {
+                const styles = window.getComputedStyle(label);
+                debugInfo += `Label ${index + 1} ("${label.textContent.trim()}"):
+  Color: ${styles.color}
+  Border: ${styles.border}
+  Background: ${styles.backgroundColor}
+  Classes: ${label.className}
+\\n\\n`;
+            });
+            
+            debugInfo += `Body classes: ${body.className}\\n`;
+            debugInfo += `Current theme: ${isDark ? 'dark' : 'light'}`;
+            
+            output.textContent = debugInfo;
+            console.log('Debug info:', debugInfo);
+        }
+
+        // Auto-debug on load
+        window.addEventListener('load', () => {
+            setTimeout(debugLabels, 500);
+        });
+    </script>
+</body>
+</html>

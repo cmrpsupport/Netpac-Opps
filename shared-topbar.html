@@ -1,0 +1,84 @@
+<!-- Top Bar with Logo - Full Width -->
+<div class="top-bar">
+    <div class="top-bar-content">
+        <a href="index.html" title="Go to Home" class="top-bar-logo-link">
+            <img id="cmrpLogo" src="Logo/CMRP Logo Light.svg" alt="CMRP Logo" class="top-bar-logo" />
+        </a>
+        <span class="top-bar-title">oppX</span>
+        
+        <!-- User Info and Online Users Section -->
+        <div class="top-bar-user-section">
+            <!-- Notifications Bell -->
+            <div class="notifications-container">
+                <div class="notifications-bell" id="notificationsBell" title="Notifications">
+                    <span class="material-icons">notifications</span>
+                    <span class="notifications-badge hidden" id="notificationsBadge">0</span>
+                    <div class="notifications-dropdown hidden" id="notificationsDropdown">
+                        <div class="notifications-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-read-btn" id="markAllReadBtn" title="Mark all as read">
+                                <span class="material-icons">done_all</span>
+                            </button>
+                        </div>
+                        <div class="notifications-list" id="notificationsList">
+                            <div class="notifications-empty" id="notificationsEmpty">
+                                <span class="material-icons">notifications_none</span>
+                                <p>No notifications</p>
+                            </div>
+                        </div>
+                        <div class="notifications-footer">
+                            <button class="view-all-btn" id="viewAllNotificationsBtn">View All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Calendar Connection Button -->
+            <div class="calendar-connection-container">
+                <button id="calendarConnectionBtn" class="calendar-connection-btn" title="Google Calendar Settings">
+                    <span class="material-icons" id="calendarIcon">event</span>
+                    <span class="calendar-status-text" id="calendarStatusText">Calendar</span>
+                </button>
+                
+                <!-- Calendar Settings Dropdown -->
+                <div class="calendar-dropdown hidden" id="calendarDropdown">
+                    <div class="calendar-dropdown-header">
+                        <h3>Google Calendar</h3>
+                    </div>
+                    <div class="calendar-dropdown-content" id="calendarDropdownContent">
+                        <div class="calendar-status-loading">
+                            <span class="material-icons">hourglass_empty</span>
+                            <p>Loading calendar status...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Login Information Display -->
+            <div class="user-info-container">
+                <div class="user-info-display" id="userInfoDisplay">
+                    <span class="material-icons user-avatar">account_circle</span>
+                    <div class="user-details">
+                        <span class="user-name" id="currentUserName">Loading...</span>
+                        <span class="user-role" id="currentUserRole">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Online Users Indicator -->
+            <div class="online-users-container">
+                <div class="online-users-display" id="onlineUsersDisplay" title="Users currently online">
+                    <div class="online-pulse"></div>
+                    <span class="material-icons">people</span>
+                    <span class="online-count" id="onlineCount">1</span>
+                    <div class="online-users-list" id="onlineUsersList">
+                        <div class="online-user-item">
+                            <span class="material-icons">account_circle</span>
+                            <span class="online-user-name">You</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

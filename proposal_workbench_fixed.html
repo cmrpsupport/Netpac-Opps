@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-opps-backend.onrender.com;">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Proposal Engineer's Workbench - CMRP (Fixed)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        /* CSS Variables for light/dark theme */
+        :root {
+            --bg-body: #f9fafb;
+            --bg-container: #ffffff;
+            --bg-header: #f3f4f6;
+            --bg-row: #ffffff;
+            --bg-control: #f9fafb;
+            --bg-control-hover: #f3f4f6;
+            --bg-secondary: #f3f4f6;
+            
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-header: #374151;
+            --text-title: #111827;
+            --text-row: #374151;
+            --text-control: #374151;
+            
+            --border-container: #e5e7eb;
+            --border-control: #d1d5db;
+            --border-focus: #3b82f6;
+            
+            --color-primary: #3b82f6;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-info: #6366f1;
+            --color-accent: #8b5cf6;
+            --color-accent-rgb: 139, 92, 246;
+        }
+        
+        :root.dark, html.dark {
+            --bg-body: #111827;
+            --bg-container: #1f2937;
+            --bg-header: #374151;
+            --bg-row: #1f2937;
+            --bg-control: #374151;
+            --bg-control-hover: #4b5563;
+            --bg-secondary: #374151;
+            
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-header: #f3f4f6;
+            --text-title: #f9fafb;
+            --text-row: #e5e7eb;
+            --text-control: #e5e7eb;
+            
+            --border-container: #4b5563;
+            --border-control: #6b7280;
+            --border-focus: #60a5fa;
+        }
+        
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        /* Filter label fixes for dark mode - FIXED VERSION */
+        .filter-label {
+            color: #374151 !important; /* Gray-700 for light mode */
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+        }
+        
+        html.dark .filter-label,
+        .dark .filter-label {
+            color: #f3f4f6 !important; /* Light gray for dark mode */
+        }
+        
+        /* Border thickness fixes - FIXED VERSION */
+        #notStartedColumn .kanban-column-header,
+        #ongoingColumn .kanban-column-header,
+        #forApprovalColumn .kanban-column-header,
+        #submittedColumn .kanban-column-header {
+            border-top-width: 2px !important;
+        }
+        
+        .today-column {
+            border-width: 1px !important;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2) !important;
+        }
+        
+        .schedule-task.proposal-task {
+            border-left-width: 2px !important;
+        }
+        
+        .schedule-task.general-task {
+            border-left-width: 2px !important;
+        }
+        
+        .drag-over {
+            border-width: 1px !important;
+        }
+        
+        .weekend-day {
+            border-left-width: 2px !important;
+        }
+    </style>
+    
+    <script src="config.js"></script>
+</head>
+<body class="min-h-screen">
+    <div class="main-content">
+        <div class="simple-header">
+            <div class="title-group">
+                <a href="index.html" title="Go to Home" style="text-decoration: none; color: inherit;">
+                    <img id="cmrpLogo" src="Logo/CMRP Logo Light.svg" alt="CMRP Logo" style="height:2.2rem;width:auto;display:inline-block;vertical-align:middle;transition:filter 0.2s;cursor:pointer;" />
+                </a>
+                <span class="subtitle">Proposal Engineer's Workbench (Fixed)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <nav class="flex gap-2" id="mainNav">
+                    <a href="index.html" class="nav-square-btn" title="Opportunities Management - View and manage all opportunities"><span class="material-icons">dashboard</span></a>
+                    <a href="win-loss_dashboard.html" class="nav-square-btn" title="Win-Loss Dashboard - Analyze won and lost opportunities"><span class="material-icons">line_axis</span></a>
+                    <a href="forecastr_dashboard.html" class="nav-square-btn" title="Forecast Dashboard - View revenue forecasts and trends"><span class="material-icons">insights</span></a>
+                    <a href="executive_dashboard.html" class="nav-square-btn" title="Executive Dashboard - Comprehensive business metrics"><span class="material-icons">analytics</span></a>
+                    <a href="proposal_workbench.html" class="nav-square-btn active" id="proposalWorkbenchNavBtn" title="Proposal Engineer's Workbench - Manage proposal tasks"><span class="material-icons">view_kanban</span></a>
+                    <a href="user_management.html" class="nav-square-btn" id="userMgmtNavBtn" title="User Management - Manage users and permissions (Admin only)"><span class="material-icons">group</span></a>
+                </nav>
+                <button id="themeToggle" class="nav-square-btn" title="Toggle between light and dark theme"><span class="material-icons">wb_sunny</span></button>
+                <button id="changePasswordBtn" class="nav-square-btn" title="Change your account password"><span class="material-icons">lock</span></button>
+                <button id="logoutBtn" class="nav-square-btn" title="Sign out of your account"><span class="material-icons">logout</span></button>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="app-content">
+            <div class="main-container container mx-auto p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold">My Proposal Tasks</h1>
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-2">
+                            <!-- FIXED LABEL - Direct style with !important -->
+                            <label style="color: #f3f4f6 !important; font-size: 0.875rem; font-weight: 500;">Filter by Client:</label>
+                            <select id="clientFilter" class="filter-dropdown">
+                                <option value="all">All Clients</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- FIXED LABEL - Direct style with !important -->
+                            <label style="color: #f3f4f6 !important; font-size: 0.875rem; font-weight: 500;">Filter by Account Manager:</label>
+                            <select id="accountMgrFilter" class="filter-dropdown">
+                                <option value="all">All Account Managers</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rest of the content would go here -->
+                <div class="text-center p-10 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                    <h2 class="text-xl font-bold mb-4">This is a fixed version with corrected label colors and border thickness</h2>
+                    <p>The filter labels above should now be visible in dark mode.</p>
+                    <p class="mt-4">Please go back to the <a href="proposal_workbench.html" class="text-blue-600 dark:text-blue-400 underline">original version</a> after testing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="proposal_workbench.js"></script>
+</body>
+</html> 

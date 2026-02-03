@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Database Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #721c24; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .status { padding: 15px; border-radius: 4px; margin: 15px 0; font-weight: bold; text-align: center; }
+        .loading { background: #e2e3e5; color: #495057; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        .endpoint-input { display: flex; gap: 10px; margin: 15px 0; align-items: center; }
+        .endpoint-input input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .urgent { background: #dc3545; color: white; padding: 15px; border-radius: 4px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 Production Database Connection Diagnostic</h1>
+        <p>Diagnose and fix the "failed to fetch" login error in production.</p>
+
+        <div class="urgent">
+            <strong>⚠️ URGENT:</strong> If your Neon database shows "idle" in the console, it needs to be woken up. This tool will help diagnose and fix the issue.
+        </div>
+
+        <div class="endpoint-input">
+            <label for="productionUrl"><strong>Production URL:</strong></label>
+            <input type="text" id="productionUrl" value="https://cmrp-opps-backend.onrender.com" placeholder="Enter your production backend URL">
+            <button onclick="setProductionUrl()">Set</button>
+        </div>
+
+        <div class="status loading" id="statusDisplay">
+            🔍 Ready to diagnose production database connection...
+        </div>
+
+        <div style="margin: 20px 0;">
+            <button onclick="diagnoseProduction()">🔧 Full Production Diagnostic</button>
+            <button onclick="wakeUpProductionDB()">⚡ Wake Up Production DB</button>
+            <button onclick="testProductionLogin()">🔐 Test Production Login</button>
+            <button onclick="checkRenderStatus()">🌐 Check Render Status</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h3>📋 Common Solutions</h3>
+            <div class="info">
+                <strong>1. Neon Database Idle:</strong> Free tier databases go to sleep after 5 minutes of inactivity. Wake them up by sending any query.
+            </div>
+            <div class="info">
+                <strong>2. Render Cold Start:</strong> Free tier servers go to sleep after 15 minutes. First request after sleep takes 1-2 minutes.
+            </div>
+            <div class="info">
+                <strong>3. Network Timeout:</strong> If database takes too long to wake up, requests may timeout. Try multiple times.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let productionBaseUrl = 'https://cmrp-opps-backend.onrender.com';
+
+        function updateStatus(message, type = 'info') {
+            const statusDisplay = document.getElementById('statusDisplay');
+            const types = {
+                success: { bg: '#d4edda', color: '#155724', icon: '✅' },
+                error: { bg: '#f8d7da', color: '#721c24', icon: '❌' },
+                warning: { bg: '#fff3cd', color: '#856404', icon: '⚠️' },
+                info: { bg: '#d1ecf1', color: '#0c5460', icon: '🔍' },
+                loading: { bg: '#e2e3e5', color: '#495057', icon: '⏳' }
+            };
+            
+            const style = types[type] || types.info;
+            statusDisplay.style.background = style.bg;
+            statusDisplay.style.color = style.color;
+            statusDisplay.innerHTML = `${style.icon} ${message}`;
+        }
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            results.innerHTML += `<div class="${className}">${message}</div>`;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function setProductionUrl() {
+            productionBaseUrl = document.getElementById('productionUrl').value.trim();
+            if (!productionBaseUrl.startsWith('http')) {
+                productionBaseUrl = 'https://' + productionBaseUrl;
+            }
+            addResult(`Production URL set to: ${productionBaseUrl}`, 'info');
+        }
+
+        async function makeProductionRequest(endpoint, options = {}) {
+            const url = productionBaseUrl + endpoint;
+            const defaultOptions = {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                ...options
+            };
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url, defaultOptions);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+
+                let responseData;
+                try {
+                    responseData = await response.json();
+                } catch (e) {
+                    responseData = await response.text();
+                }
+
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: responseData,
+                    responseTime,
+                    url
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message,
+                    url
+                };
+            }
+        }
+
+        async function wakeUpProductionDB() {
+            clearResults();
+            updateStatus('Waking up production database...', 'loading');
+            
+            addResult(`🚀 Attempting to wake up database at: ${productionBaseUrl}`, 'info');
+            
+            // Try multiple endpoints to wake up the database
+            const endpoints = ['/api/health', '/api/opportunities', '/api/users'];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    updateStatus(`Trying ${endpoint}...`, 'loading');
+                    const result = await makeProductionRequest(endpoint);
+                    
+                    if (result.success) {
+                        addResult(`✅ ${endpoint}: Database responding (${result.responseTime}ms)`, 'success');
+                        updateStatus('Production database is awake!', 'success');
+                        return;
+                    } else if (result.status === 401 || result.status === 403) {
+                        addResult(`✅ ${endpoint}: Database awake (authentication required - ${result.responseTime}ms)`, 'success');
+                        updateStatus('Production database is awake!', 'success');
+                        return;
+                    } else if (result.status === 500) {
+                        addResult(`⚠️ ${endpoint}: Server error - database may still be waking up`, 'warning');
+                    } else if (result.error) {
+                        addResult(`❌ ${endpoint}: ${result.error}`, 'error');
+                    } else {
+                        addResult(`🔍 ${endpoint}: Status ${result.status} (${result.responseTime}ms)`, 'info');
+                    }
+                } catch (error) {
+                    addResult(`❌ ${endpoint}: ${error.message}`, 'error');
+                }
+                
+                // Wait a moment between attempts
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            updateStatus('Unable to confirm database wake-up', 'warning');
+            addResult(`💡 If this persists, your Neon database may need manual intervention`, 'warning');
+        }
+
+        async function testProductionLogin() {
+            clearResults();
+            updateStatus('Testing production login...', 'loading');
+            
+            try {
+                const result = await makeProductionRequest('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                });
+
+                if (result.success && result.data.token) {
+                    updateStatus('Production login successful!', 'success');
+                    addResult(`✅ Login successful! (${result.responseTime}ms)`, 'success');
+                    addResult(`🔑 Token received, database is fully operational`, 'success');
+                    
+                    // Test token validity
+                    const tokenTest = await makeProductionRequest('/api/users', {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${result.data.token}`
+                        }
+                    });
+                    
+                    if (tokenTest.success || tokenTest.status === 403) {
+                        addResult(`✅ Token validation: Working correctly`, 'success');
+                    }
+                } else if (result.status === 401) {
+                    updateStatus('Production server responding, login failed', 'warning');
+                    addResult(`⚠️ Login failed: ${result.data.error || result.data.message}`, 'warning');
+                    addResult(`💡 Server is working, but credentials may be incorrect`, 'info');
+                } else if (result.status === 500) {
+                    updateStatus('Database connection issue detected', 'error');
+                    addResult(`❌ Server error (500): Database connection problem`, 'error');
+                    addResult(`💡 Try waking up the database first`, 'warning');
+                } else if (result.error) {
+                    updateStatus('Connection failed', 'error');
+                    addResult(`❌ Connection error: ${result.error}`, 'error');
+                    addResult(`💡 This indicates a network or server issue`, 'warning');
+                } else {
+                    addResult(`🔍 Unexpected response: ${result.status} - ${JSON.stringify(result.data)}`, 'info');
+                }
+            } catch (error) {
+                updateStatus('Production login test failed', 'error');
+                addResult(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkRenderStatus() {
+            clearResults();
+            updateStatus('Checking Render service status...', 'loading');
+            
+            try {
+                // Test basic connectivity
+                const healthResult = await makeProductionRequest('/api/health');
+                
+                if (healthResult.success) {
+                    addResult(`✅ Render service is online and responding`, 'success');
+                    addResult(`📊 Health data: <pre>${JSON.stringify(healthResult.data, null, 2)}</pre>`, 'info');
+                    updateStatus('Render service is healthy', 'success');
+                } else if (healthResult.error && healthResult.error.includes('fetch')) {
+                    addResult(`❌ Cannot reach Render service: ${healthResult.error}`, 'error');
+                    addResult(`💡 Possible causes: Service is down, URL incorrect, or network issue`, 'warning');
+                    updateStatus('Render service unreachable', 'error');
+                } else {
+                    addResult(`⚠️ Render service responding with status: ${healthResult.status}`, 'warning');
+                    addResult(`Response: ${JSON.stringify(healthResult.data)}`, 'info');
+                }
+            } catch (error) {
+                updateStatus('Render status check failed', 'error');
+                addResult(`❌ Status check failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function diagnoseProduction() {
+            clearResults();
+            updateStatus('Running full production diagnostic...', 'loading');
+            
+            addResult(`🔧 Starting comprehensive production diagnostic...`, 'info');
+            addResult(`🌐 Target: ${productionBaseUrl}`, 'info');
+            addResult(`⏰ Started at: ${new Date().toLocaleTimeString()}`, 'info');
+            
+            // Step 1: Basic connectivity
+            addResult(`\n📋 Step 1: Testing basic connectivity...`, 'info');
+            try {
+                const healthResult = await makeProductionRequest('/api/health');
+                if (healthResult.success) {
+                    addResult(`✅ Render service: Online (${healthResult.responseTime}ms)`, 'success');
+                } else if (healthResult.status === 500) {
+                    addResult(`⚠️ Render service: Online but database issues (${healthResult.responseTime}ms)`, 'warning');
+                } else if (healthResult.error) {
+                    addResult(`❌ Render service: Offline (${healthResult.error})`, 'error');
+                    return; // No point continuing if service is down
+                }
+            } catch (error) {
+                addResult(`❌ Connectivity test failed: ${error.message}`, 'error');
+                return;
+            }
+
+            // Step 2: Database wake-up
+            addResult(`\n📋 Step 2: Waking up database...`, 'info');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            try {
+                const dbResult = await makeProductionRequest('/api/users', {
+                    headers: { 'Authorization': 'Bearer dummy-token' }
+                });
+                
+                if (dbResult.status === 401) {
+                    addResult(`✅ Database: Awake and responding (auth required)`, 'success');
+                } else if (dbResult.status === 500) {
+                    addResult(`❌ Database: Connection issues detected`, 'error');
+                } else {
+                    addResult(`🔍 Database: Unexpected response (${dbResult.status})`, 'info');
+                }
+            } catch (error) {
+                addResult(`❌ Database test failed: ${error.message}`, 'error');
+            }
+
+            // Step 3: Login test
+            addResult(`\n📋 Step 3: Testing login endpoint...`, 'info');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            try {
+                const loginResult = await makeProductionRequest('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                });
+                
+                if (loginResult.success) {
+                    addResult(`✅ Login: Successful! Production is fully operational`, 'success');
+                    updateStatus('Production is fully operational!', 'success');
+                } else if (loginResult.status === 401) {
+                    addResult(`⚠️ Login: Failed with invalid credentials`, 'warning');
+                    addResult(`💡 Server is working, check credentials`, 'info');
+                } else if (loginResult.status === 500) {
+                    addResult(`❌ Login: Database connection error`, 'error');
+                    addResult(`💡 Neon database may need more time to wake up`, 'warning');
+                } else {
+                    addResult(`🔍 Login: Status ${loginResult.status}`, 'info');
+                }
+            } catch (error) {
+                addResult(`❌ Login test failed: ${error.message}`, 'error');
+            }
+
+            addResult(`\n🏁 Diagnostic completed at: ${new Date().toLocaleTimeString()}`, 'info');
+            
+            // Provide recommendations
+            addResult(`\n💡 Recommendations:`, 'info');
+            addResult(`1. If database shows connection errors, wait 2-3 minutes and try again`, 'info');
+            addResult(`2. If Render service is slow, it may be cold starting (normal for free tier)`, 'info');
+            addResult(`3. If login continues to fail, check if database credentials need rotation`, 'warning');
+        }
+
+        // Auto-run basic connectivity test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('🚀 Production diagnostic tool loaded', 'info');
+                addResult('Click "Full Production Diagnostic" to test your production environment', 'info');
+            }, 500);
+        });
+    </script>
+</body>
+</html>

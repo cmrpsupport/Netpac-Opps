@@ -1,0 +1,1041 @@
+/* Proposal Workbench Style Fixes - Dark Mode and Layout */
+/* Applied: January 2025 */
+
+/* ================================
+   TOGGLE BUTTON FIXES (Dark Mode)
+   ================================ */
+
+/* Fix toggle button container background in dark mode */
+html.dark .flex.bg-gray-100.dark\:bg-gray-800,
+.dark .flex.bg-gray-100.dark\:bg-gray-800 {
+    background-color: #374151 !important; /* Proper dark gray */
+    border: 1px solid #4b5563 !important;
+}
+
+/* Fix toggle button container background in light mode */
+html:not(.dark) .flex.bg-gray-100.dark\:bg-gray-800,
+.flex.bg-gray-100.dark\:bg-gray-800:not(.dark) {
+    background-color: #f3f4f6 !important; /* Light gray for light mode */
+    border: 1px solid #d1d5db !important;
+}
+
+/* Fix active toggle button (Proposal Board) - Blue color as preferred */
+html.dark #proposalViewBtn.bg-indigo-600,
+.dark #proposalViewBtn.bg-indigo-600,
+#proposalViewBtn.bg-indigo-600 {
+    background-color: #2563eb !important; /* Blue color as preferred */
+    color: #ffffff !important;
+}
+
+/* Fix active toggle button (Schedule) when it's active */
+html.dark #scheduleViewBtn.bg-indigo-600,
+.dark #scheduleViewBtn.bg-indigo-600,
+#scheduleViewBtn.bg-indigo-600 {
+    background-color: #2563eb !important; /* Blue color as preferred */
+    color: #ffffff !important;
+}
+
+/* Fix inactive toggle buttons in dark mode */
+html.dark #scheduleViewBtn.text-gray-700.dark\:text-gray-300,
+.dark #scheduleViewBtn.text-gray-700.dark\:text-gray-300,
+html.dark #proposalViewBtn.text-gray-700.dark\:text-gray-300,
+.dark #proposalViewBtn.text-gray-700.dark\:text-gray-300,
+html.dark button.text-gray-700.dark\:text-gray-300,
+.dark button.text-gray-700.dark\:text-gray-300 {
+    color: #d1d5db !important; /* Light gray text */
+    background-color: transparent !important;
+}
+
+/* LIGHT MODE - Black text on light container */
+html:not(.dark) #scheduleViewBtn:not(.bg-indigo-600):not([style*="background-color: rgb(37, 99, 235)"]),
+html:not(.dark) #proposalViewBtn:not(.bg-indigo-600):not([style*="background-color: rgb(37, 99, 235)"]) {
+    color: #000000 !important; /* Black text for light container */
+    background-color: transparent !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+}
+
+/* DARK MODE - White text on dark container */
+html.dark #scheduleViewBtn:not(.bg-indigo-600):not([style*="background-color: rgb(37, 99, 235)"]),
+html.dark #proposalViewBtn:not(.bg-indigo-600):not([style*="background-color: rgb(37, 99, 235)"]),
+.dark #scheduleViewBtn:not(.bg-indigo-600):not([style*="background-color: rgb(37, 99, 235)"]),
+.dark #proposalViewBtn:not(.bg-indigo-600):not([style*="background-color: rgb(37, 99, 235)"]) {
+    color: #ffffff !important; /* White text for dark container */
+    background-color: transparent !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+}
+
+/* Fix hover state for inactive toggle buttons in dark mode */
+html.dark #scheduleViewBtn:hover,
+.dark #scheduleViewBtn:hover,
+html.dark #proposalViewBtn:hover,
+.dark #proposalViewBtn:hover,
+html.dark button.dark\:hover\:bg-gray-700:hover,
+.dark button.dark\:hover\:bg-gray-700:hover {
+    background-color: #4b5563 !important;
+    color: #f3f4f6 !important;
+}
+
+/* Fix hover state for inactive toggle buttons in light mode */
+html:not(.dark) #scheduleViewBtn:hover:not(.bg-indigo-600),
+html:not(.dark) #proposalViewBtn:hover:not(.bg-indigo-600),
+#scheduleViewBtn:hover:not(.bg-indigo-600),
+#proposalViewBtn:hover:not(.bg-indigo-600) {
+    background-color: #d1d5db !important; /* Slightly darker gray background on hover */
+    color: #000000 !important; /* Pure black text on hover */
+    font-weight: 600 !important; /* Even bolder on hover */
+}
+
+/* Ensure active buttons don't get hover effects */
+html.dark #scheduleViewBtn.bg-indigo-600:hover,
+.dark #scheduleViewBtn.bg-indigo-600:hover,
+html.dark #proposalViewBtn.bg-indigo-600:hover,
+.dark #proposalViewBtn.bg-indigo-600:hover,
+#scheduleViewBtn.bg-indigo-600:hover,
+#proposalViewBtn.bg-indigo-600:hover {
+    background-color: #2563eb !important; /* Keep blue color on hover */
+    color: #ffffff !important;
+}
+
+/* ================================
+   FILTER LABEL FIXES (Dark Mode)
+   ================================ */
+
+/* Fix filter labels in dark mode - comprehensive targeting */
+html.dark .filter-label,
+.dark .filter-label,
+html.dark label.filter-label,
+.dark label.filter-label,
+html.dark .text-gray-700.dark\:text-gray-300,
+.dark .text-gray-700.dark\:text-gray-300,
+html.dark label[for="picFilter"],
+.dark label[for="picFilter"],
+html.dark label[for="clientFilter"],
+.dark label[for="clientFilter"],
+html.dark label[for="accountManagerFilter"],
+.dark label[for="accountManagerFilter"] {
+    color: #e5e7eb !important; /* Light gray for dark mode */
+    font-weight: 500 !important;
+}
+
+/* Light mode filter labels */
+html:not(.dark) .filter-label,
+html:not(.dark) label.filter-label,
+html:not(.dark) label[for="picFilter"],
+html:not(.dark) label[for="clientFilter"],
+html:not(.dark) label[for="accountManagerFilter"] {
+    color: #374151 !important; /* Dark gray for light mode */
+    font-weight: 500 !important;
+}
+
+/* ================================
+   MAIN WORKFLOW LABEL FIXES
+   ================================ */
+
+/* Fix "Main Workflow" heading color in dark mode */
+html.dark .text-gray-600.dark\:text-gray-400,
+.dark .text-gray-600.dark\:text-gray-400,
+html.dark h3.text-gray-600.dark\:text-gray-400,
+.dark h3.text-gray-600.dark\:text-gray-400 {
+    color: #9ca3af !important; /* Medium gray for dark mode */
+    font-weight: 500 !important;
+}
+
+/* Light mode "Main Workflow" heading */
+html:not(.dark) .text-gray-600,
+html:not(.dark) h3.text-gray-600 {
+    color: #4b5563 !important; /* Proper gray for light mode */
+    font-weight: 500 !important;
+}
+
+/* ================================
+   LAYOUT SPACING FIXES - AGGRESSIVE
+   ================================ */
+
+/* CRITICAL: Fix the huge space issue */
+.main-container {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* EMERGENCY FIX: Target the exact area with the space issue */
+div.main-content main.main-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+}
+
+/* Completely remove all vertical margins between elements */
+.main-container > div,
+.main-container > h2,
+.main-container > section {
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+/* Remove extra spacing below "Proposal Workbench" title */
+#pageTitle.mb-6,
+h2.mb-6,
+.mb-6 {
+    margin-bottom: 0.25rem !important; /* Extremely tight spacing */
+}
+
+/* Fix spacing in filter section - MAJOR FIX for the huge gap */
+#filterSection,
+#filterSection.mb-6 {
+    margin-bottom: 0.25rem !important; /* Drastically reduced */
+    margin-top: 0 !important; /* Remove top margin */
+}
+
+/* Remove the huge gap between header section and kanban board */
+.main-container .mb-6:first-child {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Remove extra space above Kanban Board - CRITICAL FIX */
+.mb-8,
+div.mb-8 {
+    margin-bottom: 0.25rem !important; /* Drastically reduced */
+}
+
+.mb-8 h2 {
+    margin-bottom: 0.25rem !important; /* Much tighter */
+}
+
+/* Remove the Main Workflow section spacing entirely */
+.mb-4,
+div.mb-4 {
+    margin-bottom: 0 !important; /* Remove gap after Main Workflow */
+}
+
+/* Proposal Status Board heading - reduce space */
+h2.text-xl.font-bold.mb-4 {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Fix spacing below "Filter by PIC:" and other filter labels */
+.flex.items-center.gap-2 {
+    align-items: center !important;
+    gap: 0.375rem !important; /* Slightly smaller gap */
+}
+
+/* Compact filter section layout */
+#filterSection .flex.items-center.space-x-4 {
+    gap: 1rem !important; /* Consistent spacing */
+}
+
+/* Force filter section to align to left edge - AGGRESSIVE FIX */
+#filterSection.mb-6.flex.justify-end.items-center {
+    justify-content: flex-start !important; /* Change from flex-end to flex-start */
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+/* Target the inner flex container */
+#filterSection .flex.items-center.space-x-4 {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* Target the individual filter groups */
+#filterSection .flex.items-center.gap-2 {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* Target the filter labels specifically */
+#filterSection .filter-label {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* ================================
+   NO DECISION YET BUTTON STYLING
+   ================================ */
+
+/* Style the No Decision Yet button to match filter section elements */
+#noDecisionToggleBtn {
+    background-color: #6b7280 !important; /* Neutral gray background */
+    color: #ffffff !important; /* White text for readability */
+    border: 1px solid #4b5563 !important; /* Darker gray border */
+    padding: 0.5rem 0.75rem !important; /* Match filter dropdown padding */
+    font-size: 0.875rem !important; /* Match filter dropdown font size */
+    font-weight: 500 !important; /* Medium font weight */
+    border-radius: 0.375rem !important; /* Match filter dropdown border radius */
+    height: auto !important; /* Let height be determined by padding */
+    min-height: 38px !important; /* Match filter dropdown height */
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+}
+
+#noDecisionToggleBtn:hover {
+    background-color: #4b5563 !important; /* Darker gray on hover */
+    border-color: #374151 !important; /* Even darker border on hover */
+    color: #ffffff !important; /* Keep white text */
+}
+
+/* Dark mode styling for No Decision Yet button */
+html.dark #noDecisionToggleBtn {
+    background-color: #6b7280 !important; /* Keep neutral gray in dark mode */
+    color: #ffffff !important; /* White text */
+    border-color: #4b5563 !important;
+}
+
+html.dark #noDecisionToggleBtn:hover {
+    background-color: #4b5563 !important;
+    border-color: #374151 !important;
+    color: #ffffff !important;
+}
+
+/* ================================
+   NO DECISION MODAL DRAG FIX
+   ================================ */
+
+/* Make the modal overlay transparent to drag events so cards can be dragged to main columns */
+#noDecisionModal {
+    pointer-events: none !important; /* Allow drag events to pass through */
+}
+
+/* But keep the modal content interactive */
+#noDecisionModalContent {
+    pointer-events: auto !important; /* Modal content stays interactive */
+}
+
+/* Make the modal content area smaller and positioned to not block main workflow */
+#noDecisionModalContent {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    left: auto !important;
+    margin: 0 !important;
+    width: 350px !important;
+    max-width: 350px !important;
+}
+
+/* Hide the Main Workflow label completely */
+h3.text-sm.font-medium.text-gray-600.dark\:text-gray-400.mb-2 {
+    display: none !important;
+}
+
+/* Fix vertical spacing in the entire view container */
+#viewContainer {
+    margin-top: 0 !important;
+}
+
+/* Fix the gap between title and filter section */
+.justify-between.items-center.mb-6 {
+    margin-bottom: 0.25rem !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* CRITICAL: Target the specific div causing the space issue */
+div#main-content > div.main-content > main.main-container > div:nth-child(1),
+div#main-content > div.main-content > main.main-container > div:nth-child(2),
+div#main-content > div.main-content > main.main-container > div:nth-child(3),
+div#main-content > div.main-content > main.main-container > div#viewContainer {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Fix the specific space in the filter section */
+div#filterSection {
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* NUCLEAR OPTION: Force all elements to have no margin */
+div.main-content * {
+    margin-top: 0 !important;
+}
+
+/* Target the specific area highlighted with the red circle */
+main.main-container > div:first-child + div {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Ensure no gap between filter section and board */
+#filterSection + div, 
+#filterSection + div + div,
+#filterSection ~ div {
+    margin-top: 0 !important;
+}
+
+/* ================================
+   KANBAN COLUMN HEADER FIXES
+   ================================ */
+
+/* Fix kanban column headers in dark mode */
+html.dark .kanban-column-header,
+.dark .kanban-column-header {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
+    border-bottom-color: #4b5563 !important;
+}
+
+/* Light mode kanban column headers */
+html:not(.dark) .kanban-column-header {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+    border-bottom-color: #e5e7eb !important;
+}
+
+/* For Revision column header - keep current styling in both light and dark mode */
+#forRevisionColumn .kanban-column-header {
+    background-color: #ea580c !important; /* Orange background (same as dark mode) */
+    color: #ffffff !important; /* White text */
+    border-bottom-color: #c2410c !important; /* Darker orange border */
+}
+
+html.dark #forRevisionColumn .kanban-column-header {
+    background-color: #ea580c !important; /* Keep same orange in dark mode */
+    color: #ffffff !important; /* White text */
+    border-bottom-color: #c2410c !important; /* Darker orange border */
+}
+
+/* Make only "For Approval" column header purple, not the entire column */
+#forApprovalColumn .kanban-column-header {
+    background-color: #8b5cf6 !important; /* Purple background for header only */
+    color: #ffffff !important; /* White text */
+    border-bottom-color: #7c3aed !important; /* Purple border */
+}
+
+/* DON'T style the column container - only the body! The container should keep its Tailwind classes */
+/* Only force the For Approval column BODY to match other columns exactly */
+#forApprovalBody,
+#forApprovalBody.kanban-column-body,
+#forApprovalBody.kanban-column-body.p-3,
+div#forApprovalBody.kanban-column-body.p-3 {
+    background-color: transparent !important; /* Let it inherit from parent container */
+    background: transparent !important; /* Let it inherit from parent container */
+}
+
+/* Remove any pseudo-elements that might be adding background */
+#forApprovalBody::before,
+#forApprovalBody::after {
+    display: none !important;
+}
+
+/* Don't style the column container in dark mode either */
+html.dark #forApprovalBody,
+html.dark #forApprovalBody.kanban-column-body,
+html.dark #forApprovalBody.kanban-column-body.p-3,
+html.dark div#forApprovalBody.kanban-column-body.p-3 {
+    background-color: transparent !important; /* Let it inherit from parent container */
+    background: transparent !important; /* Let it inherit from parent container */
+}
+
+/* Remove all the complex overrides - let the body inherit from its parent container */
+
+html.dark #forApprovalColumn .kanban-column-header {
+    background-color: #7c3aed !important; /* Only header is purple in dark mode */
+    color: #ffffff !important;
+}
+
+/* Fix column header heights to be uniform */
+.kanban-column-header {
+    min-height: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 12px 16px !important;
+    box-sizing: border-box !important;
+}
+
+.kanban-column-header h3 {
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* ================================
+   WEEKEND LABEL AND CHECKBOX FIXES
+   ================================ */
+
+/* Fix "Include weekends" label in dark mode */
+html.dark label[for="weekend-toggle"],
+.dark label[for="weekend-toggle"],
+html.dark .text-gray-900.dark\:text-gray-300,
+.dark .text-gray-900.dark\:text-gray-300 {
+    color: #d1d5db !important;
+}
+
+/* Light mode weekend label */
+html:not(.dark) label[for="weekend-toggle"] {
+    color: #111827 !important;
+}
+
+/* ================================
+   BUTTON AND NAVIGATION FIXES
+   ================================ */
+
+/* Fix navigation buttons (prev/next week) in dark mode */
+html.dark .text-gray-500.dark\:text-gray-400,
+.dark .text-gray-500.dark\:text-gray-400 {
+    color: #9ca3af !important;
+}
+
+/* Fix "Today" button - Changed to blue */
+html.dark .text-indigo-600,
+.dark .text-indigo-600,
+.text-indigo-600 {
+    color: #3b82f6 !important; /* Blue instead of purple */
+}
+
+/* Fix week display text */
+html.dark .text-gray-700.dark\:text-gray-300,
+.dark .text-gray-700.dark\:text-gray-300 {
+    color: #d1d5db !important;
+}
+
+/* ================================
+   RESPONSIVE ADJUSTMENTS
+   ================================ */
+
+/* Ensure proper spacing on smaller screens */
+@media (max-width: 768px) {
+    #filterSection {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .flex.items-center.space-x-4 {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+    }
+}
+
+/* ================================
+   FINAL OVERRIDES
+   ================================ */
+
+/* Ensure all changes take precedence */
+body.dark *[class*="text-gray-700"],
+html.dark *[class*="text-gray-700"] {
+    color: #d1d5db !important;
+}
+
+body.dark *[class*="text-gray-600"],
+html.dark *[class*="text-gray-600"] {
+    color: #9ca3af !important;
+}
+
+/* Force proper contrast for all interactive elements in dark mode */
+html.dark button:not(.bg-indigo-600):not(.bg-yellow-200),
+.dark button:not(.bg-indigo-600):not(.bg-yellow-200) {
+    color: #e5e7eb !important;
+}
+
+/* Fix any remaining text visibility issues */
+html.dark .main-container label,
+.dark .main-container label {
+    color: #e5e7eb !important;
+    font-weight: 500 !important;
+}
+
+/* ================================
+   FILTER SECTION SPACING AND SIZING IMPROVEMENTS
+   ================================ */
+
+/* Standard filter dropdown sizing */
+#filterSection .filter-dropdown {
+    min-width: 120px;
+    max-width: 160px;
+    font-size: 0.875rem; /* 14px */
+    padding: 0.375rem 0.75rem; /* Slightly tighter padding */
+}
+
+/* Make client dropdown wider for longer client names */
+#filterSection .filter-dropdown-wide {
+    min-width: 180px !important;
+    max-width: 220px !important;
+}
+
+/* Reduce spacing between filter elements - override the space-x-3 from HTML */
+#filterSection .flex.items-center.space-x-3 {
+    gap: 0.75rem !important; /* 12px spacing between filter groups */
+}
+
+/* Tighter spacing within each filter group */
+#filterSection .flex.items-center.gap-2 {
+    gap: 0.375rem !important; /* 6px between label and dropdown */
+}
+
+/* Ensure labels don't wrap and stay compact */
+#filterSection .filter-label {
+    white-space: nowrap !important;
+    min-width: fit-content !important;
+    font-size: 0.875rem !important; /* 14px */
+}
+
+/* ================================
+   MODAL Z-INDEX FIXES
+   ================================ */
+
+/* Fix modal overlay z-index to ensure it appears above all content */
+#proposalEditModal,
+#taskModalOverlay,
+#proposalSelectionModal,
+#noDecisionModal {
+    z-index: 9999 !important;
+}
+
+/* CRITICAL FIX: Ensure proposal edit modal is fully interactive */
+#proposalEditModal {
+    pointer-events: auto !important;
+    cursor: default !important;
+}
+
+#proposalEditModal * {
+    pointer-events: auto !important;
+}
+
+/* ULTRA HIGH SPECIFICITY FIX FOR MODAL INPUTS */
+html body #proposalEditModal input:not([readonly]),
+html body #proposalEditModal select:not([readonly]),
+html body #proposalEditModal textarea:not([readonly]),
+body #proposalEditModal input:not([readonly]),
+body #proposalEditModal select:not([readonly]),
+body #proposalEditModal textarea:not([readonly]),
+#proposalEditModal input:not([readonly]),
+#proposalEditModal select:not([readonly]),
+#proposalEditModal textarea:not([readonly]) {
+    cursor: text !important;
+    pointer-events: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+}
+
+html body #proposalEditModal select:not([readonly]),
+body #proposalEditModal select:not([readonly]),
+#proposalEditModal select:not([readonly]) {
+    cursor: pointer !important;
+}
+
+html body #proposalEditModal button,
+body #proposalEditModal button,
+#proposalEditModal button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* SPECIFIC TARGETING FOR PROBLEMATIC FIELDS */
+html body div#proposalEditModal textarea#editComment,
+body div#proposalEditModal textarea#editComment,
+div#proposalEditModal textarea#editComment,
+#proposalEditModal textarea#editComment,
+textarea#editComment {
+    cursor: text !important;
+    pointer-events: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+html body div#proposalEditModal select#editStatus,
+body div#proposalEditModal select#editStatus,
+div#proposalEditModal select#editStatus,
+#proposalEditModal select#editStatus,
+select#editStatus {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* OVERRIDE ANY TAILWIND OR GLOBAL STYLES */
+#proposalEditModal .enhanced-field input:not([readonly]) {
+    cursor: text !important;
+    pointer-events: auto !important;
+}
+
+#proposalEditModal .enhanced-field select:not([readonly]) {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+#proposalEditModal .enhanced-field textarea:not([readonly]) {
+    cursor: text !important;
+    pointer-events: auto !important;
+}
+
+/* NUCLEAR OPTION: Override any inline styles or computed styles */
+#proposalEditModal input[style*="cursor"],
+#proposalEditModal textarea[style*="cursor"],
+#proposalEditModal select[style*="cursor"] {
+    cursor: text !important;
+}
+
+#proposalEditModal select[style*="cursor"] {
+    cursor: pointer !important;
+}
+
+/* Force override any disabled-like styling */
+#proposalEditModal input:not([disabled]):not([readonly]),
+#proposalEditModal textarea:not([disabled]):not([readonly]) {
+    cursor: text !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+#proposalEditModal select:not([disabled]):not([readonly]) {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+/* Ensure modal content appears above overlay */
+#proposalEditModal > div,
+#taskModalOverlay > div,
+#proposalSelectionModal > div,
+#noDecisionModal > div {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+/* Fix any other modal-related elements */
+.modal-overlay {
+    z-index: 9999 !important;
+}
+
+.modal {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+/* Ensure kanban cards don't interfere with modals */
+.proposal-card {
+    z-index: 1 !important;
+}
+
+.kanban-column {
+    z-index: 1 !important;
+}
+
+/* ================================
+   MODAL ENHANCEMENT STYLES
+   ================================ */
+
+/* Make modal wider for more content */
+#proposalEditModal .mx-auto.mt-24.p-5.border.w-1\/2,
+#proposalEditModal .mx-auto.mt-12.mb-12.p-6.border.w-1\/2 {
+    width: 75% !important;
+    max-width: 800px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    pointer-events: auto !important;
+    cursor: default !important;
+}
+
+/* Pulse animation for auto-filled submission date */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Ensure modal form is interactive */
+#proposalEditForm {
+    pointer-events: auto !important;
+    cursor: default !important;
+}
+
+/* Ensure all form elements are interactive */
+#proposalEditForm input,
+#proposalEditForm select,
+#proposalEditForm textarea,
+#proposalEditForm button {
+    pointer-events: auto !important;
+}
+
+/* Specific fixes for the editable fields */
+#editComment,
+#editStatus {
+    pointer-events: auto !important;
+    cursor: text !important;
+}
+
+#editStatus {
+    cursor: pointer !important;
+}
+
+/* Style for enhanced form sections */
+.form-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: #f9fafb;
+}
+
+.dark .form-section {
+    border-color: #4b5563;
+    background-color: #374151;
+}
+
+.form-section-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dark .form-section-title {
+    color: #d1d5db;
+}
+
+/* Two-column layout for form fields */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row.single-column {
+    grid-template-columns: 1fr;
+}
+
+/* Enhanced field styling */
+.enhanced-field {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+.enhanced-field label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+    pointer-events: none;
+}
+
+.dark .enhanced-field label {
+    color: #d1d5db;
+}
+
+.enhanced-field input,
+.enhanced-field select,
+.enhanced-field textarea {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto !important;
+    cursor: text !important;
+}
+
+.enhanced-field select {
+    cursor: pointer !important;
+}
+
+.dark .enhanced-field input,
+.dark .enhanced-field select,
+.dark .enhanced-field textarea {
+    background-color: #4b5563;
+    border-color: #6b7280;
+    color: #f3f4f6;
+}
+
+/* Read-only field styling */
+.enhanced-field input[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+}
+
+.dark .enhanced-field input[readonly] {
+    background-color: #374151;
+    color: #9ca3af;
+}
+
+/* CRITICAL: Ensure editable fields are clearly interactive - MUST come after readonly styles */
+html body div#proposalEditModal .enhanced-field input:not([readonly]):not([disabled]),
+html body div#proposalEditModal .enhanced-field textarea:not([readonly]):not([disabled]),
+html body #proposalEditModal .enhanced-field input:not([readonly]):not([disabled]),
+html body #proposalEditModal .enhanced-field textarea:not([readonly]):not([disabled]),
+body div#proposalEditModal .enhanced-field input:not([readonly]):not([disabled]),
+body div#proposalEditModal .enhanced-field textarea:not([readonly]):not([disabled]),
+div#proposalEditModal .enhanced-field input:not([readonly]):not([disabled]),
+div#proposalEditModal .enhanced-field textarea:not([readonly]):not([disabled]),
+#proposalEditModal .enhanced-field input:not([readonly]):not([disabled]),
+#proposalEditModal .enhanced-field textarea:not([readonly]):not([disabled]),
+.enhanced-field input:not([readonly]):not([disabled]),
+.enhanced-field textarea:not([readonly]):not([disabled]) {
+    cursor: text !important;
+    pointer-events: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+html body div#proposalEditModal .enhanced-field select:not([readonly]):not([disabled]),
+html body #proposalEditModal .enhanced-field select:not([readonly]):not([disabled]),
+body div#proposalEditModal .enhanced-field select:not([readonly]):not([disabled]),
+div#proposalEditModal .enhanced-field select:not([readonly]):not([disabled]),
+#proposalEditModal .enhanced-field select:not([readonly]):not([disabled]),
+.enhanced-field select:not([readonly]):not([disabled]) {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* ===========================
+   SPECIFIC EDITABLE FIELDS FIX
+   =========================== */
+
+/* EDITABLE FIELDS STYLING - All fields that can be edited */
+html body div#proposalEditModal textarea#editComment,
+html body #proposalEditModal textarea#editComment,
+body div#proposalEditModal textarea#editComment,
+div#proposalEditModal textarea#editComment,
+#proposalEditModal textarea#editComment,
+textarea#editComment,
+#editComment,
+html body div#proposalEditModal select#editStatus,
+html body #proposalEditModal select#editStatus,
+body div#proposalEditModal select#editStatus,
+div#proposalEditModal select#editStatus,
+#proposalEditModal select#editStatus,
+select#editStatus,
+#editStatus,
+html body div#proposalEditModal input#editRevision,
+#editRevision,
+html body div#proposalEditModal input#editFinalAmount,
+#editFinalAmount,
+html body div#proposalEditModal input#editMargin,
+#editMargin,
+html body div#proposalEditModal select#editOpportunityStatus,
+#editOpportunityStatus,
+html body div#proposalEditModal input#editSubmissionDate,
+#editSubmissionDate {
+    pointer-events: auto !important;
+    cursor: text !important;
+    background-color: white !important;
+    border: 2px solid #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    outline: none !important;
+    color: #111827 !important;
+}
+
+/* Special cursor for select dropdowns */
+html body div#proposalEditModal select#editStatus,
+#editStatus,
+html body div#proposalEditModal select#editOpportunityStatus,
+#editOpportunityStatus {
+    cursor: pointer !important;
+}
+
+/* Special cursor for textarea */
+html body div#proposalEditModal textarea#editComment,
+#editComment {
+    resize: vertical !important;
+}
+
+.dark #editComment,
+.dark #editStatus,
+.dark #editRevision,
+.dark #editFinalAmount,
+.dark #editMargin,
+.dark #editOpportunityStatus,
+.dark #editSubmissionDate {
+    background-color: #374151 !important;
+    border-color: #60a5fa !important;
+    color: #f3f4f6 !important;
+}
+
+/* Add visual indication that these fields are editable */
+#editComment:focus,
+#editStatus:focus {
+    outline: none !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* Remove the cursor-not-allowed from the remarks field that has it inline */
+#editRemarks {
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* ================================
+   DAY ACTION MENU FIXES (CSP Compliance)
+   ================================ */
+
+/* Fix inline styles to prevent CSP violations */
+#dayActionMenu {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid #e5e7eb !important;
+    z-index: 1000 !important;
+}
+
+#dayActionMenu button.add-task-action {
+    margin-bottom: 4px !important;
+}
+
+#dayActionMenu .material-icons.add-task-icon,
+#dayActionMenu .material-icons.add-proposal-icon {
+    font-size: 18px !important;
+}
+
+#dayActionMenu .action-text {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+/* ================================
+   SCHEDULE TEMPLATE FIXES (CSP Compliance)
+   ================================ */
+
+/* Hide schedule template */
+#scheduleTemplate {
+    display: none !important;
+}
+
+/* Fix schedule header day names and dates */
+.schedule-header .day-name {
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+.schedule-header .day-date {
+    color: white !important;
+}
+
+/* ================================
+   END ONLINE USERS DROPDOWN FIXES
+   ================================ */

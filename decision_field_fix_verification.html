@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Field Options Fix Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Decision Field Options Fix Verification</h1>
+        
+        <div class="test-section">
+            <h2>Issue Summary</h2>
+            <p>There was an issue where only the "decision" field was showing up as a dropdown but had incorrect options ("Pending", "Approved", "Declined") instead of the expected options ("", "GO", "DECLINE") from the getFieldOptions function.</p>
+            <p>The A, C, R, U, D, solutions, sol_particulars, industries, ind_particulars fields were also not showing up as dropdowns.</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>Applied Fixes</h2>
+            <ol>
+                <li>Fixed hardcoded dropdown options in index.html Create form for "decision" field</li>
+                <li>Added clearing of existing options in dropdown creation for both Edit and Create modal functions</li>
+                <li>Updated the filter logic for 'no_decision' to check for empty decision instead of 'pending'</li>
+                <li>Simplified declined check to only look for 'decline'</li>
+                <li><strong>Added 'a', 'c', 'r', 'u', 'd', and 'submitted' to the DROPDOWN_FIELDS constant</strong> (critical fix)</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h2>Testing Steps</h2>
+            <button id="openAppBtn">Open Application</button>
+            <button id="openConsoleBtn">Show Console Instructions</button>
+            <button id="runAnalyzerBtn">Run Dropdown Analyzer</button>
+            <div id="testStatus" class="status pending">
+                Verification pending. Please follow the testing steps.
+            </div>
+            
+            <h3>1. Create Modal Testing</h3>
+            <ol>
+                <li>Click "Create New Opportunity" button</li>
+                <li>Verify that the "Decision" dropdown shows options: "--Select--", "GO", and "DECLINE"</li>
+                <li>Verify that A, C, R, U, D fields also show up as dropdowns</li>
+                <li>Verify that solutions, sol_particulars, industries, and ind_particulars also show up as dropdowns</li>
+            </ol>
+            
+            <h3>2. Edit Modal Testing</h3>
+            <ol>
+                <li>Click the "Edit" button on any row</li>
+                <li>Verify that the "Decision" dropdown shows options: "--Select--", "GO", and "DECLINE"</li>
+                <li>Verify that A, C, R, U, D fields also show up as dropdowns</li>
+                <li>Verify that solutions, sol_particulars, industries, and ind_particulars also show up as dropdowns</li>
+            </ol>
+            
+            <h3>Debug Information</h3>
+            <p>Open your browser's console (F12) and look for "[DEBUG]" messages that will show what options are being loaded for each field.</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>Verification Results</h2>
+            <form id="verificationForm">
+                <h3>Create Modal</h3>
+                <div>
+                    <input type="checkbox" id="createDecisionOptions"> 
+                    <label for="createDecisionOptions">Decision field shows correct options (GO, DECLINE)</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="createACRUDDropdowns"> 
+                    <label for="createACRUDDropdowns">A, C, R, U, D fields show as dropdowns</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="createOtherDropdowns"> 
+                    <label for="createOtherDropdowns">solutions, sol_particulars, industries, ind_particulars fields show as dropdowns</label>
+                </div>
+                
+                <h3>Edit Modal</h3>
+                <div>
+                    <input type="checkbox" id="editDecisionOptions"> 
+                    <label for="editDecisionOptions">Decision field shows correct options (GO, DECLINE)</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="editACRUDDropdowns"> 
+                    <label for="editACRUDDropdowns">A, C, R, U, D fields show as dropdowns</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="editOtherDropdowns"> 
+                    <label for="editOtherDropdowns">solutions, sol_particulars, industries, ind_particulars fields show as dropdowns</label>
+                </div>
+                
+                <button type="button" id="submitVerification">Submit Verification</button>
+            </form>
+            
+            <div id="verificationResult" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('openAppBtn').addEventListener('click', function() {
+            window.open('http://localhost:3000', '_blank');
+        });
+        
+        document.getElementById('openConsoleBtn').addEventListener('click', function() {
+            alert('To open browser console:\n\n' +
+                  '1. Press F12 or right-click and select "Inspect"\n' +
+                  '2. Select the "Console" tab\n' +
+                  '3. Look for [DEBUG] messages showing dropdown options');
+        });
+        
+        document.getElementById('runAnalyzerBtn').addEventListener('click', function() {
+            const analyzerCode = `// This script will analyze all dropdown fields in the application
+// Run this in your browser console to debug dropdown options
+
+function analyzeDropdowns() {
+    console.log('=== DROPDOWN ANALYSIS ===');
+    
+    // Get all field options from getFieldOptions
+    const dropdownFields = [
+        'decision', 
+        'status', 
+        'opp_status',
+        'a', 'c', 'r', 'u', 'd',
+        'solutions', 'sol_particulars', 
+        'industries', 'ind_particulars',
+        'submitted'
+    ];
+    
+    console.log('\\n1. OPTIONS FROM getFieldOptions():');
+    dropdownFields.forEach(field => {
+        const options = window.getFieldOptions ? window.getFieldOptions(field) : [];
+        console.log(\`\${field}: \${options && options.length ? options.join(', ') : 'NO OPTIONS'}\`);
+    });
+    
+    // Try to find modals in the page
+    const editModal = document.getElementById('editRowModal');
+    const createModal = document.getElementById('createOpportunityModal');
+    
+    console.log('\\n2. EDIT MODAL FIELDS:');
+    if (editModal && editModal.style.display !== 'none' && !editModal.classList.contains('hidden')) {
+        const selects = editModal.querySelectorAll('select');
+        
+        if (selects.length === 0) {
+            console.log('No select elements found in Edit Modal');
+        } else {
+            selects.forEach(select => {
+                const name = select.name || select.id;
+                const options = Array.from(select.options).map(opt => opt.value);
+                console.log(\`\${name}: \${options.join(', ')}\`);
+            });
+        }
+    } else {
+        console.log('Edit Modal not open or not found');
+    }
+    
+    console.log('\\n3. CREATE MODAL FIELDS:');
+    if (createModal && createModal.style.display !== 'none' && !createModal.classList.contains('hidden')) {
+        const selects = createModal.querySelectorAll('select');
+        
+        if (selects.length === 0) {
+            console.log('No select elements found in Create Modal');
+        } else {
+            selects.forEach(select => {
+                const name = select.name || select.id;
+                const options = Array.from(select.options).map(opt => opt.value);
+                console.log(\`\${name}: \${options.join(', ')}\`);
+            });
+        }
+    } else {
+        console.log('Create Modal not open or not found');
+    }
+    
+    console.log('\\n4. DROPDOWN_FIELDS constant:');
+    if (window.DROPDOWN_FIELDS) {
+        console.log(window.DROPDOWN_FIELDS);
+    } else {
+        console.log('DROPDOWN_FIELDS not found');
+    }
+    
+    console.log('\\n=== END ANALYSIS ===');
+}
+
+// Run the analysis
+analyzeDropdowns();`;
+            
+            const mainWindow = window.open('http://localhost:3000', '_blank');
+            setTimeout(() => {
+                if (mainWindow && !mainWindow.closed) {
+                    alert('Once the application loads, press OK to inject the dropdown analyzer');
+                    try {
+                        mainWindow.eval(analyzerCode);
+                    } catch (error) {
+                        alert('Error injecting analyzer: ' + error.message + '\nPlease check the browser console for more details.');
+                    }
+                } else {
+                    alert('Could not access the main application window. Please try running the analyzer manually.');
+                }
+            }, 3000);
+        });
+        
+        document.getElementById('submitVerification').addEventListener('click', function() {
+            const createDecisionOptions = document.getElementById('createDecisionOptions').checked;
+            const createACRUDDropdowns = document.getElementById('createACRUDDropdowns').checked;
+            const createOtherDropdowns = document.getElementById('createOtherDropdowns').checked;
+            const editDecisionOptions = document.getElementById('editDecisionOptions').checked;
+            const editACRUDDropdowns = document.getElementById('editACRUDDropdowns').checked;
+            const editOtherDropdowns = document.getElementById('editOtherDropdowns').checked;
+            
+            const allPassed = createDecisionOptions && createACRUDDropdowns && createOtherDropdowns && 
+                            editDecisionOptions && editACRUDDropdowns && editOtherDropdowns;
+            
+            const resultDiv = document.getElementById('verificationResult');
+            resultDiv.style.display = 'block';
+            
+            if (allPassed) {
+                document.getElementById('testStatus').className = 'status success';
+                document.getElementById('testStatus').textContent = 'All tests passed! The fix was successful.';
+                
+                resultDiv.innerHTML = `
+                    <h3>✅ Fix Successful!</h3>
+                    <p>All dropdown fields are now working correctly in both Create and Edit modals.</p>
+                    <ul>
+                        <li>Decision field shows correct options (GO, DECLINE)</li>
+                        <li>A, C, R, U, D fields show as dropdowns</li>
+                        <li>solutions, sol_particulars, industries, ind_particulars fields show as dropdowns</li>
+                    </ul>
+                    <p><strong>Root Cause:</strong> The main issue was that 'a', 'c', 'r', 'u', 'd', and 'submitted' were not included in the DROPDOWN_FIELDS constant, which is the primary way the application determines which fields should be rendered as dropdowns.</p>
+                    <p>You can now remove the debug logging statements that were added during troubleshooting.</p>
+                `;
+            } else {
+                document.getElementById('testStatus').className = 'status error';
+                document.getElementById('testStatus').textContent = 'Some tests failed. The fix was not completely successful.';
+                
+                let failedTests = [];
+                if (!createDecisionOptions) failedTests.push('Create Modal: Decision options incorrect');
+                if (!createACRUDDropdowns) failedTests.push('Create Modal: A,C,R,U,D fields not showing as dropdowns');
+                if (!createOtherDropdowns) failedTests.push('Create Modal: Other fields not showing as dropdowns');
+                if (!editDecisionOptions) failedTests.push('Edit Modal: Decision options incorrect');
+                if (!editACRUDDropdowns) failedTests.push('Edit Modal: A,C,R,U,D fields not showing as dropdowns');
+                if (!editOtherDropdowns) failedTests.push('Edit Modal: Other fields not showing as dropdowns');
+                
+                resultDiv.innerHTML = `
+                    <h3>❌ Some Issues Remain:</h3>
+                    <ul>
+                        ${failedTests.map(test => `<li>${test}</li>`).join('')}
+                    </ul>
+                    <p>Further debugging may be required.</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

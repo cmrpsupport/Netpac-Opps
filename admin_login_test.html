@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #721c24; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .token-display { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; word-break: break-all; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Login Verification</h1>
+        
+        <div class="success">
+            ✅ <strong>Your Admin Account Status:</strong><br>
+            Email: reuel.rivera@cmrpautomation.com<br>
+            Status: Admin privileges granted<br>
+            Roles: ["Technical", "Proposal", "Admin"]<br>
+            Account Type: "Admin"
+        </div>
+
+        <h3>Step 1: Login Test</h3>
+        <button onclick="testAdminLogin()" id="loginBtn">🔑 Test Admin Login</button>
+        <div id="loginResult"></div>
+
+        <h3>Step 2: User Management API Test</h3>
+        <button onclick="testUserManagementAPI()" id="apiBtn" disabled>👥 Test User Management API</button>
+        <div id="apiResult"></div>
+
+        <h3>Step 3: Go to User Management Page</h3>
+        <button onclick="goToUserManagement()" id="pageBtn" disabled>🚀 Open User Management Page</button>
+        
+        <div id="tokenDisplay"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        function getApiUrl(endpoint) {
+            return (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://cmrp-opps-backend.onrender.com') + endpoint;
+        }
+
+        async function testAdminLogin() {
+            const loginBtn = document.getElementById('loginBtn');
+            const loginResult = document.getElementById('loginResult');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = '⏳ Testing Login...';
+            
+            try {
+                const response = await fetch(getApiUrl('/api/login'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    
+                    // Decode token to show user info
+                    const payload = JSON.parse(atob(authToken.split('.')[1]));
+                    
+                    loginResult.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>Login Successful!</strong><br>
+                            User: ${payload.name} (${payload.email})<br>
+                            Roles: ${JSON.stringify(payload.roles)}<br>
+                            Account Type: ${payload.accountType}<br>
+                            Token Expires: ${new Date(payload.exp * 1000).toLocaleString()}
+                        </div>
+                    `;
+                    
+                    document.getElementById('tokenDisplay').innerHTML = `
+                        <h4>🎟️ Auth Token:</h4>
+                        <div class="token-display">${authToken}</div>
+                    `;
+                    
+                    document.getElementById('apiBtn').disabled = false;
+                    document.getElementById('pageBtn').disabled = false;
+                } else {
+                    loginResult.innerHTML = `<div class="error">❌ Login Failed: ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                loginResult.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔑 Test Admin Login';
+            }
+        }
+
+        async function testUserManagementAPI() {
+            const apiBtn = document.getElementById('apiBtn');
+            const apiResult = document.getElementById('apiResult');
+            
+            if (!authToken) {
+                apiResult.innerHTML = '<div class="error">❌ No auth token available</div>';
+                return;
+            }
+            
+            apiBtn.disabled = true;
+            apiBtn.textContent = '⏳ Testing API...';
+            
+            try {
+                const response = await fetch(getApiUrl('/api/users'), {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    apiResult.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>User Management API Test Successful!</strong><br>
+                            Found ${data.length} users in the system.<br>
+                            API endpoint is accessible with admin privileges.
+                        </div>
+                    `;
+                } else {
+                    apiResult.innerHTML = `<div class="error">❌ API Test Failed (${response.status}): ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                apiResult.innerHTML = `<div class="error">❌ API Network Error: ${error.message}</div>`;
+            } finally {
+                apiBtn.disabled = false;
+                apiBtn.textContent = '👥 Test User Management API';
+            }
+        }
+
+        function goToUserManagement() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            // Store the token in localStorage and redirect
+            localStorage.setItem('authToken', authToken);
+            window.location.href = 'user_management.html';
+        }
+
+        // Auto-run login test if we have stored credentials
+        document.addEventListener('DOMContentLoaded', function() {
+            const storedToken = localStorage.getItem('authToken');
+            if (storedToken) {
+                try {
+                    const payload = JSON.parse(atob(storedToken.split('.')[1]));
+                    if (payload.exp * 1000 > Date.now()) {
+                        authToken = storedToken;
+                        document.getElementById('apiBtn').disabled = false;
+                        document.getElementById('pageBtn').disabled = false;
+                        document.getElementById('loginResult').innerHTML = `
+                            <div class="success">
+                                ✅ <strong>Existing Token Found!</strong><br>
+                                User: ${payload.name} (${payload.email})<br>
+                                Click "Test User Management API" to verify access.
+                            </div>
+                        `;
+                    }
+                } catch (e) {
+                    // Invalid token, ignore
+                }
+            }
+        });
+    </script>
+</body>
+</html>

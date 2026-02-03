@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Drive Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border: 1px solid #ddd; }
+        .error { background: #ffebee; border-color: #f44336; }
+        .success { background: #e8f5e9; border-color: #4caf50; }
+        button { padding: 10px 20px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Minimal Drive Test</h1>
+    <p>This will help us see exactly what's going wrong with the API call.</p>
+    
+    <button onclick="runTest()">Run Test</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="logs"></div>
+
+    <script>
+        function log(message, type = 'normal') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            document.getElementById('logs').appendChild(div);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function runTest() {
+            clearLogs();
+            
+            // Step 1: Check token
+            log('Step 1: Checking authentication token...');
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                log('ERROR: No authToken found in localStorage. Please login first.', 'error');
+                log('Go to the main app (http://localhost:3000) and login, then come back here.', 'error');
+                return;
+            }
+            
+            log('✓ Token found: ' + token.substring(0, 20) + '...', 'success');
+
+            // Step 2: Prepare request data
+            log('Step 2: Preparing request data...');
+            const opportunityId = '453c5db8-3bb0-415c-beef-aadb3b760436';
+            const folderId = '0BwLYHtwPeCSpX0ZYU1EwTUhsOEk';
+            const url = `http://localhost:3000/api/opportunities/${opportunityId}/drive-folder`;
+            const payload = { folderId };
+            
+            log('URL: ' + url);
+            log('Payload: ' + JSON.stringify(payload));
+
+            // Step 3: Make the request
+            log('Step 3: Making API request...');
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                log('Response status: ' + response.status + ' ' + response.statusText);
+                
+                // Try to read response as JSON
+                let responseData;
+                try {
+                    responseData = await response.json();
+                    log('Response data: ' + JSON.stringify(responseData, null, 2));
+                } catch (e) {
+                    const responseText = await response.text();
+                    log('Response (not JSON): ' + responseText);
+                }
+
+                if (response.status === 200) {
+                    log('SUCCESS! The API call worked!', 'success');
+                } else if (response.status === 400) {
+                    log('400 Bad Request - This is the error we\'re debugging', 'error');
+                    log('Response details: ' + JSON.stringify(responseData), 'error');
+                } else if (response.status === 403) {
+                    log('403 Forbidden - Authentication or authorization issue', 'error');
+                } else {
+                    log('Unexpected status code: ' + response.status, 'error');
+                }
+
+            } catch (networkError) {
+                log('Network error: ' + networkError.message, 'error');
+                log('This could be a CORS issue or server not running', 'error');
+            }
+        }
+
+        // Auto-run test when page loads
+        window.onload = () => {
+            log('Page loaded. Click "Run Test" to start debugging.');
+        };
+    </script>
+</body>
+</html>

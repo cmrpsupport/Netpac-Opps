@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Load configuration first -->
+    <script src="config.js"></script>
+    
+    <!-- Resizable table styles -->
+    <style>
+        /* Resizable table columns */
+        .resizable-table {
+            position: relative;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .resizable-table th {
+            position: relative;
+            border-right: 1px solid #e5e7eb;
+        }
+        
+        .resizable-table th:last-child {
+            border-right: none;
+        }
+        
+        /* Column widths - adjust as needed */
+        .resizable-table th:nth-child(1) { width: 80px; min-width: 60px; } /* USERNAME */
+        .resizable-table th:nth-child(2) { width: 180px; min-width: 150px; } /* EMAIL */
+        .resizable-table th:nth-child(3) { width: 100px; min-width: 80px; } /* ROLES */
+        .resizable-table th:nth-child(4) { width: 90px; min-width: 70px; } /* ACCOUNT TYPE */
+        .resizable-table th:nth-child(5) { width: 120px; min-width: 100px; } /* LAST LOGIN */
+        .resizable-table th:nth-child(6) { width: 100px; min-width: 80px; } /* TIMESTAMP */
+        .resizable-table th:nth-child(7) { width: 200px; min-width: 180px; } /* ACTIONS */
+        
+        /* Resize handle */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: -2px;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            cursor: col-resize;
+            z-index: 10;
+        }
+        
+        .resize-handle:hover {
+            background: #3b82f6;
+            opacity: 0.5;
+        }
+        
+        .resize-handle.resizing {
+            background: #3b82f6;
+            opacity: 0.8;
+        }
+        
+        /* Table responsive wrapper adjustments */
+        .table-responsive-wrapper {
+            overflow-x: auto;
+        }
+        
+        .resizable-table td {
+            border-right: 1px solid #e5e7eb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .resizable-table td:last-child {
+            border-right: none;
+            white-space: nowrap; /* Prevent action button text wrapping */
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Shared Navigation Containers -->
+    <div id="shared-topbar"></div>
+    <div id="shared-sidebar"></div>
+
+    <!-- Main Content Container - Following the same pattern as other pages -->
+    <div class="main-content" style="padding-top: 1rem;">
+        <!-- Access Denied Banner (hidden by default) -->
+        <div id="accessDeniedBanner" style="display:none;color:#fff;background:#d32f2f;padding:1rem;text-align:center;font-weight:bold;margin-bottom:1rem;z-index:20;border-radius:4px;">
+            Access Denied: You do not have permission to view this page.
+        </div>
+
+        <!-- Page Header -->
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">User Management</h1>
+                <button id="addUserButton" class="action-button">
+                    <span class="material-icons">add</span>
+                    Add New User
+                </button>
+            </div>
+
+            <!-- Users Table Section - Following the same pattern as other pages -->
+            <div class="table-responsive-wrapper">
+            <div class="table-container">
+                    <table id="usersTable" class="min-w-full divide-y resizable-table">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th class="px-3 py-2 text-left">
+                                    USERNAME
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
+                                    EMAIL
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
+                                    ROLES
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
+                                    ACCOUNT TYPE
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
+                                    LAST LOGIN
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
+                                    TIMESTAMP
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center p-4 loading-text">Loading users...</td>
+                            </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div id="rowCount" class="mt-4 text-sm"></div>
+            </div>
+        </div>
+        
+    <!-- User Modal - Following the same modal pattern as other pages -->
+        <div id="userModalOverlay" class="modal-overlay hidden">
+        <div id="userModal" class="modal hidden" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New User</h2>
+                <button type="button" aria-label="Close" class="modal-close-x">&times;</button>
+            </div>
+            
+            <form id="userForm" class="modal-body">
+                    <input type="hidden" id="userId" name="userId">
+                
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Basic Information</div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="username">Username <span class="text-red-500">*</span></label>
+                            <input type="text" id="username" name="username" required />
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="email">Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" required />
+                        </div>
+                    </div>
+                    <div class="form-row single-column">
+                        <div class="enhanced-field">
+                            <label for="password">Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="password" name="password" required />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Access Information Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Access Information</div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label>Roles <span class="text-red-500">*</span></label>
+                            <div id="roleCheckboxes" class="space-y-2 mt-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="roles" value="DS" class="mr-2">
+                                    <span>Digital Solutions (DS)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="roles" value="SE" class="mr-2">
+                                    <span>Smart Energy (SE)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="roles" value="AM" class="mr-2">
+                                    <span>Account Manager (AM)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="roles" value="TM" class="mr-2">
+                                    <span>Technical Manager (TM)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="roles" value="Office Admin" class="mr-2">
+                                    <span>Office Admin</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="accountType">Account Type <span class="text-red-500">*</span></label>
+                            <select id="accountType" name="accountType" required>
+                                <option value="">-- Select --</option>
+                                <option value="User">User</option>
+                                <option value="System Admin">System Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    </div>
+                </form>
+            
+            <div class="modal-actions">
+                <button type="button" id="cancelButton" class="modal-close-btn">Cancel</button>
+                <button type="submit" form="userForm" class="modal-save-btn">Save User</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Scripts -->
+    <script src="shared-navigation.js?v=1750741456"></script>
+    <script>
+    // --- API Configuration ---
+    function getApiUrl(endpoint) {
+        if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) {
+            return window.APP_CONFIG.API_BASE_URL + endpoint;
+        }
+        // Fallback for development with CORS handling
+        const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3000' 
+            : 'https://cmrp-opps-backend.onrender.com';
+        return baseUrl + endpoint;
+    }
+
+    // Initialize shared navigation
+    let sharedNav;
+    
+    async function initializeApp() {
+        try {
+            console.log('=== USER MANAGEMENT INITIALIZATION STARTED ===');
+            
+            // Ensure APP_CONFIG exists
+            if (!window.APP_CONFIG) {
+                window.APP_CONFIG = {
+                    API_BASE_URL: getApiUrl(''),
+                    ENDPOINTS: {
+                        HEARTBEAT: '/api/heartbeat',
+                        ONLINE_USERS: '/api/online-users',
+                        USERS: '/api/users'
+                    }
+                };
+            }
+            
+            // Initialize shared navigation
+            sharedNav = new SharedNavigation();
+            await sharedNav.initialize();
+            
+            // Directly initialize user management - no auth checks
+            await initializeUserManagement();
+            
+        } catch (error) {
+            console.error('Error initializing app:', error);
+        }
+    }
+
+
+    // Initialize user management functionality
+    async function initializeUserManagement() {
+        try {
+            // Get user list
+            await fetchUsers();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+        } catch (error) {
+            console.error('Error initializing user management:', error);
+        }
+    }
+
+    // Fetch users from API
+    async function fetchUsers() {
+        try {
+            const authToken = localStorage.getItem('authToken');
+            
+            // Check if token exists
+            if (!authToken) {
+                throw new Error('No authentication token found. Please log in again.');
+            }
+
+            const response = await fetch(getApiUrl('/api/users'), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                let errorMessage = `Failed to fetch users: ${response.status}`;
+                
+                if (response.status === 401) {
+                    errorMessage = 'Authentication failed. Please log in again.';
+                    localStorage.removeItem('authToken'); // Clear invalid token
+                    window.location.href = '/login.html';
+                    return;
+                } else if (response.status === 403) {
+                    errorMessage = 'Access denied. Admin privileges required to view user management.';
+                } else if (response.status === 500) {
+                    const errorText = await response.text();
+                    errorMessage = `Server error: ${errorText}`;
+                }
+                
+                throw new Error(errorMessage);
+            }
+
+            const users = await response.json();
+            console.log('Fetched users raw data:', users); // Enhanced debug log
+            
+            // Debug each user's roles specifically
+            users.forEach((user, index) => {
+                console.log(`User ${index + 1}:`, {
+                    name: user.name,
+                    email: user.email,
+                    roles: user.roles,
+                    rolesType: typeof user.roles,
+                    rolesIsArray: Array.isArray(user.roles),
+                    accountType: user.accountType
+                });
+            });
+            
+            populateUserTable(users);
+            updateRowCount(users.length);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            // Show detailed error in table
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-red-600">
+                <div class="font-bold">Error loading users</div>
+                <div class="text-sm mt-2">${error.message}</div>
+            </td></tr>`;
+        }
+    }
+
+    // Populate user table
+    function populateUserTable(users) {
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = '';
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">No users found</td></tr>';
+                return;
+            }
+
+        users.forEach((user, index) => {
+            const tr = document.createElement('tr');
+            
+            // Handle missing or null values with better fallbacks
+            const username = user.name || user.username || user.email?.split('@')[0] || 'N/A';
+            const email = user.email || 'N/A';
+            const userId = user.id || user._id || `user-${index}`; // Handle different ID formats
+            
+            // ENHANCED roles display - handle all possible formats
+            let roles = 'N/A';
+            console.log(`Processing user ${index + 1} (${username}) roles:`, user.roles, typeof user.roles); // Debug log
+            
+            if (user.roles !== null && user.roles !== undefined) {
+                if (Array.isArray(user.roles)) {
+                    // Handle array format
+                    roles = user.roles.length > 0 ? user.roles.join(', ') : 'No Roles';
+                    console.log(`Array roles for ${username}:`, roles);
+                } else if (typeof user.roles === 'string') {
+                    // Handle string format (could be comma-separated)
+                    const trimmedRoles = user.roles.trim();
+                    if (trimmedRoles) {
+                        // If it contains commas, split and rejoin for consistency
+                        if (trimmedRoles.includes(',')) {
+                            const rolesArray = trimmedRoles.split(',').map(r => r.trim()).filter(r => r);
+                            roles = rolesArray.length > 0 ? rolesArray.join(', ') : 'No Roles';
+                } else {
+                            roles = trimmedRoles;
+                        }
+                    } else {
+                        roles = 'No Roles';
+                    }
+                    console.log(`String roles for ${username}:`, roles);
+                } else if (typeof user.roles === 'object') {
+                    // Handle object format (might be JSON)
+                    try {
+                        const rolesObj = typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles;
+                        if (Array.isArray(rolesObj)) {
+                            roles = rolesObj.length > 0 ? rolesObj.join(', ') : 'No Roles';
+                        } else {
+                            roles = JSON.stringify(rolesObj);
+                        }
+                        console.log(`Object roles for ${username}:`, roles);
+                    } catch (e) {
+                        roles = 'Invalid Role Data';
+                        console.error(`Error parsing roles for ${username}:`, e);
+                    }
+                } else {
+                    roles = String(user.roles);
+                    console.log(`Other type roles for ${username}:`, roles);
+                }
+        } else {
+                console.log(`No roles found for ${username}`);
+            }
+            
+            const accountType = user.accountType || user.account_type || 'User';
+            
+            // Format last login date
+            let lastLogin = 'Never';
+            let timestamp = 'N/A';
+            if (user.lastLoginAt) {
+                try {
+                    const loginDate = new Date(user.lastLoginAt);
+                    const now = new Date();
+                    const diffMs = now - loginDate;
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                    
+                    // Relative time
+                    if (diffMinutes < 1) {
+                        lastLogin = 'Just now';
+                    } else if (diffMinutes < 60) {
+                        lastLogin = `${diffMinutes}m ago`;
+                    } else if (diffHours < 24) {
+                        lastLogin = `${diffHours}h ago`;
+                    } else if (diffDays < 7) {
+                        lastLogin = `${diffDays}d ago`;
+                    } else {
+                        lastLogin = loginDate.toLocaleDateString();
+                    }
+                    
+                    // Only time (no date)
+                    timestamp = loginDate.toLocaleTimeString();
+                } catch (e) {
+                    lastLogin = 'Invalid date';
+                    timestamp = 'Invalid date';
+                }
+            }
+            
+            console.log(`Final display for ${username}: roles="${roles}", userId="${userId}", lastLogin="${lastLogin}", timestamp="${timestamp}"`); // Final debug log
+            
+            // Create table row with proper data attributes
+            tr.innerHTML = `
+                <td class="px-3 py-2">${username}</td>
+                <td class="px-3 py-2">${email}</td>
+                <td class="px-3 py-2"><strong>${roles}</strong></td>
+                <td class="px-3 py-2">${accountType}</td>
+                <td class="px-3 py-2">${lastLogin}</td>
+                <td class="px-3 py-2">${timestamp}</td>
+                <td class="px-3 py-2">
+                    <button class="edit-user action-button mr-2" data-user-id="${userId}" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                        <span class="material-icons" style="font-size: 1rem;">edit</span>
+                        Edit
+                    </button>
+                    <button class="delete-user action-button" data-user-id="${userId}" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; background-color: #dc2626;">
+                        <span class="material-icons" style="font-size: 1rem;">delete</span>
+                        Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        console.log('Populated table with', users.length, 'users'); // Debug log
+    }
+
+    // Update row count display
+    function updateRowCount(count) {
+        const rowCountElement = document.getElementById('rowCount');
+        if (rowCountElement) {
+            rowCountElement.textContent = `Showing ${count} user${count !== 1 ? 's' : ''}`;
+        }
+    }
+
+    // Setup resizable columns functionality
+    function setupResizableColumns() {
+        const table = document.getElementById('usersTable');
+        if (!table) return;
+
+        const resizeHandles = table.querySelectorAll('.resize-handle');
+        let isResizing = false;
+        let currentHandle = null;
+        let currentColumn = null;
+        let startX = 0;
+        let startWidth = 0;
+
+        resizeHandles.forEach((handle, index) => {
+            handle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                currentHandle = handle;
+                currentColumn = handle.closest('th');
+                startX = e.clientX;
+                startWidth = parseInt(document.defaultView.getComputedStyle(currentColumn).width, 10);
+                
+                handle.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing || !currentColumn || !currentHandle) return;
+
+            const width = startWidth + e.clientX - startX;
+            const minWidth = parseInt(getComputedStyle(currentColumn).getPropertyValue('min-width'), 10);
+            
+            if (width >= minWidth) {
+                currentColumn.style.width = width + 'px';
+                // Also update corresponding td cells
+                const columnIndex = Array.from(currentColumn.parentNode.children).indexOf(currentColumn);
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cell = row.children[columnIndex];
+                    if (cell) {
+                        cell.style.width = width + 'px';
+                    }
+                });
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                if (currentHandle) {
+                    currentHandle.classList.remove('resizing');
+                }
+                currentHandle = null;
+                currentColumn = null;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Setup resizable columns
+        setupResizableColumns();
+        
+        // Add user button
+        const addUserButton = document.getElementById('addUserButton');
+        if (addUserButton) {
+            addUserButton.addEventListener('click', () => {
+                // Reset form for new user
+                document.getElementById('userForm').reset();
+                document.getElementById('userId').value = '';
+                document.getElementById('password').required = true;
+                document.getElementById('modalTitle').textContent = 'Add New User';
+                document.getElementById('userModalOverlay').classList.remove('hidden');
+                document.getElementById('userModal').classList.remove('hidden');
+            });
+        }
+
+        // Cancel button and close X
+        const cancelButton = document.getElementById('cancelButton');
+        const closeButton = document.querySelector('#userModal .modal-close-x');
+        
+        function closeModal() {
+            document.getElementById('userModalOverlay').classList.add('hidden');
+            document.getElementById('userModal').classList.add('hidden');
+        }
+        
+        if (cancelButton) {
+            cancelButton.addEventListener('click', closeModal);
+        }
+        
+        if (closeButton) {
+            closeButton.addEventListener('click', closeModal);
+        }
+
+        // User form submission
+        const userForm = document.getElementById('userForm');
+        if (userForm) {
+            userForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleUserFormSubmit(e);
+            });
+        }
+
+        // Edit and delete buttons (using event delegation)
+        const userTableBody = document.getElementById('userTableBody');
+        if (userTableBody) {
+            userTableBody.addEventListener('click', async (e) => {
+                if (e.target.closest('.edit-user')) {
+                    const button = e.target.closest('.edit-user');
+                    const userId = button.dataset.userId;
+                    console.log('Edit button clicked, userId:', userId); // Debug log
+                    await handleEditUser(userId);
+                } else if (e.target.closest('.delete-user')) {
+                    const button = e.target.closest('.delete-user');
+                    const userId = button.dataset.userId;
+                    console.log('Delete button clicked, userId:', userId); // Debug log
+                    await handleDeleteUser(userId);
+                }
+            });
+        }
+    }
+
+    // Handle user form submission
+    async function handleUserFormSubmit(e) {
+        try {
+            const formData = new FormData(e.target);
+            const userId = formData.get('userId');
+            const userData = {
+                name: formData.get('username'), // Use 'name' field for username
+                email: formData.get('email'),
+                roles: Array.from(formData.getAll('roles')), // Updated to match the new field name
+                accountType: formData.get('accountType')
+            };
+
+            // Validate required fields
+            if (!userData.name || !userData.email || !userData.accountType) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            if (userData.roles.length === 0) {
+                alert('Please select at least one role');
+                return;
+            }
+            
+            // Handle password field
+            const password = formData.get('password');
+            if (!userId && (!password || !password.trim())) {
+                // New user requires password
+                alert('Password is required for new users');
+                return;
+            }
+            if (password && password.trim()) {
+                if (password.length < 8 || password.length > 100) {
+                    alert('Password must be between 8 and 100 characters');
+                    return;
+                }
+                userData.password = password;
+            }
+
+            console.log('Submitting user data:', userData); // Debug log
+
+            const authToken = localStorage.getItem('authToken');
+            const method = userId ? 'PUT' : 'POST';
+            const url = userId ? getApiUrl(`/api/users/${userId}`) : getApiUrl('/api/users');
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`Failed to ${userId ? 'update' : 'create'} user: ${response.status} - ${errorData}`);
+            }
+
+            // Refresh user list
+            await fetchUsers();
+            
+            // Close modal
+            document.getElementById('userModalOverlay').classList.add('hidden');
+            document.getElementById('userModal').classList.add('hidden');
+            e.target.reset();
+
+        } catch (error) {
+            console.error('Error submitting user form:', error);
+            alert('Error saving user: ' + error.message);
+        }
+    }
+
+    // Handle edit user
+    async function handleEditUser(userId) {
+        try {
+            const authToken = localStorage.getItem('authToken');
+                const response = await fetch(getApiUrl(`/api/users/${userId}`), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+                if (!response.ok) {
+                throw new Error(`Failed to fetch user: ${response.status}`);
+            }
+
+            const user = await response.json();
+            console.log('Editing user data:', user); // Debug log
+            
+            // Populate form
+            document.getElementById('userId').value = user.id;
+            document.getElementById('username').value = user.name || user.username || '';
+            document.getElementById('email').value = user.email;
+            
+            // Make password optional for edits
+            const passwordField = document.getElementById('password');
+            passwordField.required = false;
+            passwordField.value = ''; // Clear any previous value
+            passwordField.placeholder = 'Leave blank to keep current password';
+            
+            document.getElementById('accountType').value = user.accountType || user.account_type || 'User';
+            
+            // Reset and set role checkboxes
+            const roleCheckboxes = document.querySelectorAll('#roleCheckboxes input[type="checkbox"]');
+            roleCheckboxes.forEach(cb => {
+                cb.checked = false; // Reset first
+                if (user.roles) {
+                    if (Array.isArray(user.roles)) {
+                        cb.checked = user.roles.includes(cb.value);
+                    } else if (typeof user.roles === 'string') {
+                        // Handle comma-separated string roles
+                        const rolesArray = user.roles.split(',').map(r => r.trim());
+                        cb.checked = rolesArray.includes(cb.value);
+                    }
+                }
+            });
+
+            // Show modal
+            document.getElementById('userModalOverlay').classList.remove('hidden');
+            document.getElementById('userModal').classList.remove('hidden');
+            document.getElementById('modalTitle').textContent = 'Edit User';
+
+        } catch (error) {
+            console.error('Error editing user:', error);
+            alert('Error loading user data: ' + error.message);
+        }
+    }
+
+    // Handle delete user
+    async function handleDeleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const authToken = localStorage.getItem('authToken');
+            const response = await fetch(getApiUrl(`/api/users/${userId}`), {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to delete user: ${response.status}`);
+            }
+
+            // Refresh user list
+            await fetchUsers();
+
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            alert('Error deleting user: ' + error.message);
+        }
+    }
+
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

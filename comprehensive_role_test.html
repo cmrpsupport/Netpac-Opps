@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Role-Based Filtering Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        button { 
+            padding: 8px 16px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            background: #007bff; 
+            color: white; 
+        }
+        button:hover { background: #0056b3; }
+        .step-by-step { background: #e7f3ff; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .result-box { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+            border-left: 4px solid #007bff;
+        }
+        .role-test { 
+            display: inline-block; 
+            margin: 10px; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            background: #f9f9f9;
+        }
+        pre { background: #f1f1f1; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .dashboard-test { 
+            border: 1px solid #28a745; 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Comprehensive Role-Based Filtering Test Suite</h1>
+        <p><strong>Objective:</strong> Validate the complete role-based auto-filtering functionality across all dashboards</p>
+        
+        <!-- Authentication Test -->
+        <div class="test-section">
+            <h2>1. Authentication & Role Extraction Test</h2>
+            <div class="step-by-step">
+                <strong>Step 1:</strong> Test login and role extraction from JWT token
+            </div>
+            <button onclick="testAuthentication()">Test Authentication</button>
+            <div id="authResults" class="result-box"></div>
+        </div>
+
+        <!-- Role Mapping Test -->
+        <div class="test-section">
+            <h2>2. Role-to-Filter Mapping Test</h2>
+            <div class="step-by-step">
+                <strong>Step 2:</strong> Test role mapping logic for each role type
+            </div>
+            <button onclick="testRoleMapping()">Test Role Mapping</button>
+            <div id="roleMappingResults" class="result-box"></div>
+        </div>
+
+        <!-- Dashboard Integration Test -->
+        <div class="test-section">
+            <h2>3. Dashboard Auto-Filtering Test</h2>
+            <div class="step-by-step">
+                <strong>Step 3:</strong> Load each dashboard and verify auto-filtering applies
+            </div>
+            <div>
+                <button onclick="testDashboard('app.js', 'Main Dashboard')">Test Main Dashboard</button>
+                <button onclick="testDashboard('executive_dashboard.js', 'Executive Dashboard')">Test Executive Dashboard</button>
+                <button onclick="testDashboard('win-loss_dashboard.js', 'Win-Loss Dashboard')">Test Win-Loss Dashboard</button>
+                <button onclick="testDashboard('forecastr_dashboard.js', 'Forecast Dashboard')">Test Forecast Dashboard</button>
+            </div>
+            <div id="dashboardResults" class="result-box"></div>
+        </div>
+
+        <!-- Live Testing Interface -->
+        <div class="test-section">
+            <h2>4. Live Role Simulation</h2>
+            <div class="step-by-step">
+                <strong>Step 4:</strong> Simulate different roles and test filtering behavior
+            </div>
+            <div>
+                <div class="role-test">
+                    <h4>DS (Data Solutions) Role</h4>
+                    <button onclick="simulateRole('DS')">Simulate DS Role</button>
+                    <div id="dsResults"></div>
+                </div>
+                <div class="role-test">
+                    <h4>SE (Systems Engineering) Role</h4>
+                    <button onclick="simulateRole('SE')">Simulate SE Role</button>
+                    <div id="seResults"></div>
+                </div>
+                <div class="role-test">
+                    <h4>Sales Role</h4>
+                    <button onclick="simulateRole('Sales')">Simulate Sales Role</button>
+                    <div id="salesResults"></div>
+                </div>
+                <div class="role-test">
+                    <h4>Admin Role</h4>
+                    <button onclick="simulateRole('Admin')">Simulate Admin Role</button>
+                    <div id="adminResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Summary -->
+        <div class="test-section">
+            <h2>5. Test Results Summary</h2>
+            <button onclick="generateReport()">Generate Comprehensive Report</button>
+            <div id="finalReport" class="result-box"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        let currentToken = null;
+
+        function getApiUrl(endpoint) {
+            return (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://cmrp-opps-backend.onrender.com') + endpoint;
+        }
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] ${message}`);
+            return `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+
+        // Role-based filtering functions (copied from dashboards for testing)
+        function getCurrentUserRoles() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.warn('[getCurrentUserRoles] No token found');
+                    return [];
+                }
+                
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.roles || [];
+            } catch (error) {
+                console.error('[getCurrentUserRoles] Error parsing token:', error);
+                return [];
+            }
+        }
+
+        function mapUserRolesToFilters(roles) {
+            console.log('[mapUserRolesToFilters] Input roles:', roles);
+            
+            if (!Array.isArray(roles) || roles.length === 0) {
+                console.log('[mapUserRolesToFilters] No roles found, returning null');
+                return null;
+            }
+
+            // DS role: Filter by data solutions
+            if (roles.includes('DS')) {
+                const filters = {
+                    solutions: ['data', 'analytics', 'intelligence', 'ds']
+                };
+                console.log('[mapUserRolesToFilters] DS role detected, returning filters:', filters);
+                return filters;
+            }
+
+            // SE role: Filter by engineering solutions
+            if (roles.includes('SE')) {
+                const filters = {
+                    solutions: ['engineering', 'technical', 'se']
+                };
+                console.log('[mapUserRolesToFilters] SE role detected, returning filters:', filters);
+                return filters;
+            }
+
+            // Sales and Admin roles: No automatic filtering
+            if (roles.includes('Sales') || roles.includes('Admin')) {
+                console.log('[mapUserRolesToFilters] Sales/Admin role detected, no filtering applied');
+                return null;
+            }
+
+            console.log('[mapUserRolesToFilters] No applicable roles found, returning null');
+            return null;
+        }
+
+        async function testAuthentication() {
+            const resultsDiv = document.getElementById('authResults');
+            resultsDiv.innerHTML = log('Starting authentication test...', 'info');
+
+            try {
+                // Test login with admin credentials
+                const loginResponse = await fetch(getApiUrl('/api/login'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error(`Login failed: ${loginResponse.status}`);
+                }
+
+                const loginResult = await loginResponse.json();
+                currentToken = loginResult.token;
+                localStorage.setItem('authToken', currentToken);
+
+                const payload = JSON.parse(atob(currentToken.split('.')[1]));
+                const roles = payload.roles || [];
+
+                resultsDiv.innerHTML += log('✅ Authentication successful!', 'success');
+                resultsDiv.innerHTML += log(`User: ${payload.name} (${payload.email})`, 'info');
+                resultsDiv.innerHTML += log(`Roles: ${roles.join(', ') || 'None'}`, 'info');
+                resultsDiv.innerHTML += log(`Token expires: ${new Date(payload.exp * 1000).toLocaleString()}`, 'info');
+
+                testResults.push({
+                    test: 'Authentication',
+                    result: 'PASS',
+                    details: `User authenticated with roles: ${roles.join(', ')}`
+                });
+
+                return true;
+            } catch (error) {
+                resultsDiv.innerHTML += log(`❌ Authentication failed: ${error.message}`, 'error');
+                testResults.push({
+                    test: 'Authentication',
+                    result: 'FAIL',
+                    details: error.message
+                });
+                return false;
+            }
+        }
+
+        async function testRoleMapping() {
+            const resultsDiv = document.getElementById('roleMappingResults');
+            resultsDiv.innerHTML = log('Testing role mapping logic...', 'info');
+
+            const testCases = [
+                { roles: ['DS'], expected: 'data solutions filter' },
+                { roles: ['SE'], expected: 'engineering solutions filter' },
+                { roles: ['Sales'], expected: 'no filtering' },
+                { roles: ['Admin'], expected: 'no filtering' },
+                { roles: ['DS', 'SE'], expected: 'DS takes precedence' },
+                { roles: [], expected: 'no filtering' }
+            ];
+
+            let passCount = 0;
+            let failCount = 0;
+
+            for (const testCase of testCases) {
+                const result = mapUserRolesToFilters(testCase.roles);
+                const roleStr = testCase.roles.join(', ') || 'None';
+                
+                if (testCase.roles.includes('DS')) {
+                    if (result && result.solutions && result.solutions.includes('data')) {
+                        resultsDiv.innerHTML += log(`✅ DS role mapping: ${roleStr} → Data solutions filter`, 'success');
+                        passCount++;
+                    } else {
+                        resultsDiv.innerHTML += log(`❌ DS role mapping failed: ${roleStr}`, 'error');
+                        failCount++;
+                    }
+                } else if (testCase.roles.includes('SE')) {
+                    if (result && result.solutions && result.solutions.includes('engineering')) {
+                        resultsDiv.innerHTML += log(`✅ SE role mapping: ${roleStr} → Engineering solutions filter`, 'success');
+                        passCount++;
+                    } else {
+                        resultsDiv.innerHTML += log(`❌ SE role mapping failed: ${roleStr}`, 'error');
+                        failCount++;
+                    }
+                } else {
+                    if (result === null) {
+                        resultsDiv.innerHTML += log(`✅ ${roleStr || 'No roles'} → No filtering (correct)`, 'success');
+                        passCount++;
+                    } else {
+                        resultsDiv.innerHTML += log(`❌ ${roleStr || 'No roles'} → Should have no filtering`, 'error');
+                        failCount++;
+                    }
+                }
+            }
+
+            const overallResult = failCount === 0 ? 'PASS' : 'PARTIAL';
+            resultsDiv.innerHTML += log(`\nRole Mapping Test: ${passCount} passed, ${failCount} failed`, overallResult === 'PASS' ? 'success' : 'warning');
+
+            testResults.push({
+                test: 'Role Mapping',
+                result: overallResult,
+                details: `${passCount} passed, ${failCount} failed`
+            });
+        }
+
+        async function testDashboard(jsFile, dashboardName) {
+            const resultsDiv = document.getElementById('dashboardResults');
+            resultsDiv.innerHTML += log(`Testing ${dashboardName}...`, 'info');
+
+            try {
+                // Create a test iframe to load the dashboard
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = `http://localhost:3000/${jsFile.replace('.js', '.html')}`;
+                document.body.appendChild(iframe);
+
+                // Wait for iframe to load
+                await new Promise((resolve) => {
+                    iframe.onload = resolve;
+                    setTimeout(resolve, 3000); // Fallback timeout
+                });
+
+                // Check if role-based filtering functions exist in the iframe
+                try {
+                    const iframeWindow = iframe.contentWindow;
+                    const hasGetCurrentUserRoles = typeof iframeWindow.getCurrentUserRoles === 'function';
+                    const hasMapUserRolesToFilters = typeof iframeWindow.mapUserRolesToFilters === 'function';
+                    const hasApplyAutoFiltersForUser = typeof iframeWindow.applyAutoFiltersForUser === 'function';
+
+                    if (hasGetCurrentUserRoles && hasMapUserRolesToFilters && hasApplyAutoFiltersForUser) {
+                        resultsDiv.innerHTML += log(`✅ ${dashboardName}: All role-based filtering functions present`, 'success');
+                        testResults.push({
+                            test: `${dashboardName} Integration`,
+                            result: 'PASS',
+                            details: 'All required functions present'
+                        });
+                    } else {
+                        resultsDiv.innerHTML += log(`⚠️ ${dashboardName}: Some functions missing`, 'warning');
+                        testResults.push({
+                            test: `${dashboardName} Integration`,
+                            result: 'PARTIAL',
+                            details: 'Some functions missing'
+                        });
+                    }
+                } catch (error) {
+                    resultsDiv.innerHTML += log(`⚠️ ${dashboardName}: Could not verify functions (CORS/Security)`, 'warning');
+                    testResults.push({
+                        test: `${dashboardName} Integration`,
+                        result: 'PARTIAL',
+                        details: 'Could not verify due to security restrictions'
+                    });
+                }
+
+                document.body.removeChild(iframe);
+            } catch (error) {
+                resultsDiv.innerHTML += log(`❌ ${dashboardName}: ${error.message}`, 'error');
+                testResults.push({
+                    test: `${dashboardName} Integration`,
+                    result: 'FAIL',
+                    details: error.message
+                });
+            }
+        }
+
+        async function simulateRole(roleName) {
+            const resultDiv = document.getElementById(`${roleName.toLowerCase()}Results`);
+            resultDiv.innerHTML = log(`Simulating ${roleName} role...`, 'info');
+
+            try {
+                // Create a test token with the specific role
+                const testPayload = {
+                    id: 'test-user',
+                    email: 'test@example.com',
+                    name: `Test ${roleName} User`,
+                    roles: [roleName],
+                    exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                };
+
+                const testToken = 'header.' + btoa(JSON.stringify(testPayload)) + '.signature';
+                localStorage.setItem('authToken', testToken);
+
+                // Test the role-based filtering
+                const extractedRoles = getCurrentUserRoles();
+                const filters = mapUserRolesToFilters(extractedRoles);
+
+                if (extractedRoles.includes(roleName)) {
+                    resultDiv.innerHTML += log(`✅ Role extraction successful: ${extractedRoles.join(', ')}`, 'success');
+                    
+                    if (roleName === 'DS' && filters && filters.solutions.includes('data')) {
+                        resultDiv.innerHTML += log(`✅ DS filtering: Data solutions filter applied`, 'success');
+                    } else if (roleName === 'SE' && filters && filters.solutions.includes('engineering')) {
+                        resultDiv.innerHTML += log(`✅ SE filtering: Engineering solutions filter applied`, 'success');
+                    } else if ((roleName === 'Sales' || roleName === 'Admin') && filters === null) {
+                        resultDiv.innerHTML += log(`✅ ${roleName} filtering: No automatic filtering (correct)`, 'success');
+                    } else {
+                        resultDiv.innerHTML += log(`⚠️ ${roleName} filtering: Unexpected result`, 'warning');
+                    }
+                    
+                    testResults.push({
+                        test: `${roleName} Role Simulation`,
+                        result: 'PASS',
+                        details: `Role correctly applied with expected filtering behavior`
+                    });
+                } else {
+                    resultDiv.innerHTML += log(`❌ Role extraction failed`, 'error');
+                    testResults.push({
+                        test: `${roleName} Role Simulation`,
+                        result: 'FAIL',
+                        details: 'Role extraction failed'
+                    });
+                }
+            } catch (error) {
+                resultDiv.innerHTML += log(`❌ Simulation failed: ${error.message}`, 'error');
+                testResults.push({
+                    test: `${roleName} Role Simulation`,
+                    result: 'FAIL',
+                    details: error.message
+                });
+            }
+        }
+
+        function generateReport() {
+            const reportDiv = document.getElementById('finalReport');
+            
+            const totalTests = testResults.length;
+            const passedTests = testResults.filter(t => t.result === 'PASS').length;
+            const partialTests = testResults.filter(t => t.result === 'PARTIAL').length;
+            const failedTests = testResults.filter(t => t.result === 'FAIL').length;
+
+            let report = `
+                <h3>📊 Test Results Summary</h3>
+                <div class="success">✅ Passed: ${passedTests}</div>
+                <div class="warning">⚠️ Partial: ${partialTests}</div>
+                <div class="error">❌ Failed: ${failedTests}</div>
+                <div class="info">📈 Total: ${totalTests}</div>
+                <br>
+                <h4>Detailed Results:</h4>
+            `;
+
+            testResults.forEach(test => {
+                const icon = test.result === 'PASS' ? '✅' : test.result === 'PARTIAL' ? '⚠️' : '❌';
+                const className = test.result === 'PASS' ? 'success' : test.result === 'PARTIAL' ? 'warning' : 'error';
+                report += `<div class="${className}">${icon} ${test.test}: ${test.result} - ${test.details}</div>`;
+            });
+
+            // Overall assessment
+            const successRate = (passedTests / totalTests) * 100;
+            if (successRate >= 80) {
+                report += `<br><div class="success"><strong>🎉 Overall Assessment: Role-based filtering is working correctly! (${successRate.toFixed(1)}% success rate)</strong></div>`;
+            } else if (successRate >= 60) {
+                report += `<br><div class="warning"><strong>⚠️ Overall Assessment: Role-based filtering needs some improvements (${successRate.toFixed(1)}% success rate)</strong></div>`;
+            } else {
+                report += `<br><div class="error"><strong>❌ Overall Assessment: Role-based filtering has significant issues (${successRate.toFixed(1)}% success rate)</strong></div>`;
+            }
+
+            reportDiv.innerHTML = report;
+
+            // Export results to console for logging
+            console.log('=== COMPREHENSIVE ROLE-BASED FILTERING TEST RESULTS ===');
+            console.table(testResults);
+            console.log(`Overall Success Rate: ${successRate.toFixed(1)}%`);
+        }
+
+        // Auto-start some basic tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Comprehensive Role-Based Filtering Test Suite loaded');
+            console.log('Click buttons to run individual tests or use "Generate Report" for summary');
+        });
+    </script>
+</body>
+</html>

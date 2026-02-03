@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Filter Independence Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-success { background-color: #dcfce7; color: #166534; border-color: #16a34a; }
+        .status-error { background-color: #fee2e2; color: #dc2626; border-color: #dc2626; }
+        .status-warning { background-color: #fef3c7; color: #92400e; border-color: #f59e0b; }
+        .status-info { background-color: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">🔍 Dashboard Filter Independence Verification</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Instructions</h2>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Open the main application in another tab: <a href="index.html" target="_blank" class="text-blue-600 underline">index.html</a></li>
+                <li>Copy the script below and paste it into the browser console on the main page</li>
+                <li>Run the automated test or manual commands</li>
+                <li>Observe if dashboard values change when filters are applied</li>
+            </ol>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Console Test Script</h2>
+            <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                <pre id="script-content">// Dashboard Independence Test Script
+console.clear();
+console.log('🔍 Dashboard Independence Test - Starting...');
+
+let initialValues = {};
+let currentValues = {};
+
+function getDashboardValues() {
+    return {
+        totalOpportunities: document.getElementById('totalOpportunities')?.textContent || 'N/A',
+        op100Summary: document.getElementById('op100Summary')?.textContent || 'N/A',
+        op90Summary: document.getElementById('op90Summary')?.textContent || 'N/A',
+        totalSubmitted: document.getElementById('totalSubmitted')?.textContent || 'N/A',
+        totalDeclined: document.getElementById('totalDeclined')?.textContent || 'N/A',
+        totalInactive: document.getElementById('totalInactive')?.textContent || 'N/A'
+    };
+}
+
+function compareValues(initial, current) {
+    const changes = [];
+    for (const key in initial) {
+        if (initial[key] !== current[key]) {
+            changes.push({
+                field: key,
+                from: initial[key],
+                to: current[key]
+            });
+        }
+    }
+    return changes;
+}
+
+function captureInitialValues() {
+    initialValues = getDashboardValues();
+    console.log('📊 Initial Dashboard Values:', initialValues);
+    return initialValues;
+}
+
+function testFilter(filterType, filterValue) {
+    console.log(`🧪 Testing ${filterType} filter with value: ${filterValue}`);
+    
+    const dropdown = document.getElementById(filterType === 'accountMgr' ? 'accountMgrFilterDropdown' : 'solutionsFilterDropdown');
+    if (!dropdown) {
+        console.log(`❌ ${filterType} dropdown not found`);
+        return false;
+    }
+    
+    // Find option with the specified value
+    const option = Array.from(dropdown.options).find(opt => opt.value === filterValue);
+    if (!option) {
+        console.log(`❌ Option "${filterValue}" not found in ${filterType} dropdown`);
+        console.log('Available options:', Array.from(dropdown.options).map(opt => opt.value));
+        return false;
+    }
+    
+    // Change the filter
+    dropdown.value = filterValue;
+    dropdown.dispatchEvent(new Event('change'));
+    
+    // Wait a moment then check values
+    setTimeout(() => {
+        currentValues = getDashboardValues();
+        const changes = compareValues(initialValues, currentValues);
+        
+        if (changes.length === 0) {
+            console.log('✅ SUCCESS: Dashboard values unchanged after filtering');
+        } else {
+            console.log('❌ FAILURE: Dashboard values changed after filtering');
+            changes.forEach(change => {
+                console.log(`   🔄 ${change.field}: "${change.from}" → "${change.to}"`);
+            });
+        }
+        
+        console.log('📊 Current Dashboard Values:', currentValues);
+    }, 1000);
+    
+    return true;
+}
+
+function resetFilters() {
+    console.log('🔄 Resetting all filters...');
+    
+    const accountMgrDropdown = document.getElementById('accountMgrFilterDropdown');
+    const solutionsDropdown = document.getElementById('solutionsFilterDropdown');
+    
+    if (accountMgrDropdown) {
+        accountMgrDropdown.value = 'all';
+        accountMgrDropdown.dispatchEvent(new Event('change'));
+    }
+    
+    if (solutionsDropdown) {
+        solutionsDropdown.value = 'all';
+        solutionsDropdown.dispatchEvent(new Event('change'));
+    }
+    
+    setTimeout(() => {
+        currentValues = getDashboardValues();
+        const changes = compareValues(initialValues, currentValues);
+        
+        if (changes.length === 0) {
+            console.log('✅ Dashboard values remain unchanged after reset');
+        } else {
+            console.log('❌ Dashboard values changed after reset');
+            changes.forEach(change => {
+                console.log(`   🔄 ${change.field}: "${change.from}" → "${change.to}"`);
+            });
+        }
+    }, 1000);
+}
+
+function runAutomatedTest() {
+    console.log('🚀 Starting automated dashboard independence test...');
+    
+    // Capture initial values
+    captureInitialValues();
+    
+    // Get available filter options
+    const accountMgrDropdown = document.getElementById('accountMgrFilterDropdown');
+    const solutionsDropdown = document.getElementById('solutionsFilterDropdown');
+    
+    let testIndex = 0;
+    const tests = [];
+    
+    // Add account manager tests
+    if (accountMgrDropdown && accountMgrDropdown.options.length > 1) {
+        for (let i = 1; i < Math.min(accountMgrDropdown.options.length, 3); i++) {
+            tests.push({
+                type: 'accountMgr',
+                value: accountMgrDropdown.options[i].value,
+                name: accountMgrDropdown.options[i].textContent
+            });
+        }
+    }
+    
+    // Add solutions tests
+    if (solutionsDropdown && solutionsDropdown.options.length > 1) {
+        for (let i = 1; i < Math.min(solutionsDropdown.options.length, 3); i++) {
+            tests.push({
+                type: 'solutions',
+                value: solutionsDropdown.options[i].value,
+                name: solutionsDropdown.options[i].textContent
+            });
+        }
+    }
+    
+    if (tests.length === 0) {
+        console.log('❌ No filter options available for testing');
+        return;
+    }
+    
+    function runNextTest() {
+        if (testIndex >= tests.length) {
+            console.log('🏁 All tests completed');
+            setTimeout(() => {
+                resetFilters();
+                console.log('✅ Test suite finished');
+            }, 2000);
+            return;
+        }
+        
+        const test = tests[testIndex];
+        console.log(`🔬 Test ${testIndex + 1}/${tests.length}: ${test.type} = "${test.name}"`);
+        
+        testFilter(test.type, test.value);
+        testIndex++;
+        
+        setTimeout(runNextTest, 3000);
+    }
+    
+    setTimeout(runNextTest, 2000);
+}
+
+// Make functions available
+window.captureInitialValues = captureInitialValues;
+window.testFilter = testFilter;
+window.resetFilters = resetFilters;
+window.runAutomatedTest = runAutomatedTest;
+window.getDashboardValues = getDashboardValues;
+
+console.log('📋 Available commands:');
+console.log('  captureInitialValues() - Capture current dashboard values');
+console.log('  testFilter("accountMgr", "John Doe") - Test specific filter');
+console.log('  resetFilters() - Reset all filters');
+console.log('  runAutomatedTest() - Run complete test suite');
+console.log('  getDashboardValues() - Get current dashboard values');
+
+console.log('🎯 Quick start: Run runAutomatedTest() to test dashboard independence');</pre>
+            </div>
+            <button onclick="copyScript()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                📋 Copy Script to Clipboard
+            </button>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Expected Behavior</h2>
+            <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                    <div class="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">✓</div>
+                    <div>
+                        <p class="font-semibold text-green-700">Dashboard Cards Should NOT Change</p>
+                        <p class="text-gray-600">When applying account manager or solutions filters, dashboard cards (OP100, OP90, Total Opportunities, etc.) should show the same values as they represent overall system metrics.</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="w-6 h-6 bg-blue-500 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">i</div>
+                    <div>
+                        <p class="font-semibold text-blue-700">Table Should Change</p>
+                        <p class="text-gray-600">The opportunities table and row count should change to show only filtered opportunities, but dashboard cards should remain stable.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Troubleshooting</h2>
+            <div class="space-y-3">
+                <div class="p-3 border-l-4 border-yellow-400 bg-yellow-50">
+                    <p class="font-semibold text-yellow-800">If dashboard values ARE changing:</p>
+                    <ul class="list-disc list-inside text-yellow-700 mt-2 space-y-1">
+                        <li>There may be additional code calling <code>updateSummaryCounters()</code> during filtering</li>
+                        <li>Check browser console for any JavaScript errors</li>
+                        <li>Verify the implementation in <code>app.js</code> lines 520-530</li>
+                    </ul>
+                </div>
+                <div class="p-3 border-l-4 border-green-400 bg-green-50">
+                    <p class="font-semibold text-green-800">If dashboard values are NOT changing:</p>
+                    <ul class="list-disc list-inside text-green-700 mt-2 space-y-1">
+                        <li>✅ The implementation is working correctly</li>
+                        <li>Dashboard cards are properly independent of table filters</li>
+                        <li>This is the desired behavior</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyScript() {
+            const scriptContent = document.getElementById('script-content').textContent;
+            navigator.clipboard.writeText(scriptContent).then(() => {
+                alert('📋 Script copied to clipboard! Paste it in the browser console on the main page.');
+            }).catch(err => {
+                console.error('Failed to copy script:', err);
+                alert('❌ Failed to copy script. Please select and copy the text manually.');
+            });
+        }
+    </script>
+</body>
+</html>

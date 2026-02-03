@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Executive Dashboard Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status { padding: 5px 10px; border-radius: 20px; color: white; font-weight: bold; }
+        .status.pass { background: #22c55e; }
+        .status.fail { background: #ef4444; }
+        .status.warn { background: #f59e0b; }
+        .status.info { background: #3b82f6; }
+        .code { background: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        h1 { color: #1f2937; text-align: center; }
+        h2 { color: #374151; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Executive Dashboard Final Validation Report</h1>
+        
+        <div class="test-card">
+            <h2>📊 Test Summary</h2>
+            <div id="summary"></div>
+        </div>
+
+        <div class="test-grid">
+            <div class="test-card">
+                <h2>🔧 JavaScript Function Tests</h2>
+                <div id="js-tests"></div>
+            </div>
+
+            <div class="test-card">
+                <h2>🌐 API Connectivity Tests</h2>
+                <div id="api-tests"></div>
+            </div>
+
+            <div class="test-card">
+                <h2>🎨 UI Elements Tests</h2>
+                <div id="ui-tests"></div>
+            </div>
+
+            <div class="test-card">
+                <h2>⚡ Performance Tests</h2>
+                <div id="perf-tests"></div>
+            </div>
+        </div>
+
+        <div class="test-card">
+            <h2>📋 Detailed Results</h2>
+            <div id="detailed-results"></div>
+        </div>
+    </div>
+
+    <script>
+        class TestRunner {
+            constructor() {
+                this.results = {
+                    pass: 0,
+                    fail: 0,
+                    warn: 0,
+                    info: 0
+                };
+                this.tests = [];
+            }
+
+            addResult(category, name, status, details = '') {
+                this.results[status]++;
+                this.tests.push({ category, name, status, details });
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                // Update summary
+                const total = Object.values(this.results).reduce((a, b) => a + b, 0);
+                const passRate = total > 0 ? Math.round((this.results.pass / total) * 100) : 0;
+                
+                document.getElementById('summary').innerHTML = `
+                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <div><span class="status pass">${this.results.pass} Passed</span></div>
+                        <div><span class="status fail">${this.results.fail} Failed</span></div>
+                        <div><span class="status warn">${this.results.warn} Warnings</span></div>
+                        <div><span class="status info">${this.results.info} Info</span></div>
+                        <div style="font-weight: bold; color: ${passRate >= 80 ? '#22c55e' : passRate >= 60 ? '#f59e0b' : '#ef4444'};">
+                            Overall: ${passRate}% (${this.results.pass}/${total})
+                        </div>
+                    </div>
+                `;
+
+                // Update category displays
+                this.updateCategoryDisplay('js-tests', 'JavaScript Function Tests');
+                this.updateCategoryDisplay('api-tests', 'API Connectivity Tests');
+                this.updateCategoryDisplay('ui-tests', 'UI Elements Tests');
+                this.updateCategoryDisplay('perf-tests', 'Performance Tests');
+
+                // Update detailed results
+                const detailedHtml = this.tests.map(test => `
+                    <div style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong>[${test.category}] ${test.name}</strong>
+                            <span class="status ${test.status}">${test.status.toUpperCase()}</span>
+                        </div>
+                        ${test.details ? `<div class="code">${test.details}</div>` : ''}
+                    </div>
+                `).join('');
+                
+                document.getElementById('detailed-results').innerHTML = detailedHtml;
+            }
+
+            updateCategoryDisplay(elementId, category) {
+                const categoryTests = this.tests.filter(t => t.category === category);
+                const html = categoryTests.map(test => `
+                    <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${test.name}</span>
+                        <span class="status ${test.status}" style="font-size: 12px; padding: 2px 8px;">${test.status}</span>
+                    </div>
+                `).join('') || '<div style="color: #6b7280;">No tests run yet...</div>';
+                
+                document.getElementById(elementId).innerHTML = html;
+            }
+        }
+
+        const testRunner = new TestRunner();
+
+        async function runAllTests() {
+            // JavaScript Function Tests
+            await testJavaScriptFunctions();
+            
+            // API Connectivity Tests
+            await testAPIConnectivity();
+            
+            // UI Elements Tests
+            await testUIElements();
+            
+            // Performance Tests
+            await testPerformance();
+            
+            console.log('All tests completed!');
+        }
+
+        async function testJavaScriptFunctions() {
+            try {
+                const response = await fetch('/executive_dashboard.js');
+                const jsContent = await response.text();
+                
+                // Test 1: setupFilters function exists
+                if (jsContent.includes('function setupFilters()')) {
+                    testRunner.addResult('JavaScript Function Tests', 'setupFilters function definition', 'pass', 'Function properly defined');
+                } else {
+                    testRunner.addResult('JavaScript Function Tests', 'setupFilters function definition', 'fail', 'Function not found');
+                }
+
+                // Test 2: setupFilters is called
+                if (jsContent.includes('setupFilters();')) {
+                    testRunner.addResult('JavaScript Function Tests', 'setupFilters function call', 'pass', 'Function call found');
+                } else {
+                    testRunner.addResult('JavaScript Function Tests', 'setupFilters function call', 'fail', 'Function call not found');
+                }
+
+                // Test 3: Regex pattern fix
+                const badRegexPattern = /\/\[\\s\\._-@\]\+\//g;
+                const goodRegexPattern = /\/\[\\s\\._\\-@\]\+\//g;
+                
+                if (jsContent.match(badRegexPattern)) {
+                    testRunner.addResult('JavaScript Function Tests', 'Regex pattern fix', 'fail', 'Unfixed regex patterns found');
+                } else if (jsContent.match(goodRegexPattern)) {
+                    testRunner.addResult('JavaScript Function Tests', 'Regex pattern fix', 'pass', 'Regex patterns properly escaped');
+                } else {
+                    testRunner.addResult('JavaScript Function Tests', 'Regex pattern fix', 'info', 'No regex patterns found');
+                }
+
+                // Test 4: Filter object initialization
+                if (jsContent.includes('currentFilters = {')) {
+                    testRunner.addResult('JavaScript Function Tests', 'Filter object initialization', 'pass', 'currentFilters object found');
+                } else {
+                    testRunner.addResult('JavaScript Function Tests', 'Filter object initialization', 'warn', 'currentFilters object not found');
+                }
+
+                // Test 5: Syntax check (basic)
+                try {
+                    new Function(jsContent);
+                    testRunner.addResult('JavaScript Function Tests', 'JavaScript syntax validation', 'pass', 'No syntax errors detected');
+                } catch (syntaxError) {
+                    testRunner.addResult('JavaScript Function Tests', 'JavaScript syntax validation', 'fail', `Syntax error: ${syntaxError.message}`);
+                }
+
+            } catch (error) {
+                testRunner.addResult('JavaScript Function Tests', 'Script loading', 'fail', `Error: ${error.message}`);
+            }
+        }
+
+        async function testAPIConnectivity() {
+            // Test 1: Server health check
+            try {
+                const healthResponse = await fetch('/api/health');
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    testRunner.addResult('API Connectivity Tests', 'Server health check', 'pass', `Status: ${healthData.status}`);
+                } else {
+                    testRunner.addResult('API Connectivity Tests', 'Server health check', 'warn', `HTTP ${healthResponse.status}`);
+                }
+            } catch (error) {
+                testRunner.addResult('API Connectivity Tests', 'Server health check', 'fail', `Error: ${error.message}`);
+            }
+
+            // Test 2: Opportunities endpoint (without auth)
+            try {
+                const oppsResponse = await fetch('/api/opportunities');
+                if (oppsResponse.status === 401) {
+                    testRunner.addResult('API Connectivity Tests', 'Opportunities endpoint', 'pass', 'Endpoint accessible (auth required)');
+                } else if (oppsResponse.ok) {
+                    testRunner.addResult('API Connectivity Tests', 'Opportunities endpoint', 'pass', 'Endpoint accessible and responding');
+                } else {
+                    testRunner.addResult('API Connectivity Tests', 'Opportunities endpoint', 'warn', `HTTP ${oppsResponse.status}`);
+                }
+            } catch (error) {
+                testRunner.addResult('API Connectivity Tests', 'Opportunities endpoint', 'fail', `Error: ${error.message}`);
+            }
+
+            // Test 3: Dashboard endpoint
+            try {
+                const dashResponse = await fetch('/api/dashboard');
+                if (dashResponse.ok) {
+                    testRunner.addResult('API Connectivity Tests', 'Dashboard endpoint', 'pass', 'Endpoint accessible');
+                } else {
+                    testRunner.addResult('API Connectivity Tests', 'Dashboard endpoint', 'warn', `HTTP ${dashResponse.status}`);
+                }
+            } catch (error) {
+                testRunner.addResult('API Connectivity Tests', 'Dashboard endpoint', 'fail', `Error: ${error.message}`);
+            }
+        }
+
+        async function testUIElements() {
+            try {
+                const htmlResponse = await fetch('/executive_dashboard.html');
+                const htmlContent = await htmlResponse.text();
+                
+                // Test filter elements
+                const filterElements = ['solutionFilter', 'accountMgrFilter', 'clearFilters'];
+                let foundFilters = 0;
+                
+                filterElements.forEach(elementId => {
+                    if (htmlContent.includes(`id="${elementId}"`)) {
+                        foundFilters++;
+                        testRunner.addResult('UI Elements Tests', `Filter element: ${elementId}`, 'pass', 'Element found in HTML');
+                    } else {
+                        testRunner.addResult('UI Elements Tests', `Filter element: ${elementId}`, 'fail', 'Element not found in HTML');
+                    }
+                });
+
+                // Test dashboard elements
+                const dashboardElements = ['pipelineChart', 'statusChart', 'historicalChart'];
+                dashboardElements.forEach(elementId => {
+                    if (htmlContent.includes(`id="${elementId}"`)) {
+                        testRunner.addResult('UI Elements Tests', `Chart element: ${elementId}`, 'pass', 'Element found in HTML');
+                    } else {
+                        testRunner.addResult('UI Elements Tests', `Chart element: ${elementId}`, 'fail', 'Element not found in HTML');
+                    }
+                });
+
+                // Overall UI structure test
+                if (foundFilters === filterElements.length) {
+                    testRunner.addResult('UI Elements Tests', 'Filter structure completeness', 'pass', 'All filter elements present');
+                } else {
+                    testRunner.addResult('UI Elements Tests', 'Filter structure completeness', 'fail', `Missing ${filterElements.length - foundFilters} filter elements`);
+                }
+
+            } catch (error) {
+                testRunner.addResult('UI Elements Tests', 'HTML loading', 'fail', `Error: ${error.message}`);
+            }
+        }
+
+        async function testPerformance() {
+            // Test 1: Script loading time
+            const startTime = performance.now();
+            try {
+                await fetch('/executive_dashboard.js');
+                const loadTime = performance.now() - startTime;
+                
+                if (loadTime < 1000) {
+                    testRunner.addResult('Performance Tests', 'Script loading time', 'pass', `${loadTime.toFixed(2)}ms`);
+                } else if (loadTime < 3000) {
+                    testRunner.addResult('Performance Tests', 'Script loading time', 'warn', `${loadTime.toFixed(2)}ms (slow)`);
+                } else {
+                    testRunner.addResult('Performance Tests', 'Script loading time', 'fail', `${loadTime.toFixed(2)}ms (very slow)`);
+                }
+            } catch (error) {
+                testRunner.addResult('Performance Tests', 'Script loading time', 'fail', `Error: ${error.message}`);
+            }
+
+            // Test 2: HTML loading time
+            const htmlStartTime = performance.now();
+            try {
+                await fetch('/executive_dashboard.html');
+                const htmlLoadTime = performance.now() - htmlStartTime;
+                
+                if (htmlLoadTime < 500) {
+                    testRunner.addResult('Performance Tests', 'HTML loading time', 'pass', `${htmlLoadTime.toFixed(2)}ms`);
+                } else if (htmlLoadTime < 1500) {
+                    testRunner.addResult('Performance Tests', 'HTML loading time', 'warn', `${htmlLoadTime.toFixed(2)}ms (slow)`);
+                } else {
+                    testRunner.addResult('Performance Tests', 'HTML loading time', 'fail', `${htmlLoadTime.toFixed(2)}ms (very slow)`);
+                }
+            } catch (error) {
+                testRunner.addResult('Performance Tests', 'HTML loading time', 'fail', `Error: ${error.message}`);
+            }
+        }
+
+        // Start tests when page loads
+        runAllTests();
+    </script>
+</body>
+</html>

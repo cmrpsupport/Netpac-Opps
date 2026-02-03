@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Wake-up Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #721c24; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .status { padding: 10px; border-radius: 4px; margin: 10px 0; font-weight: bold; }
+        .loading { background: #e2e3e5; color: #495057; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Database Wake-up & Health Check</h1>
+        <p>This tool helps wake up an idle Neon database and test the connection.</p>
+
+        <div class="info">
+            <strong>Issue:</strong> Neon databases go idle after inactivity, causing "failed to fetch" errors during login attempts.
+        </div>
+
+        <div class="status loading" id="statusDisplay">
+            🔍 Ready to test database connection...
+        </div>
+
+        <div style="margin: 20px 0;">
+            <button onclick="wakeUpDatabase()">🚀 Wake Up Database</button>
+            <button onclick="testHealthEndpoint()">💓 Test Health Endpoint</button>
+            <button onclick="testLoginEndpoint()">🔐 Test Login Endpoint</button>
+            <button onclick="runFullDiagnostic()">🔧 Full Diagnostic</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDisplay = document.getElementById('statusDisplay');
+            const types = {
+                success: { bg: '#d4edda', color: '#155724', icon: '✅' },
+                error: { bg: '#f8d7da', color: '#721c24', icon: '❌' },
+                warning: { bg: '#fff3cd', color: '#856404', icon: '⚠️' },
+                info: { bg: '#d1ecf1', color: '#0c5460', icon: '🔍' },
+                loading: { bg: '#e2e3e5', color: '#495057', icon: '⏳' }
+            };
+            
+            const style = types[type] || types.info;
+            statusDisplay.style.background = style.bg;
+            statusDisplay.style.color = style.color;
+            statusDisplay.innerHTML = `${style.icon} ${message}`;
+        }
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            results.innerHTML += `<div class="${className}">${message}</div>`;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function wakeUpDatabase() {
+            clearResults();
+            updateStatus('Waking up database...', 'loading');
+            
+            try {
+                // Try to hit the health endpoint to wake up the database
+                const response = await fetch('/api/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('Database is awake and responding!', 'success');
+                    addResult(`✅ Health check successful: ${data.status}`, 'success');
+                    addResult(`📊 Service: ${data.service}`, 'info');
+                    addResult(`⏰ Timestamp: ${data.timestamp}`, 'info');
+                    
+                    // Now test database connection
+                    await testDatabaseConnection();
+                } else {
+                    throw new Error(`Health check failed with status ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('Failed to wake up database', 'error');
+                addResult(`❌ Database wake-up failed: ${error.message}`, 'error');
+                addResult(`💡 This might indicate a server or network issue`, 'warning');
+            }
+        }
+
+        async function testDatabaseConnection() {
+            try {
+                updateStatus('Testing database connection...', 'loading');
+                
+                // Try to fetch users (which requires database)
+                const response = await fetch('/api/users', {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer dummy-token-for-connection-test'
+                    }
+                });
+
+                if (response.status === 401) {
+                    // 401 means the server is responding and database is connected
+                    // (just auth failed, which is expected with dummy token)
+                    addResult(`✅ Database connection confirmed (expected auth error with dummy token)`, 'success');
+                } else if (response.status === 500) {
+                    addResult(`⚠️ Database may be warming up - try again in a moment`, 'warning');
+                } else {
+                    addResult(`🔍 Unexpected response: ${response.status}`, 'info');
+                }
+            } catch (error) {
+                addResult(`❌ Database connection test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testHealthEndpoint() {
+            clearResults();
+            updateStatus('Testing health endpoint...', 'loading');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/health');
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('Health endpoint is responding', 'success');
+                    addResult(`✅ Health check passed (${responseTime}ms)`, 'success');
+                    addResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                } else {
+                    throw new Error(`Status ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('Health endpoint failed', 'error');
+                addResult(`❌ Health check failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLoginEndpoint() {
+            clearResults();
+            updateStatus('Testing login endpoint...', 'loading');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'test@example.com', 
+                        password: 'testpassword' 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 && data.error === 'Invalid credentials') {
+                    updateStatus('Login endpoint is working correctly', 'success');
+                    addResult(`✅ Login endpoint responding (expected invalid credentials error)`, 'success');
+                    addResult(`This confirms the server and database are connected`, 'info');
+                } else if (response.status === 500) {
+                    updateStatus('Database connection issue detected', 'error');
+                    addResult(`❌ Server error (500) - likely database connection issue`, 'error');
+                    addResult(`Try waking up the database first`, 'warning');
+                } else {
+                    addResult(`🔍 Unexpected response: ${response.status} - ${JSON.stringify(data)}`, 'info');
+                }
+            } catch (error) {
+                updateStatus('Login endpoint failed', 'error');
+                addResult(`❌ Login test failed: ${error.message}`, 'error');
+                addResult(`This likely indicates a network or server issue`, 'warning');
+            }
+        }
+
+        async function runFullDiagnostic() {
+            clearResults();
+            updateStatus('Running full diagnostic...', 'loading');
+            
+            addResult(`🔧 Starting comprehensive diagnostic at ${new Date().toLocaleTimeString()}`, 'info');
+            
+            // Test 1: Health endpoint
+            addResult(`📋 Test 1: Health Endpoint`, 'info');
+            try {
+                const healthResponse = await fetch('/api/health');
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    addResult(`✅ Health endpoint: OK`, 'success');
+                } else {
+                    addResult(`❌ Health endpoint: Failed (${healthResponse.status})`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Health endpoint: ${error.message}`, 'error');
+            }
+
+            // Wait a moment for database to fully wake up
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Test 2: Login endpoint
+            addResult(`📋 Test 2: Login Endpoint`, 'info');
+            try {
+                const loginResponse = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test@test.com', password: 'test' })
+                });
+                
+                if (loginResponse.status === 401) {
+                    addResult(`✅ Login endpoint: Responding correctly`, 'success');
+                } else if (loginResponse.status === 500) {
+                    addResult(`❌ Login endpoint: Database connection issue`, 'error');
+                } else {
+                    addResult(`🔍 Login endpoint: Unexpected status ${loginResponse.status}`, 'warning');
+                }
+            } catch (error) {
+                addResult(`❌ Login endpoint: ${error.message}`, 'error');
+            }
+
+            // Test 3: Try with real credentials
+            addResult(`📋 Test 3: Real Login Attempt`, 'info');
+            try {
+                const realLoginResponse = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'reuel.rivera@cmrpautomation.com', 
+                        password: 'cmrp0601' 
+                    })
+                });
+                
+                if (realLoginResponse.ok) {
+                    addResult(`✅ Real login: SUCCESS - Database is fully operational!`, 'success');
+                    updateStatus('All systems operational!', 'success');
+                } else {
+                    const errorData = await realLoginResponse.json();
+                    addResult(`❌ Real login failed: ${errorData.error || errorData.message}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Real login error: ${error.message}`, 'error');
+            }
+
+            addResult(`🏁 Diagnostic completed at ${new Date().toLocaleTimeString()}`, 'info');
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealthEndpoint, 500);
+        });
+    </script>
+</body>
+</html>

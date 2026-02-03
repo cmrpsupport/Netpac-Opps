@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Real-time Dashboard Filter Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .test-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .test-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .dashboard-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .dashboard-title {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .dashboard-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #212529;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.monitoring { background: #fff3cd; color: #856404; }
+        .status.changed { background: #f8d7da; color: #721c24; }
+        .status.stable { background: #d4edda; color: #155724; }
+        .console {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4338ca;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🔍 Real-time Dashboard Filter Test</h1>
+        <p>Monitor dashboard cards while applying filters on the main application</p>
+    </div>
+
+    <div class="instructions">
+        <h3>📋 Test Instructions:</h3>
+        <ol>
+            <li>Open the main application at <a href="http://localhost:3000" target="_blank">localhost:3000</a> in another tab</li>
+            <li>Click "Start Monitoring" below to begin tracking dashboard values</li>
+            <li>In the main app, try filtering by Account Manager</li>
+            <li>Watch the dashboard values in this test page to see if they change</li>
+            <li>Expected: Dashboard values should remain STABLE regardless of filtering</li>
+        </ol>
+    </div>
+
+    <div class="test-grid">
+        <div class="test-panel">
+            <h3>🎯 Dashboard Values Monitor</h3>
+            <div id="status" class="status monitoring">Status: Ready to Monitor</div>
+            
+            <div class="dashboard-card">
+                <div class="dashboard-title">Total Opportunities</div>
+                <div id="totalOpportunities" class="dashboard-value">--</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="dashboard-title">OP100 Summary</div>
+                <div id="op100Summary" class="dashboard-value">--</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="dashboard-title">OP90 Summary</div>
+                <div id="op90Summary" class="dashboard-value">--</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="dashboard-title">Total Submitted</div>
+                <div id="totalSubmitted" class="dashboard-value">--</div>
+            </div>
+            
+            <button onclick="startMonitoring()">🟢 Start Monitoring</button>
+            <button onclick="stopMonitoring()">🔴 Stop Monitoring</button>
+            <button onclick="captureSnapshot()">📸 Capture Snapshot</button>
+        </div>
+
+        <div class="test-panel">
+            <h3>📊 Monitor Console</h3>
+            <div id="console" class="console">
+                Waiting to start monitoring...\n
+                Click "Start Monitoring" to begin tracking dashboard values.
+            </div>
+            <button onclick="clearConsole()">🗑️ Clear Console</button>
+        </div>
+    </div>
+
+    <script>
+        let monitoringInterval = null;
+        let lastValues = {};
+        let changeCount = 0;
+        
+        function log(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'monitoring') {
+            const status = document.getElementById('status');
+            status.textContent = `Status: ${message}`;
+            status.className = `status ${type}`;
+        }
+        
+        function getDashboardValues() {
+            const values = {};
+            
+            // Try to get values from main window (if accessible)
+            try {
+                if (window.opener || window.parent !== window) {
+                    // If this is a popup or iframe, try to access parent
+                    const mainWindow = window.opener || window.parent;
+                    const doc = mainWindow.document;
+                    
+                    values.totalOpportunities = doc.getElementById('totalOpportunities')?.textContent || '--';
+                    values.op100Summary = doc.getElementById('op100Summary')?.textContent || '--';
+                    values.op90Summary = doc.getElementById('op90Summary')?.textContent || '--';
+                    values.totalSubmitted = doc.getElementById('totalSubmitted')?.textContent || '--';
+                } else {
+                    // If we can't access main window, use localStorage polling method
+                    // This is a fallback approach
+                    values.totalOpportunities = localStorage.getItem('dashboardTest_totalOpportunities') || '--';
+                    values.op100Summary = localStorage.getItem('dashboardTest_op100Summary') || '--';
+                    values.op90Summary = localStorage.getItem('dashboardTest_op90Summary') || '--';
+                    values.totalSubmitted = localStorage.getItem('dashboardTest_totalSubmitted') || '--';
+                }
+            } catch (error) {
+                log(`❌ Error accessing dashboard values: ${error.message}`);
+                values.totalOpportunities = 'ERROR';
+                values.op100Summary = 'ERROR';
+                values.op90Summary = 'ERROR';
+                values.totalSubmitted = 'ERROR';
+            }
+            
+            return values;
+        }
+        
+        function updateDisplay(values) {
+            document.getElementById('totalOpportunities').textContent = values.totalOpportunities;
+            document.getElementById('op100Summary').textContent = values.op100Summary;
+            document.getElementById('op90Summary').textContent = values.op90Summary;
+            document.getElementById('totalSubmitted').textContent = values.totalSubmitted;
+        }
+        
+        function checkForChanges(currentValues) {
+            let hasChanged = false;
+            
+            for (const key in currentValues) {
+                if (lastValues[key] && lastValues[key] !== currentValues[key]) {
+                    log(`🔄 CHANGE DETECTED: ${key} changed from "${lastValues[key]}" to "${currentValues[key]}"`);
+                    hasChanged = true;
+                    changeCount++;
+                }
+            }
+            
+            if (hasChanged) {
+                updateStatus(`${changeCount} changes detected`, 'changed');
+                log(`⚠️ Dashboard values have changed! This indicates the filter independence is NOT working correctly.`);
+            } else if (Object.keys(lastValues).length > 0) {
+                updateStatus('Values are stable ✅', 'stable');
+            }
+            
+            lastValues = { ...currentValues };
+        }
+        
+        function monitorDashboard() {
+            const currentValues = getDashboardValues();
+            updateDisplay(currentValues);
+            checkForChanges(currentValues);
+            
+            log(`📊 Current values: Total=${currentValues.totalOpportunities}, OP100=${currentValues.op100Summary}, OP90=${currentValues.op90Summary}, Submitted=${currentValues.totalSubmitted}`);
+        }
+        
+        function startMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+            
+            log('🟢 Starting dashboard monitoring...');
+            updateStatus('Monitoring active', 'monitoring');
+            
+            // Initial capture
+            monitorDashboard();
+            
+            // Monitor every 2 seconds
+            monitoringInterval = setInterval(monitorDashboard, 2000);
+        }
+        
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+            
+            log('🔴 Monitoring stopped');
+            updateStatus('Monitoring stopped', 'monitoring');
+        }
+        
+        function captureSnapshot() {
+            log('📸 Manual snapshot captured');
+            monitorDashboard();
+        }
+        
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '';
+            log('Console cleared');
+        }
+        
+        // Instructions for localStorage method (fallback)
+        window.addEventListener('load', function() {
+            log('🔍 Dashboard Monitor loaded');
+            log('💡 If cross-window access fails, you can manually test:');
+            log('   1. Open browser console on main app');
+            log('   2. Run this code to save values to localStorage:');
+            log('   localStorage.setItem("dashboardTest_totalOpportunities", document.getElementById("totalOpportunities").textContent);');
+            log('   3. Then monitor here to see if values change');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,6035 @@
+/* --- Theme Variables --- */
+:root {
+    /* Light Theme Variables - Inspired by new screenshot */
+    --bg-body: #00529B; /* Prominent blue from image background */
+    --text-body: #FFFFFF; /* White text on blue body */
+    --bg-container: #ffffff; /* White container, as per image */
+    --border-container: #dadce0; /* Light gray border for white container */
+    --border-container-subtle: #e8e9ea; /* Very subtle border for body container */
+    --text-title: #202124; /* Dark text for titles in white container */
+    --text-primary: #202124; /* Primary text color for light mode */
+    --text-label: #5f6368; /* Dark text for labels in white container */
+    --border-table: #dadce0; /* Light gray for tables in white containers */
+    --bg-header: #0C2135; /* Navy blue darker than #0F2847 but lighter than #0A1A2E */
+    --text-header: #ffffff; /* White text on navy header */
+    --bg-row: #ffffff; /* White rows in white container */
+    --text-row: #202124; /* Dark text for rows in white container */
+    --bg-row-hover: #f1f3f4; /* Light gray hover for rows in white container */
+    --bg-op30: #fef3c7; /* Light yellow for 30% */
+    --text-op30: #92400e;
+    --bg-op30-hover: #fde68a;
+    --bg-op60: #fed7aa; /* Light orange for 60% */
+    --text-op60: #c2410c;
+    --bg-op60-hover: #fdba74;
+    --bg-op90: #ddd6fe; /* Light purple for 90% */
+    --text-op90: #7c3aed;
+    --bg-op90-hover: #c4b5fd;
+    --bg-op100: #e6f4ea;
+    --text-op100: #137333;
+    --bg-op100-hover: #d4eada;
+    --bg-lost: #fce8e6;
+    --text-lost: #c5221f;
+    --bg-lost-hover: #f6d9d8;
+    --bg-declined: #f1f3f4;
+    --text-declined: #5f6368;
+    --bg-declined-hover: #e8eaed;
+    --border-urgent-soon: #f29900;
+    --border-urgent-past: #ea4335;
+    --bg-control: #ffffff;
+    --border-control: #dadce0;
+    --text-control: #202124;
+    --placeholder-control: #80868b;
+    --bg-control-hover: #e8f0fe;
+    --border-focus: #1a73e8;
+    --shadow-focus: rgba(26, 115, 232, 0.3);
+    --text-secondary: #5f6368; /* Review if this appears on blue body */
+    --bg-secondary: #f8f9fa; /* Light secondary background for user info */
+    --bg-hover: #e8f0fe; /* Light hover background for user info */
+    --text-error: #ea4335;
+    --text-link: #1a73e8;
+    --text-link-hover: #174ea6;
+    --select-arrow-url: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235f6368' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); /* Dark arrow for white bg controls */
+    --bg-modal: #ffffff;
+    --border-modal: #dadce0;
+    --text-modal-title: #202124;
+    --bg-modal-close-hover: #f1f3f4;
+    --bg-modal-save: #1a73e8; 
+    --text-modal-save: #ffffff;
+    --bg-modal-save-hover: #174ea6; 
+    --bg-theme-button: #0C2135; /* Match new navy header */
+    --text-theme-button: #ffffff;
+    --border-theme-button: #0A1A2E; /* Darker border for navy button */
+    
+    /* Google Drive folder field colors */
+    --bg-drive-folder: #f8f9fa;
+    --border-drive-folder: #dadce0;
+    --text-drive-folder: #202124;
+    --bg-drive-btn: #1a73e8;
+    --text-drive-btn: #ffffff;
+    --bg-drive-btn-hover: #174ea6;
+    --bg-theme-button-hover: #1B365D; /* Lighter hover for navy button */
+    --bg-filter-button: #1a73e8; /* Google Blue for light theme */
+    --text-filter-button: #ffffff;
+    --border-filter-button: #1a73e8;
+    --bg-filter-button-hover: #174ea6; /* Google Blue Hover */
+    --bg-filter-button-active: #1565c0; /* Google Blue Active */
+    --text-filter-button-active: #ffffff;
+    --border-filter-button-active: #1565c0;
+    
+    /* Sidebar Variables */
+    --sidebar-width: 280px;
+    --sidebar-width-collapsed: 50px;
+    --sidebar-bg: var(--bg-container); /* Match page container background */
+    --sidebar-border: var(--border-container); /* Match page borders */
+    --sidebar-text: var(--text-title); /* Match page text */
+    --sidebar-text-secondary: var(--text-secondary); /* Match secondary text */
+    --sidebar-hover: var(--bg-row-hover); /* Match page hover effects */
+    --sidebar-active: #2563eb; /* User's preferred blue */
+    --sidebar-active-bg: #eff6ff; /* Light blue background for active items */
+    --sidebar-active-text: #2563eb; /* Blue text for active items */
+    --sidebar-section-bg: var(--bg-row); /* Match page row background */
+
+    /* Chart Colors */
+    --color-win: #16a34a;
+    --color-win-bg: rgba(22, 163, 74, 0.2);
+    --color-win-dark: #15803d;
+    --color-loss: #dc2626;
+    --color-loss-bg: rgba(220, 38, 38, 0.2);
+    --color-loss-dark: #b91c1c;
+    --color-forecast: #8b5cf6;
+    --color-forecast-bg: rgba(139, 92, 246, 0.2);
+    --color-forecast-dark: #7c3aed;
+    --chart-grid-color: #e5e7eb;
+    --chart-tick-color: #6b7280;
+    --chart-title-color: #111827;
+    --chart-legend-color: #374151;
+    --chart-tooltip-bg: #e8e9ea;
+    --chart-tooltip-text: #111827;
+}
+
+/* Dark Theme Variables */
+.dark {
+    --bg-body: #1e1e1e;
+    --text-body: #e0e0e0;
+    --bg-container: #1a1a1a;
+    --border-container: #404040;
+    --border-container-subtle: #2a2a2a; /* Very subtle darker border for body container */
+    --text-title: #ffffff;
+    --text-primary: #ffffff; /* Primary text color for dark mode */
+    --text-label: #c0c0c0;
+    --border-table: #4a4a4a;
+    --bg-header: #1a1a1a; /* Keep dark header background */
+    --text-header: #ffffff; /* Ensure header text is white in dark mode */
+    --bg-row: #2d2d2d;
+    --text-row: #e0e0e0;
+    --bg-row-hover: #3c3c3c;
+    --bg-op30: #451a03; /* Dark yellow for 30% */
+    --text-op30: #fcd34d;
+    --bg-op30-hover: #78350f;
+    --bg-op60: #431407; /* Dark orange for 60% */
+    --text-op60: #fb923c;
+    --bg-op60-hover: #9a3412;
+    --bg-op90: #3c1361; /* Dark purple for 90% */
+    --text-op90: #a855f7;
+    --bg-op90-hover: #581c87;
+    --bg-op100: #14532d;
+    --text-op100: #dcfce7;
+    --bg-op100-hover: #166534;
+    --bg-lost: #7f1d1d;
+    --text-lost: #fee2e2;
+    --bg-lost-hover: #991b1b;
+    --bg-declined: #4b5563;
+    --text-declined: #bdc3c7;
+    --bg-declined-hover: #525f70;
+    --border-urgent-soon: #f97316;
+    --border-urgent-past: #dc2626;
+    --bg-control: #3c3c3c;
+    --border-control: #5a5a5a;
+    --text-control: #e0e0e0;
+    --placeholder-control: #8e8e93;
+    --bg-control-hover: #4a4a4a;
+    --border-focus: #0a84ff;
+    --shadow-focus: rgba(10, 132, 255, 0.3);
+    --text-secondary: #a0a0a0;
+    --bg-secondary: #3a3a3a; /* Dark secondary background for user info */
+    --bg-hover: #4a4a4a; /* Dark hover background for user info */
+    --text-error: #ff8080;
+    --text-link: #8ab4f8;
+    --text-link-hover: #a7c7fa;
+    --select-arrow-url: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a0a0a0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    --bg-modal: #2d2d2d;
+    --border-modal: #404040;
+    --text-modal-title: #ffffff;
+    --bg-modal-close-hover: #6b6b6b;
+    --bg-modal-save: #1a73e8;
+    --text-modal-save: #ffffff;
+    --bg-modal-save-hover: #174ea6;
+    --bg-theme-button: #4b5563;
+    --text-theme-button: #f9fafb; /* Text for general theme buttons in dark mode */
+    --border-theme-button: #6b7280;
+    --bg-theme-button-hover: #6b7280;
+    --bg-filter-button: #1877f2; /* Facebook Blue */
+    --text-filter-button: #ffffff;
+    --border-filter-button: #1877f2;
+    --bg-filter-button-hover: #166fe5; /* Facebook Blue Hover */
+    --bg-filter-button-active: #1565c0; /* Facebook Blue Active */
+    --text-filter-button-active: #ffffff;
+    --border-filter-button-active: #1565c0;
+
+    /* Dark Sidebar Variables */
+    --sidebar-bg: var(--bg-header); /* Match top navigation background */
+    --sidebar-border: #2a2a2a; /* Darker sidebar borders for dark mode */
+    --sidebar-text: var(--text-title); /* Match page text */
+    --sidebar-text-secondary: var(--text-secondary); /* Match secondary text */
+    --sidebar-hover: var(--bg-row-hover); /* Match page hover effects */
+    --sidebar-active: #2563eb; /* User's preferred blue */
+    --sidebar-active-bg: #1e3a8a; /* Dark blue background for active items */
+    --sidebar-active-text: #ffffff; /* White text for active items in dark mode */
+    --sidebar-section-bg: var(--bg-row); /* Match page row background */
+
+    /* Chart Colors */
+    --color-win: #22c55e;
+    --color-win-bg: rgba(34, 197, 94, 0.2);
+    --color-win-dark: #16a34a;
+    --color-loss: #ef4444;
+    --color-loss-bg: rgba(239, 68, 68, 0.2);
+    --color-loss-dark: #dc2626;
+    --color-forecast: #a78bfa;
+    --color-forecast-bg: rgba(167, 139, 250, 0.2);
+    --color-forecast-dark: #8b5cf6;
+    --chart-grid-color: #404040;
+    --chart-tick-color: #a0a0a0;
+    --chart-title-color: #ffffff;
+    --chart-legend-color: #e0e0e0;
+    --chart-tooltip-bg: #2d2d2d;
+    --chart-tooltip-text: #ffffff;
+}
+
+/* --- Sidebar Navigation Styles --- */
+.app-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Top Bar - Full Width */
+.top-bar {
+    width: 100%;
+    background-color: var(--bg-header);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    height: 3rem; /* Thinner top bar */
+}
+
+.top-bar-content {
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem; /* Reduced padding */
+    height: 100%;
+}
+
+.top-bar-logo-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.top-bar-logo {
+    height: 1.8rem; /* Smaller logo */
+    width: auto;
+    margin-right: 0.75rem;
+    transition: filter 0.2s ease;
+}
+
+.top-bar-title {
+    font-size: 1.125rem; /* Smaller title */
+    font-weight: 600;
+    color: var(--text-header);
+}
+
+/* Top Bar User Section Styles */
+.top-bar-user-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.user-info-container {
+    display: flex;
+    align-items: center;
+}
+
+.user-info-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.user-info-display:hover {
+    background: var(--bg-hover);
+}
+
+.user-avatar {
+    font-size: 1.5rem !important;
+    color: var(--text-secondary);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+}
+
+/* User Info Styles - Always light colors for dark top bar */
+.user-name,
+html.dark .user-name,
+html:not(.dark) .user-name,
+.top-bar .user-name,
+.top-bar-content .user-name,
+.user-info-display .user-name,
+#currentUserName {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #ffffff !important; /* Pure white for maximum contrast against dark top bar */
+}
+
+.user-role,
+html.dark .user-role,
+html:not(.dark) .user-role,
+.top-bar .user-role,
+.top-bar-content .user-role,
+.user-info-display .user-role,
+#currentUserRole {
+    font-size: 0.75rem !important;
+    color: #e5e7eb !important; /* Light gray for dark top bar */
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+/* Online Users Display - Always light colors for dark top bar */
+.online-users-display .online-user-name,
+html.dark .online-users-display .online-user-name,
+html:not(.dark) .online-users-display .online-user-name,
+.top-bar .online-user-name,
+.online-users-display .online-user-name {
+    font-size: 0.875rem !important;
+    color: #ffffff !important; /* Pure white for maximum contrast against dark top bar */
+    font-weight: 500 !important;
+}
+
+.online-users-display .online-user-page,
+html.dark .online-users-display .online-user-page,
+html:not(.dark) .online-users-display .online-user-page,
+.top-bar .online-user-page,
+.online-users-display .online-user-page {
+    font-size: 0.75rem !important;
+    color: #e5e7eb !important; /* Light gray for dark top bar */
+    opacity: 0.7;
+}
+
+/* Online count styling */
+.online-count,
+#onlineCount {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+/* Online Users Dropdown - Theme-aware colors */
+.online-users-list .online-user-name {
+    color: var(--text-primary) !important;
+}
+
+.online-users-list .online-user-page {
+    color: var(--text-secondary) !important;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background-color: var(--bg-control);
+    border: none;
+    border-radius: 0.5rem;
+    color: var(--text-control);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-control-hover);
+}
+
+.theme-toggle.active {
+    background-color: var(--sidebar-active);
+    color: #ffffff;
+}
+
+/* Online Users Indicator */
+.online-users-container {
+    position: relative;
+}
+
+.online-users-display {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.online-users-display:hover {
+    background: var(--bg-hover);
+}
+
+/* Online Users Icon - Ensure visibility in all themes */
+.online-users-display .material-icons,
+html.dark .online-users-display .material-icons,
+html:not(.dark) .online-users-display .material-icons {
+    color: #ffffff !important; /* Force white color for the people icon */
+    font-size: 1.25rem !important;
+}
+
+.online-pulse {
+    width: 8px;
+    height: 8px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.online-count {
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* Online Users Dropdown - Enhanced contrast for light mode */
+.online-users-list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 200px;
+    background-color: var(--bg-container) !important;
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 50;
+}
+
+/* Light mode dropdown - dark text on white background */
+html:not(.dark) .online-users-list {
+    background-color: #ffffff !important;
+    border-color: #e5e7eb !important;
+}
+
+html:not(.dark) .online-users-list .online-user-name {
+    color: #111827 !important; /* Dark gray for maximum contrast */
+    font-weight: 500;
+}
+
+html:not(.dark) .online-users-list .online-user-page {
+    color: #4b5563 !important; /* Medium gray for secondary text */
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+html:not(.dark) .online-user-item {
+    background-color: #ffffff !important;
+}
+
+html:not(.dark) .online-user-item:hover {
+    background-color: #f3f4f6 !important;
+}
+
+/* Dark mode dropdown - light text on dark background */
+html.dark .online-users-list {
+    background-color: #1f2937 !important;
+    border-color: #4b5563 !important;
+}
+
+html.dark .online-users-list .online-user-name {
+    color: #ffffff !important; /* Force white text to match other pages */
+    font-weight: 500;
+}
+
+html.dark .online-users-list .online-user-page {
+    color: #e5e7eb !important; /* Light gray for secondary text */
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+html.dark .online-user-item {
+    background-color: #1f2937 !important;
+}
+
+html.dark .online-user-item:hover {
+    background-color: #374151 !important;
+}
+
+/* Dropdown styling - theme-aware */
+html:not(.dark) .online-user-item {
+    color: var(--text-primary) !important;
+}
+
+html:not(.dark) .online-users-list .online-user-name {
+    color: var(--text-primary) !important;
+}
+
+html:not(.dark) .online-users-list .online-user-page {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .online-user-item {
+    color: var(--text-primary) !important;
+}
+
+html.dark .online-users-list .online-user-name {
+    color: var(--text-primary) !important;
+}
+
+html.dark .online-users-list .online-user-page {
+    color: var(--text-secondary) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .top-bar-user-section {
+        gap: 0.5rem;
+    }
+    
+    .user-details {
+        display: none;
+    }
+    
+    .user-info-display {
+        padding: 0.5rem;
+    }
+    
+    .online-users-list {
+        right: -1rem;
+        min-width: 180px;
+    }
+}
+
+/* Layout Container - Below Top Bar */
+.layout-container {
+    display: flex;
+    margin-top: 3rem; /* Adjusted for thinner top bar */
+    min-height: calc(100vh - 3rem);
+}
+
+/* Dynamic responsive layout that reacts to available real estate */
+.main-content {
+    /* Use CSS clamp() for fluid padding based on viewport width */
+    padding: 0 clamp(1rem, 2vw, 6rem);
+    /* Container width adapts to viewport with reasonable bounds */
+    width: min(100%, 100vw - var(--sidebar-width-collapsed));
+}
+
+/* Adaptive spacing based on available viewport width */
+.main-content > div {
+    /* Dynamic container that scales with viewport */
+    width: 100%;
+    max-width: none;
+    /* Fluid padding that grows with screen size */
+    padding: clamp(1rem, 1.5vw, 3rem);
+    /* IMPORTANT: Ensure solid background for content containers */
+    background-color: var(--bg-container) !important;
+    color: var(--text-title) !important;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-container-subtle) !important;
+}
+
+/* Dashboard grid adapts to available space */
+.grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 {
+    /* Dynamic grid columns based on available width */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: clamp(0.5rem, 1vw, 2rem);
+}
+
+/* Fluid table system that adapts to available space */
+.table-responsive-wrapper,
+.table-container {
+    width: 100%;
+    max-width: none;
+    /* Smooth transitions when resizing */
+    transition: all 0.3s ease;
+}
+
+/* Dynamic table columns that scale with container width */
+#opportunitiesTable {
+    width: 100%;
+    table-layout: auto; /* Allow columns to resize based on content and space */
+}
+
+/* Fluid column widths using CSS custom properties and calc() */
+#opportunitiesTable th,
+#opportunitiesTable td {
+    /* Base minimum width with fluid scaling */
+    min-width: max(80px, 8vw);
+    max-width: none;
+    /* Responsive padding */
+    padding: clamp(0.5rem, 0.8vw, 1.2rem);
+}
+
+/* Specific column fluid sizing */
+.col-project-name {
+    width: clamp(200px, 20vw, 400px) !important;
+    min-width: clamp(200px, 15vw, 300px) !important;
+}
+
+.col-client {
+    width: clamp(150px, 15vw, 300px) !important;
+    min-width: clamp(120px, 12vw, 200px) !important;
+}
+
+.col-amount {
+    width: clamp(100px, 10vw, 180px) !important;
+    min-width: clamp(80px, 8vw, 120px) !important;
+}
+
+.col-status {
+    width: clamp(120px, 12vw, 200px) !important;
+    min-width: clamp(100px, 10vw, 150px) !important;
+}
+
+/* Responsive font sizes for table content */
+#opportunitiesTable {
+    font-size: clamp(0.75rem, 0.9vw, 1rem);
+}
+
+#opportunitiesTable th {
+    font-size: clamp(0.7rem, 0.85vw, 0.95rem);
+}
+
+/* Responsive breakpoints that scale with viewport */
+@media (min-width: 1400px) {
+    .grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+}
+
+@media (min-width: 1800px) {
+    .grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+}
+
+@media (min-width: 2400px) {
+    .grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+
+/* Sidebar hover adjustment for larger screens */
+.sidebar:hover ~ .main-content {
+    width: min(100%, 100vw - var(--sidebar-width));
+}
+
+/* CSS Container Queries for adaptive layout based on available container space */
+@supports (container-type: inline-size) {
+    .main-content {
+        container-type: inline-size;
+        container-name: main-layout;
+    }
+    
+    /* Adaptive dashboard cards based on container width */
+    @container main-layout (min-width: 1200px) {
+        .dashboard-card {
+            padding: clamp(1rem, 1.5vw, 2rem);
+            font-size: clamp(0.875rem, 1vw, 1.125rem);
+        }
+        
+        .dashboard-value {
+            font-size: clamp(1.5rem, 2.5vw, 3rem) !important;
+        }
+    }
+    
+    @container main-layout (min-width: 1600px) {
+        .grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 {
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: clamp(1rem, 1.5vw, 2.5rem);
+        }
+    }
+    
+    @container main-layout (min-width: 2000px) {
+        .dashboard-card {
+            padding: clamp(1.5rem, 2vw, 3rem);
+        }
+        
+        .grid.grid-cols-1.sm\\:grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+    }
+}
+
+/* --- Gmail-Style Hover-to-Expand Sidebar --- */
+
+.sidebar {
+    width: var(--sidebar-width-collapsed);
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 3rem; /* Start below top bar */
+    left: 0;
+    height: calc(100vh - 3rem); /* Full height minus top bar */
+    z-index: 100;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.2s ease;
+    /* Hide scrollbar while maintaining scroll functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Expand on hover */
+.sidebar:hover {
+    width: var(--sidebar-width);
+}
+
+.sidebar-section {
+    padding: 0.5rem 0;
+    flex-shrink: 0;
+}
+
+.sidebar-section:not(:last-child) {
+    border-bottom: 1px solid var(--sidebar-border);
+}
+
+.sidebar-section-title {
+    padding: 0.5rem 1.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--sidebar-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Show section titles on hover */
+.sidebar:hover .sidebar-section-title {
+    opacity: 1;
+}
+
+.sidebar-item,
+.sidebar-action-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: calc(100% - 1rem);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border-radius: 0.5rem;
+    margin: 0.125rem 0.5rem;
+    justify-content: center;
+}
+
+/* When sidebar is hovered, adjust padding and alignment */
+.sidebar:hover .sidebar-item,
+.sidebar:hover .sidebar-action-btn {
+    padding: 0.75rem 1.25rem;
+    justify-content: flex-start;
+}
+
+.sidebar-item:hover,
+.sidebar-action-btn:hover {
+    background-color: var(--sidebar-hover);
+    color: var(--sidebar-text);
+    border-radius: 12px;
+    margin: 0 0.5rem;
+}
+
+.sidebar-item.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    font-weight: 500;
+    border-radius: 12px;
+    margin: 0 0.5rem;
+}
+
+/* Theme button should never show active state per user preference */
+.sidebar-action-btn.active {
+    background-color: transparent;
+    color: var(--sidebar-text);
+    font-weight: 400;
+}
+
+/* Override filter-fixes.css for sidebar theme toggle specifically */
+.sidebar #themeToggle,
+.sidebar #themeToggle.active,
+.sidebar #themeToggle:active,
+.sidebar #themeToggle[aria-selected="true"],
+.sidebar button#themeToggle.active {
+    background-color: transparent !important;
+    color: var(--sidebar-text) !important;
+    font-weight: 400 !important;
+    background: none !important;
+    /* Override filter-fixes.css header styles */
+    padding: 0.75rem 0 !important;
+    border-radius: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0.125rem 0.5rem !important;
+    width: calc(100% - 1rem) !important;
+}
+
+/* Ensure sidebar theme toggle hover works normally (override filter-fixes.css) */
+.sidebar #themeToggle:hover {
+    background-color: var(--sidebar-hover) !important;
+    color: var(--sidebar-text) !important;
+}
+
+/* When sidebar is hovered, adjust theme toggle like other sidebar items */
+.sidebar:hover #themeToggle {
+    padding: 0.75rem 1.25rem !important;
+    justify-content: flex-start !important;
+}
+
+.sidebar-item .material-icons,
+.sidebar-action-btn .material-icons {
+    margin: 0;
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Show margin and adjust icon size on hover */
+.sidebar:hover .sidebar-item .material-icons,
+.sidebar:hover .sidebar-action-btn .material-icons {
+    margin-right: 0.75rem;
+    margin-left: 0;
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    justify-content: flex-start;
+}
+
+.sidebar-item-text {
+    font-size: 0.875rem;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    width: 0;
+    transition: all 0.2s ease;
+}
+
+/* Show text on hover */
+.sidebar:hover .sidebar-item-text {
+    opacity: 1;
+    width: auto;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 0 1.5rem;
+    border-top: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width-collapsed);
+    background-color: var(--bg-body);
+    min-height: calc(100vh - 3rem);
+    transition: margin-left 0.2s ease;
+}
+
+/* Adjust main content when sidebar is hovered */
+.sidebar:hover ~ .main-content {
+    margin-left: var(--sidebar-width);
+}
+
+/* Gmail-style sidebar is always visible at full width */
+
+@keyframes tooltipFadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+/* Dark mode sidebar border overrides */
+.dark .sidebar {
+    border-right-color: #2a2a2a;
+}
+
+.dark .sidebar-header {
+    border-bottom-color: #2a2a2a;
+}
+
+.dark .sidebar-section:not(:last-child) {
+    border-bottom-color: #2a2a2a;
+}
+
+.dark .sidebar-footer {
+    border-top-color: #2a2a2a;
+}
+
+/* Logo maintains its original colors in both themes */
+
+/* Mobile Responsive Sidebar - Gmail style remains visible on larger screens */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    /* Mobile overlay */
+    .sidebar.open::before {
+        content: '';
+        position: fixed;
+        top: 3rem; /* Start below top bar */
+        right: 0;
+        bottom: 0;
+        left: var(--sidebar-width);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+    
+    /* Mobile toggle button */
+    .mobile-sidebar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 4rem; /* Below top bar */
+        left: 1rem;
+        z-index: 200;
+        background: var(--sidebar-bg);
+        border: 1px solid var(--sidebar-border);
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        color: var(--sidebar-text);
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-sidebar-toggle:hover {
+        background: var(--sidebar-hover);
+    }
+    
+    .mobile-sidebar-toggle .material-icons {
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 1025px) {
+    .mobile-sidebar-toggle {
+        display: none;
+    }
+}
+
+/* KANBAN BOARD DRAG & DROP IMPROVEMENTS */
+
+/* Remove height restrictions - let content flow naturally */
+
+/* Ensure proposal card spacing is reasonable */
+.proposal-card {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 0.5rem !important;
+    cursor: grab;
+    padding: 0.75rem !important;
+}
+
+.proposal-card:active {
+    cursor: grabbing;
+}
+
+/* Improve visual feedback during drag */
+.proposal-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+}
+
+/* Ensure kanban columns are proper drop zones */
+.kanban-column {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make the entire column body a drop zone */
+.kanban-column-body {
+    flex: 1;
+    position: relative;
+    padding: 0.75rem;
+    /* Add a subtle visual cue when empty */
+}
+
+/* Empty column state - make it easier to drop into empty columns */
+.kanban-column-body:empty::before {
+    content: "Drop proposals here";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-style: italic;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Improve drag over state for entire column */
+.kanban-column.drag-over,
+.kanban-column-body.drag-over {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border: 2px dashed rgba(59, 130, 246, 0.5) !important;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+/* Make sure all kanban columns have consistent drop zone behavior */
+#notStartedBody, #ongoingBody, #forRevisionBody, #forApprovalBody, #submittedBody, 
+#noDecisionBody {
+    position: relative;
+}
+
+/* For Revision column styling (now in main workflow) */
+#forRevisionColumn .kanban-column-body {
+    /* No special height restrictions - flows naturally */
+}
+
+/* VIEW TOGGLE STYLES */
+.view-toggle-container {
+    background: rgba(243, 244, 246, 1);
+}
+
+.dark .view-toggle-container {
+    background: rgba(31, 41, 55, 1);
+}
+
+/* SCHEDULE READY STATE */
+.schedule-ready {
+    animation: schedule-pulse 2s infinite;
+}
+
+@keyframes schedule-pulse {
+    0%, 100% {
+        background-color: rgba(79, 70, 229, 0.05);
+        transform: scale(1);
+    }
+    50% {
+        background-color: rgba(79, 70, 229, 0.1);
+        transform: scale(1.01);
+    }
+}
+
+/* PROPOSAL SELECTION MODAL STYLES */
+.proposal-selection-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .proposal-selection-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Base Styles */
+body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-body);
+    color: var(--text-body);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 0;
+    padding: 0;
+}
+
+/* Apply header styles to the specific simple-header class */
+.simple-header {
+    background-color: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    padding: 0.5rem 1rem; /* Adjust padding as needed */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none !important; /* Remove bottom border/line */
+    box-shadow: none !important; /* Remove box shadow if any */
+    position: sticky !important; /* Make header sticky */
+    top: 0 !important;
+    z-index: 100 !important; /* Ensure header stays on top */
+}
+
+/* Filter Button Styles */
+.filter-button {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border: 1px solid var(--border-control) !important;
+    padding: 0.25rem 0.75rem !important;
+    border-radius: 0.375rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Filter Label Styles - Fix visibility in light theme */
+#statusFilterButtons span.text-sm.font-medium,
+.filter-label {
+    color: var(--text-body) !important;
+}
+
+.filter-button:hover {
+    background-color: var(--bg-control-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.filter-button.active {
+    background-color: var(--bg-filter-button-active) !important;
+    color: var(--text-filter-button-active) !important;
+    border-color: var(--border-filter-button-active) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(21, 101, 192, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+.filter-button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(24, 115, 232, 0.3) !important;
+}
+
+/* Filter Dropdown Styles - Ultra-high specificity to override Tailwind */
+html body select.filter-dropdown,
+html body .filter-dropdown,
+body select.filter-dropdown,
+body .filter-dropdown,
+select.filter-dropdown,
+.filter-dropdown {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border: 1px solid var(--border-control) !important;
+    padding: 0.375rem 0.5rem !important;
+    border-radius: 0.375rem !important;
+    font-size: 0.875rem !important;
+    min-width: 120px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Light theme specific enhancements for filter dropdowns - Ultra-high specificity */
+html body:not(.dark) select.filter-dropdown,
+html body:not(.dark) .filter-dropdown,
+body:not(.dark) select.filter-dropdown,
+body:not(.dark) .filter-dropdown,
+select.filter-dropdown,
+.filter-dropdown {
+    background-color: #ffffff !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+    color: #374151 !important;
+}
+
+html body:not(.dark) select.filter-dropdown:hover,
+html body:not(.dark) .filter-dropdown:hover,
+body:not(.dark) select.filter-dropdown:hover,
+body:not(.dark) .filter-dropdown:hover {
+    border-color: #d1d5db !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    background-color: #f9fafb !important;
+}
+
+html body:not(.dark) select.filter-dropdown:focus,
+html body:not(.dark) .filter-dropdown:focus,
+body:not(.dark) select.filter-dropdown:focus,
+body:not(.dark) .filter-dropdown:focus {
+    outline: none !important;
+    border-color: var(--bg-filter-button) !important;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    background-color: #ffffff !important;
+}
+
+/* Dark theme filter dropdown styles - Ultra-high specificity */
+html body.dark select.filter-dropdown,
+html body.dark .filter-dropdown,
+body.dark select.filter-dropdown,
+body.dark .filter-dropdown,
+.dark select.filter-dropdown,
+.dark .filter-dropdown {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border: 1px solid var(--border-control) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+html body.dark select.filter-dropdown:hover,
+html body.dark .filter-dropdown:hover,
+body.dark select.filter-dropdown:hover,
+body.dark .filter-dropdown:hover,
+.dark select.filter-dropdown:hover,
+.dark .filter-dropdown:hover {
+    border-color: #6b7280 !important;
+    background-color: var(--bg-control-hover) !important;
+}
+
+html body.dark select.filter-dropdown:focus,
+html body.dark .filter-dropdown:focus,
+body.dark select.filter-dropdown:focus,
+body.dark .filter-dropdown:focus,
+.dark select.filter-dropdown:focus,
+.dark .filter-dropdown:focus {
+    outline: none !important;
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 3px var(--shadow-focus), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Filter Label Styles - Ultra-high specificity to override Tailwind CSS */
+html body label.text-sm.font-medium,
+html body span.text-sm.font-medium,
+html body .text-sm.font-medium,
+body label.text-sm.font-medium,
+body span.text-sm.font-medium,
+body .text-sm.font-medium,
+label.text-sm.font-medium,
+span.text-sm.font-medium,
+.text-sm.font-medium {
+    color: var(--text-label) !important;
+    transition: color 0.2s ease !important;
+}
+
+/* Dark theme filter labels - Ultra-high specificity */
+html body.dark label.text-sm.font-medium,
+html body.dark span.text-sm.font-medium,
+html body.dark .text-sm.font-medium,
+body.dark label.text-sm.font-medium,
+body.dark span.text-sm.font-medium,
+body.dark .text-sm.font-medium,
+.dark label.text-sm.font-medium,
+.dark span.text-sm.font-medium,
+.dark .text-sm.font-medium {
+    color: #f3f4f6 !important; /* Light gray for dark theme */
+}
+
+/* Light theme filter labels - Ultra-high specificity */
+html body:not(.dark) label.text-sm.font-medium,
+html body:not(.dark) span.text-sm.font-medium,
+html body:not(.dark) .text-sm.font-medium,
+body:not(.dark) label.text-sm.font-medium,
+body:not(.dark) span.text-sm.font-medium,
+body:not(.dark) .text-sm.font-medium,
+:not(.dark) label.text-sm.font-medium, /* Added to cover cases where body might not have .dark or :not(.dark) */
+:not(.dark) span.text-sm.font-medium,
+:not(.dark) .text-sm.font-medium {
+    color: #374151 !important; /* Dark gray for light theme */
+}
+
+/* Ensure links and icons within the header also use the header text color */
+.simple-header a,
+.simple-header .material-icons {
+    color: var(--text-header) !important;
+}
+
+.simple-header .subtitle {
+    color: var(--text-header) !important; /* Ensuring subtitle also gets the color */
+    opacity: 0.8; /* Slightly less prominent than main logo/icons */
+}
+
+.simple-header .nav-square-btn {
+    background-color: transparent !important;
+    border: none !important; /* Remove border from navigation buttons */
+    color: var(--text-header) !important; /* Ensure icon color inside button */
+}
+
+.simple-header .nav-square-btn .material-icons {
+    color: var(--text-header) !important; /* Explicitly target icons in buttons */
+}
+
+.simple-header .nav-square-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Slight hover effect */
+}
+
+/* Ensure theme toggle button in header also uses white icon in dark mode */
+.dark .simple-header #themeToggle .material-icons {
+    color: #ffffff !important;
+}
+
+/* Container Styles */
+.container {
+    background-color: var(--bg-container);
+    border: 1px solid var(--border-container); /* Ensure border is applied */
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* May need adjustment for dark bg */
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-title); /* This will be white if inside a .container */
+    margin-top: 0;
+}
+
+label {
+    color: var(--text-label); /* This will be light gray if inside a .container */
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Table Styles */
+.table-container {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    border: 1px solid var(--border-table);
+    max-height: 70vh;
+    -webkit-overflow-scrolling: touch;
+    background-color: var(--bg-container); /* Table itself will be white */
+    width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-filter-button-active) var(--bg-container); /* Scrollbar thumb on white bg */
+    display: block;
+    z-index: 1;
+}
+
+/* Table responsive wrapper for better scrolling experience */
+.table-responsive-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    overflow: visible;
+    height: auto;
+    min-height: 60vh;
+}
+
+/* Scroll indicator styling */
+.scroll-indicator {
+    position: absolute;
+    bottom: -24px;
+    right: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary); /* This is #5f6368. If on blue body, needs change. Assume it's on white container for now. */
+    padding: 4px 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    opacity: 0.8;
+    animation: pulsate 2s infinite;
+}
+
+@keyframes pulsate {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+/* Enhanced table cell styling */
+.table-container tr {
+    height: 40px;
+    min-height: 40px;
+}
+
+.table-container td,
+.table-container th {
+    padding: 12px 14px;
+    height: 40px !important;
+    min-height: 40px !important;
+}
+
+/* Webkit scrollbar styles */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--bg-container); /* Track will be white */
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--bg-filter-button-active); /* Thumb color */
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--border-focus); /* Hover color for thumb */
+}
+
+.table-container table,
+#opportunitiesTable {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 1200px; /* Force minimum width to enable horizontal scrolling */
+    width: auto;
+    background-color: var(--bg-container); /* Table itself will be white */
+    table-layout: fixed;
+    margin: 0;
+    padding: 0;
+    display: table;
+}
+
+/* Prevent table from expanding columns beyond their set widths */
+#opportunitiesTable th,
+#opportunitiesTable td {
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Enhanced styles for table headers and sticky column */
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: var(--text-header); /* White text on dark blue header */
+}
+
+/* Improved sticky header (for vertical scroll) */
+.table-container th:not(.sticky-col) {
+    position: sticky !important;
+    top: 0 !important;
+    background-color: var(--bg-header) !important; /* Very dark blue */
+    z-index: 10 !important;
+    border-bottom: 1px solid var(--border-table) !important; /* Light gray border */
+}
+
+/* Enhanced sticky column styles with higher specificity */
+.table-container th.sticky-col,
+#opportunitiesTable th.sticky-col {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 15 !important;
+    background: var(--bg-header) !important; /* Very dark blue */
+    box-shadow: 2px 0 4px -2px rgba(0,0,0,0.1);
+}
+
+/* Enhanced sticky column cells */
+.table-container td.sticky-col,
+#opportunitiesTable td.sticky-col {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 5 !important;
+    background: var(--bg-container) !important; /* White */
+    box-shadow: 2px 0 4px -2px rgba(0,0,0,0.1);
+    border-right: 1px solid var(--border-container); /* Light gray border */
+}
+
+/* Dark mode support for sticky columns */
+.dark .table-container th.sticky-col,
+.dark #opportunitiesTable th.sticky-col {
+    background-color: #2d2d2d !important; /* Match other column headers shade */
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+}
+
+.dark .table-container td.sticky-col,
+.dark #opportunitiesTable td.sticky-col {
+    background: var(--bg-container) !important;
+}
+
+/* Ensure table body cells don't overlap sticky header */
+#opportunitiesTable th, #opportunitiesTable td {
+  background-clip: padding-box;
+}
+
+/* Better sort indicator styling */
+.sort-indicator {
+    margin-left: 8px;
+    opacity: 0.7;
+    font-size: 12px;
+}
+
+/* Make sure the table scrolls properly */
+#opportunitiesTable {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Improved table header styling */
+.header-content { /* Duplicate selector, changes are fine */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ensure borders are visible for all cells */
+.table-container th,
+.table-container td {
+    border-right: 1px solid var(--border-table); /* Light gray border */
+    border-bottom: 1px solid var(--border-table); /* Light gray border */
+}
+
+/* Adjust table layout for better display */
+#opportunitiesTable {
+    width: auto !important; /* Allow table to expand beyond container width */
+    table-layout: fixed !important; /* Fixed table layout for better column width control */
+}
+
+/* Improve header styling */
+.sticky-header th {
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-header); /* Very dark blue */
+    z-index: 10;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+}
+
+/* Enhanced table styles for better visibility */
+.table-container th {
+    background-color: var(--bg-header) !important; /* Very dark blue */
+    color: var(--text-header) !important; /* White text */
+    font-weight: 600 !important;
+    padding: 12px 16px !important;
+    border-bottom: 2px solid var(--border-table) !important; /* Light gray border */
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    position: sticky !important;
+    top: 0;
+    z-index: 10;
+}
+
+.table-container td {
+    padding: 10px 12px !important;
+    border-bottom: 1px solid var(--border-table) !important;
+    border-right: 1px solid var(--border-table) !important;
+    vertical-align: middle !important;
+}
+
+/* Table Headers */
+.table-container th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-header);
+    z-index: 2;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-header);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #4a4a4a;
+    padding: 12px;
+    text-align: left;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Cells */
+.table-container th,
+.table-container td {
+    padding: 10px 12px;
+    text-align: left;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    border-bottom: 1px solid #4a4a4a;
+    vertical-align: middle;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #e0e0e0;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Row hover effect */
+.table-container tr:hover td {
+    background-color: #2d2d2d;
+}
+
+/* Status-based row colors */
+tr.bg-op100 {
+    background-color: var(--bg-op100);
+}
+
+tr.bg-lost {
+    background-color: var(--bg-lost);
+}
+
+tr.bg-declined {
+    background-color: var(--bg-declined);
+}
+
+/* Column Width Styles */
+.project-name-cell,
+.table-container td.project-name-cell {
+    max-width: 350px;
+    min-width: 250px;
+    width: 280px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    word-wrap: break-word !important;
+    overflow: visible !important;
+    text-overflow: initial !important;
+    height: auto !important;
+    padding: 12px !important;
+}
+
+/* Sticky Column Styles */
+th.sticky-col {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: var(--bg-header);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+td.sticky-col {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 2 !important;
+    background-color: var(--bg-row);
+    border-right: 2px solid var(--border-table);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+/* Other column width adjustments */
+th, td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 120px; /* Minimum width for all columns */
+}
+
+/* Override general rule for remarks cells to allow wrapping */
+th.remarks-cell, td.remarks-cell {
+    white-space: normal !important;
+}
+
+/* Column-specific widths */
+th:nth-child(1), td:nth-child(1) { /* Project Name */
+    min-width: 300px;
+    width: 300px;
+}
+th:nth-child(2), td:nth-child(2) { /* Rev */
+    min-width: 60px;
+    width: 60px;
+}
+th:nth-child(3), td:nth-child(3) { /* Client */
+    min-width: 190px;
+    width: 190px;
+}
+th:nth-child(4), td:nth-child(4) { /* Solution */
+    min-width: 160px;
+    width: 160px;
+}
+th:nth-child(5), td:nth-child(5) { /* Industry */
+    min-width: 160px;
+    width: 160px;
+}
+th:nth-child(6), td:nth-child(6),
+th:nth-child(7), td:nth-child(7) { /* Date columns */
+    min-width: 130px;
+    width: 130px;
+}
+th:nth-child(8), td:nth-child(8) { /* Decision */
+    min-width: 100px;
+    width: 100px;
+}
+th:nth-child(9), td:nth-child(9),
+th:nth-child(10), td:nth-child(10) { /* Account Mgr, PIC */
+    min-width: 120px;
+    width: 120px;
+}
+th:nth-child(11), td:nth-child(11) { /* BOM */
+    min-width: 100px;
+    width: 100px;
+}
+th:nth-child(12), td:nth-child(12) { /* Status */
+    min-width: 130px;
+    width: 130px;
+}
+th:nth-child(13), td:nth-child(13) { /* Submitted */
+    min-width: 130px;
+    width: 130px;
+}
+th:nth-child(14), td:nth-child(14) { /* Margin */
+    min-width: 90px;
+    width: 90px;
+    text-align: right;
+}
+th:nth-child(15), td:nth-child(15) { /* Final Amount */
+    min-width: 130px;
+    width: 130px;
+    text-align: right;
+}
+th:nth-child(16), td:nth-child(16) { /* OPp Status */
+    min-width: 100px;
+    width: 100px;
+}
+th:nth-child(17), td:nth-child(17) { /* Date Awarded */
+    min-width: 130px;
+    width: 130px;
+}
+/* Remarks column styling moved to .remarks-cell class for better flexibility */
+th:nth-child(19), td:nth-child(19) { /* Forecast */
+    min-width: 160px;
+    width: 160px;
+}
+th:nth-child(20), td:nth-child(20) { /* Actions */
+    min-width: 100px;
+    width: 100px;
+    text-align: center;
+}
+th.numeric-column, td.numeric-column { /* Numeric columns */
+    text-align: right;
+}
+
+/* Override for project name column - must come after general th, td styles */
+.table-container td.project-name-cell,
+td.project-name-cell,
+.table-container td:nth-child(1),
+td:nth-child(1),
+#opportunitiesTable td.project-name-cell,
+#opportunitiesTable td:nth-child(1) {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    width: 280px !important;
+    min-width: 280px !important;
+}
+
+/* Special width adjustments for specific columns */
+th.numeric-column, td.numeric-column {
+    width: 120px;
+    min-width: 120px;
+    text-align: right;
+}
+
+/* Remove or comment out this block to prevent override of Remarks column width */
+/*
+th.remarks-cell, td.remarks-cell {
+    min-width: 300px;
+    max-width: 300px;
+    width: 300px;
+}
+*/
+
+/* Remarks cell styling with proper text wrapping */
+th.remarks-cell, td.remarks-cell {
+    min-width: 200px !important;
+    width: 200px !important;
+    max-width: 250px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    padding: 8px !important;
+    height: auto !important;
+    vertical-align: top !important;
+}
+
+/* Ensure proper background colors for sticky columns in different states */
+tr:hover td.sticky-col {
+    background-color: var(--bg-row-hover) !important;
+}
+
+tr.bg-op100 td.sticky-col {
+    background-color: var(--bg-op100) !important;
+}
+
+tr.bg-op100:hover td.sticky-col {
+    background-color: var(--bg-op100-hover) !important;
+}
+
+tr.bg-lost td.sticky-col {
+    background-color: var(--bg-lost) !important;
+}
+
+tr.bg-lost:hover td.sticky-col {
+    background-color: var(--bg-lost-hover) !important;
+}
+
+tr.bg-declined td.sticky-col {
+    background-color: var(--bg-declined) !important;
+}
+
+tr.bg-declined:hover td.sticky-col {
+    background-color: var(--bg-declined-hover) !important;
+}
+
+/* Status-based background for sticky cells */
+td.sticky-col[data-row-status="op100"] {
+    background-color: var(--bg-op100) !important;
+}
+
+td.sticky-col[data-row-status="lost"] {
+    background-color: var(--bg-lost) !important;
+}
+
+td.sticky-col[data-row-status="declined"] {
+    background-color: var(--bg-declined) !important;
+}
+
+/* Hover states for different status cells */
+tr:hover td.sticky-col[data-row-status="op100"] {
+    background-color: var(--bg-op100-hover) !important;
+}
+
+tr:hover td.sticky-col[data-row-status="lost"] {
+    background-color: var(--bg-lost-hover) !important;
+}
+
+tr:hover td.sticky-col[data-row-status="declined"] {
+    background-color: var(--bg-declined-hover) !important;
+}
+
+/* Default dark background for sticky cells */
+td.sticky-col:not([data-row-status]) {
+    background-color: #2d2d2d !important;
+}
+
+tr:hover td.sticky-col:not([data-row-status]) {
+    background-color: #3c3c3c !important;
+}
+
+/* --- Light theme table and dashboard improvements --- */
+body:not(.dark) #opportunitiesTable th,
+body:not(.dark) #opportunitiesTable td {
+    color: #222 !important;
+    background: #fff !important;
+    border-color: #e5e7eb !important;
+}
+
+/* Match table headers to navigation header color */
+body:not(.dark) #opportunitiesTable th {
+    background: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-container) !important;
+    font-weight: 600 !important;
+}
+body:not(.dark) #opportunitiesTable tr:hover td {
+    background: var(--bg-row-hover) !important;
+}
+
+/* Dark mode table styling - comprehensive fixes */
+.dark #opportunitiesTable {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-table) !important;
+}
+
+.dark #opportunitiesTable th {
+    background: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+    font-weight: 600 !important;
+}
+
+.dark #opportunitiesTable td {
+    background: var(--bg-container) !important;
+    color: var(--text-row) !important;
+    border-color: var(--border-table) !important;
+}
+
+.dark #opportunitiesTable tr:hover td {
+    background: var(--bg-row-hover) !important;
+    color: var(--text-row) !important;
+}
+
+.dark .table-container {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Dark mode sticky column fixes */
+.dark .table-container th.sticky-col,
+.dark #opportunitiesTable th.sticky-col {
+    background: #2d2d2d !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+}
+
+.dark .table-container td.sticky-col,
+.dark #opportunitiesTable td.sticky-col {
+    background: var(--bg-container) !important;
+    color: var(--text-row) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Restore production dashboard card styles */
+.dashboard-card {
+    background: var(--bg-container);
+    border: 1px solid var(--border-container);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    position: relative;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 140px;
+}
+
+.dashboard-title {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+}
+
+.dashboard-value {
+    color: var(--text-title);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+    min-height: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-change {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    min-height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Universal hover effect for all dashboard cards */
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    border-color: var(--color-primary, #3b82f6) !important;
+}
+
+/* Enhanced hover for clickable cards */
+.dashboard-card.cursor-pointer:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    background: var(--bg-row-hover);
+}
+
+/* Light theme specific overrides */
+body:not(.dark) .dashboard-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark) .dashboard-title {
+    color: #6b7280;
+}
+
+body:not(.dark) .dashboard-value {
+    color: #111827;
+}
+
+body:not(.dark) .dashboard-change {
+    color: #374151;
+}
+
+body:not(.dark) .dashboard-card:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Dark theme specific overrides */
+.dark .dashboard-card {
+    background: #2d2d2d;
+    border-color: #404040;
+}
+
+.dark .dashboard-title {
+    color: #9ca3af;
+}
+
+.dark .dashboard-value {
+    color: #f3f4f6;
+}
+
+.dark .dashboard-change {
+    color: #9ca3af;
+}
+
+.dark .dashboard-card:hover {
+    border-color: #3b82f6 !important;
+    background: #374151 !important;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Enhanced dashboard card theme fixes to ensure proper theme switching */
+.dark .dashboard-card .dashboard-title {
+    color: var(--text-secondary) !important;
+}
+
+.dark .dashboard-card .dashboard-value {
+    color: var(--text-title) !important;
+}
+
+.dark .dashboard-card .dashboard-change {
+    color: var(--text-secondary) !important;
+}
+
+/* Light mode dashboard card fixes */
+body:not(.dark) .dashboard-card {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-container) !important;
+}
+
+body:not(.dark) .dashboard-card .dashboard-title {
+    color: var(--text-secondary) !important;
+}
+
+body:not(.dark) .dashboard-card .dashboard-value {
+    color: var(--text-title) !important;
+}
+
+body:not(.dark) .dashboard-card .dashboard-change {
+    color: var(--text-secondary) !important;
+}
+
+/* --- Enhanced Modal Styles --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999 !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* Revision History Modal - Position at top instead of center */
+#revisionHistoryModalOverlay {
+    align-items: flex-start;
+    padding-top: 2rem;
+}
+
+#revisionHistoryModal {
+    margin-top: 0;
+    max-height: calc(100vh - 4rem);
+    max-width: 1000px;
+    width: 95%;
+}
+
+.modal {
+    background-color: var(--bg-modal, #ffffff);
+    border: none;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 600px;
+    width: 95%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    z-index: 10000 !important;
+    position: relative;
+    transform: scale(0.95);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal:not(.hidden) {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 1.25rem;
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--border-control, #dadce0);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary, #666);
+}
+
+/* Enhanced form styling for modals */
+.modal .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.modal .form-group label {
+    display: block;
+    color: var(--text-label, #374151);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.modal .form-group input,
+.modal .form-group select,
+.modal .form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-control, #d1d5db);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: var(--bg-control, #ffffff);
+    color: var(--text-control, #1f2937);
+    transition: all 0.2s ease;
+}
+
+.modal .form-group input:focus,
+.modal .form-group select:focus,
+.modal .form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background-color: var(--bg-control, #ffffff);
+}
+
+.modal h2 {
+    color: var(--text-modal-title, #1f2937);
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: var(--text-label);
+}
+
+.modal input[type="text"],
+.modal input[type="email"],
+.modal input[type="password"] {
+    padding: 0.75rem;
+    border: 1px solid var(--border-control);
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: var(--bg-control);
+    color: var(--text-control);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal input[type="text"]:focus,
+.modal input[type="email"]:focus,
+.modal input[type="password"]:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--shadow-focus);
+}
+
+.modal input[type="text"]::placeholder,
+.modal input[type="email"]::placeholder,
+.modal input[type="password"]::placeholder {
+    color: var(--placeholder-control);
+}
+
+.modal button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal button[type="submit"] {
+    background-color: var(--bg-modal-save, #1a73e8);
+    color: var(--text-modal-save, #ffffff);
+}
+
+.modal button[type="submit"]:hover {
+    background-color: var(--bg-modal-save-hover, #174ea6);
+}
+
+.modal button[type="button"] {
+    background-color: transparent;
+    color: var(--text-row, #202124);
+    border: 1px solid var(--border-control, #dadce0);
+    margin-top: 1rem;
+}
+
+.modal button[type="button"]:hover {
+    background-color: var(--bg-control-hover, #f1f3f4);
+}
+
+/* Enhanced Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    border-bottom: 1px solid var(--border-modal, #e5e7eb);
+    background: var(--bg-modal, #ffffff);
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 0;
+    min-height: 2.25rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    flex: 1;
+    color: var(--text-modal-title, #1f2937);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.modal-close-x {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    color: var(--text-secondary, #6b7280);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-close-x:hover {
+    background-color: var(--bg-hover, #f3f4f6);
+    color: var(--text-label, #374151);
+    transform: scale(1.1);
+}
+
+/* Enhanced Modal Actions Container */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border-modal, #e5e7eb);
+    background: var(--bg-modal, #ffffff);
+    border-radius: 0 0 16px 16px;
+    margin-top: 0;
+    min-height: 3rem;
+    align-items: center;
+}
+
+/* For edit modal with sync button, use space-between layout */
+.modal-actions-with-sync {
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Ensure all buttons in modal-actions have consistent height and alignment */
+.modal-actions-with-sync > div {
+    display: flex;
+    align-items: center;
+}
+
+/* Ensure all modal buttons have consistent height and baseline alignment */
+.modal-actions button {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    line-height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* Enhanced Modal Action Buttons */
+.modal .modal-save-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #ffffff;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal .modal-save-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.modal .modal-close-btn {
+    background-color: transparent !important;
+    color: var(--text-secondary, #6b7280) !important;
+    border: 1px solid var(--border-control, #d1d5db) !important;
+    padding: 0.625rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 0 !important;
+    transition: all 0.2s ease;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal .modal-close-btn:hover {
+    background-color: var(--bg-control-hover, #f3f4f6) !important;
+    color: var(--text-label, #374151) !important;
+    border-color: var(--text-secondary, #6b7280) !important;
+    transform: translateY(-1px);
+}
+
+/* Sync Button Style */
+.modal .modal-sync-btn {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal .modal-sync-btn:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+}
+
+.modal .modal-sync-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+}
+
+.modal .text-red-600 {
+    color: #dc2626;
+    background-color: #fef2f2;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+    margin: 0.5rem 0;
+}
+
+.modal .text-green-600 {
+    color: #059669;
+    background-color: #f0fdf4;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #bbf7d0;
+    margin: 0.5rem 0;
+}
+
+.hidden {
+    display: none;
+}
+
+/* === LOGIN PAGE STYLES === */
+/* Login page specific body styling */
+body.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-body); /* Use same as main app */
+}
+
+.dark body.login-page {
+    background-color: var(--bg-body); /* Use same as main app */
+}
+
+.login-container {
+    width: 100%;
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.login-card {
+    background-color: var(--bg-container); /* Use theme variables */
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    padding: 2rem;
+    border: 1px solid var(--border-container);
+    backdrop-filter: blur(10px);
+}
+
+.dark .login-card {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-logo {
+    height: 2.5rem; /* Made smaller, matching main app logo */
+    width: auto;
+    margin: 0 auto 1rem auto;
+    transition: filter 0.2s ease;
+}
+
+.login-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-title);
+    margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-label);
+}
+
+.form-label .material-icons {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-control);
+    border-radius: 0.5rem;
+    background-color: var(--bg-control);
+    color: var(--text-control);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input::placeholder {
+    color: var(--placeholder-control);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--shadow-focus);
+}
+
+.login-submit-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-modal-save);
+    color: var(--text-modal-save);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+    background-color: var(--bg-modal-save-hover);
+}
+
+.login-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.login-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-container);
+}
+
+.theme-toggle-btn {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--bg-control-hover, #f1f3f4);
+    color: var(--text-label);
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--text-error);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.dark .error-message {
+    background-color: rgba(153, 27, 27, 0.2);
+    border-color: #7f1d1d;
+}
+
+.error-message .material-icons {
+    color: var(--text-error);
+    font-size: 1.125rem;
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.dark .success-message {
+    background-color: rgba(21, 128, 61, 0.2);
+    border-color: #166534;
+    color: #4ade80;
+}
+
+.success-message .material-icons {
+    color: #22c55e;
+    font-size: 1.125rem;
+}
+
+.dark .success-message .material-icons {
+    color: #4ade80;
+}
+
+/* === COMPREHENSIVE LIGHT/DARK MODE FIXES === */
+
+/* Search Input Styling */
+body:not(.dark) #searchInput {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+}
+
+body:not(.dark) #searchInput:focus {
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 2px var(--shadow-focus) !important;
+}
+
+/* Select and Option Styling */
+body:not(.dark) select {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+}
+
+.dark select {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+}
+
+/* Text and Label Improvements */
+body:not(.dark) label {
+    color: var(--text-label) !important;
+}
+
+.dark label {
+    color: var(--text-label) !important;
+}
+
+/* Ensure proper contrast for all text elements */
+body:not(.dark) .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.dark .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Status Badge Improvements */
+body:not(.dark) .status-op100 {
+    background-color: var(--bg-op100) !important;
+    color: var(--text-op100) !important;
+}
+
+body:not(.dark) .status-lost {
+    background-color: var(--bg-lost) !important;
+    color: var(--text-lost) !important;
+}
+
+body:not(.dark) .status-declined {
+    background-color: var(--bg-declined) !important;
+    color: var(--text-declined) !important;
+}
+
+.dark .status-op100 {
+    background-color: var(--bg-op100) !important;
+    color: var(--text-op100) !important;
+}
+
+.dark .status-lost {
+    background-color: var(--bg-lost) !important;
+    color: var(--text-lost) !important;
+}
+
+.dark .status-declined {
+    background-color: var(--bg-declined) !important;
+    color: var(--text-declined) !important;
+}
+
+/* === END COMPREHENSIVE LIGHT/DARK MODE FIXES === */
+
+/* Comparison Label */
+.comparison-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-label);
+}
+
+/* Custom comparison period label styling - GUARANTEED FIX */
+.comparison-period-label {
+    font-size: 0.875rem; /* text-sm equivalent */
+    font-weight: 500; /* font-medium equivalent */
+    margin-right: 0.5rem; /* mr-2 equivalent */
+    color: var(--text-body);
+}
+
+/* Light theme */
+:root:not(.dark) .comparison-period-label,
+body:not(.dark) .comparison-period-label {
+    color: #202124 !important;
+}
+
+/* Dark theme */
+:root.dark .comparison-period-label,
+body.dark .comparison-period-label {
+    color: #e0e0e0 !important;
+}
+
+/* Dashboard Toggle Container and Buttons */
+.dashboard-toggle-container {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.dashboard-toggle-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: var(--bg-control);
+    color: var(--text-control);
+    border: 1px solid var(--border-control);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-toggle-btn:hover {
+    background-color: var(--bg-control-hover);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.dashboard-toggle-btn.active {
+    background-color: var(--bg-filter-button-active) !important;
+    color: var(--text-filter-button-active) !important;
+    border-color: var(--border-filter-button-active) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(21, 101, 192, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Advanced Multi-Level Sorting Styles */
+#advancedSortPanel {
+    transition: all 0.3s ease;
+    border-color: var(--border-container);
+}
+
+.sort-criteria-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-container);
+    border: 1px solid var(--border-container);
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.sort-criteria-item:hover {
+    background: var(--bg-hover);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sort-priority-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--bg-filter-button);
+    color: var(--text-filter-button);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.sort-column-select {
+    flex: 1;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border-control);
+    border-radius: 0.25rem;
+    background: var(--bg-control);
+    color: var(--text-control);
+    font-size: 0.75rem;
+}
+
+.sort-direction-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border-control);
+    border-radius: 0.25rem;
+    background: var(--bg-control);
+    color: var(--text-control);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 4rem;
+    justify-content: center;
+}
+
+.sort-direction-btn:hover {
+    background: var(--bg-control-hover);
+}
+
+.sort-direction-btn.asc {
+    background: #e0f2fe;
+    color: #0277bd;
+    border-color: #81d4fa;
+}
+
+.sort-direction-btn.desc {
+    background: #fce4ec;
+    color: #c2185b;
+    border-color: #f8bbd9;
+}
+
+html.dark .sort-direction-btn.asc {
+    background: #0d47a1;
+    color: #81d4fa;
+    border-color: #1976d2;
+}
+
+html.dark .sort-direction-btn.desc {
+    background: #880e4f;
+    color: #f8bbd9;
+    border-color: #ad1457;
+}
+
+.sort-move-btn, .sort-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.sort-move-btn {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.sort-move-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.sort-remove-btn {
+    background: #fee;
+    color: #dc2626;
+}
+
+.sort-remove-btn:hover {
+    background: #fecaca;
+    color: #b91c1c;
+}
+
+html.dark .sort-remove-btn {
+    background: #450a0a;
+    color: #f87171;
+}
+
+html.dark .sort-remove-btn:hover {
+    background: #7f1d1d;
+    color: #fca5a5;
+}
+
+.sort-criteria-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.sort-criteria-list.drag-over {
+    background: var(--bg-hover);
+}
+
+/* Enhanced table header sort indicators */
+th.multi-sort {
+    position: relative;
+}
+
+th.multi-sort::after {
+    content: attr(data-sort-priority);
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    background: var(--bg-filter-button);
+    color: var(--text-filter-button);
+    border-radius: 50%;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+th.multi-sort.sort-asc::after {
+    background: #0277bd;
+}
+
+th.multi-sort.sort-desc::after {
+    background: #c2185b;
+}
+
+html.dark th.multi-sort.sort-asc::after {
+    background: #1976d2;
+}
+
+html.dark th.multi-sort.sort-desc::after {
+    background: #ad1457;
+}
+
+#currentSortDisplay:not(:empty)::before {
+    content: "Current: ";
+    font-weight: 600;
+}
+
+/* --- THEME TABLE FIXES --- */
+/* Universal table header/cell fix for both themes */
+#opportunitiesTable th, .table-container th {
+    background-color: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+    font-weight: 600 !important;
+}
+#opportunitiesTable td, .table-container td {
+    background-color: var(--bg-container) !important;
+    color: var(--text-row) !important;
+    border-color: var(--border-table) !important;
+}
+#opportunitiesTable tr:hover td, .table-container tr:hover td {
+    background-color: var(--bg-row-hover) !important;
+    color: var(--text-row) !important;
+}
+
+/* Sticky column fix for both themes */
+#opportunitiesTable th.sticky-col, .table-container th.sticky-col {
+    background-color: #2d2d2d !important; /* Match other column headers in dark mode */
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Light mode sticky columns */
+html:not(.dark) #opportunitiesTable th.sticky-col, 
+html:not(.dark) .table-container th.sticky-col {
+    background-color: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+}
+#opportunitiesTable td.sticky-col, .table-container td.sticky-col {
+    background: var(--bg-container) !important;
+    color: var(--text-row) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Filter/status bar always visible and themed */
+#rowCount {
+    background: var(--bg-container) !important;
+    color: var(--text-title) !important;
+    border: 1px solid var(--border-table) !important;
+    border-radius: 6px;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    display: block;
+}
+
+/* Ensure filter/status bar is visible in both themes */
+.dark #rowCount {
+    background: var(--bg-container) !important;
+    color: var(--text-title) !important;
+    border: 1px solid var(--border-table) !important;
+}
+
+/* Remove any legacy or conflicting table color rules */
+body:not(.dark) #opportunitiesTable th,
+body:not(.dark) .table-container th,
+body:not(.dark) #opportunitiesTable td,
+body:not(.dark) .table-container td,
+.dark #opportunitiesTable th,
+.dark .table-container th,
+.dark #opportunitiesTable td,
+.dark .table-container td {
+    /* All handled by universal rules above */
+}
+
+/* === COMPREHENSIVE DARK MODE TABLE FIXES === */
+/* Ensure all table elements are properly styled in dark mode */
+.dark #opportunitiesTable,
+.dark .table-container table,
+.dark .table-container {
+    background-color: var(--bg-container) !important;
+    color: var(--text-row) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Dark mode table headers - all header elements */
+.dark #opportunitiesTable thead,
+.dark #opportunitiesTable thead tr,
+.dark #opportunitiesTable thead th,
+.dark .table-container thead,
+.dark .table-container thead tr,
+.dark .table-container thead th,
+.dark .sticky-header,
+.dark .sticky-header tr,
+.dark .sticky-header th {
+    background-color: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Dark mode table body - all body elements */
+.dark #opportunitiesTable tbody,
+.dark #opportunitiesTable tbody tr,
+.dark #opportunitiesTable tbody td,
+.dark .table-container tbody,
+.dark .table-container tbody tr,
+.dark .table-container tbody td {
+    background-color: var(--bg-container) !important;
+    color: var(--text-row) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Dark mode hover states */
+.dark #opportunitiesTable tbody tr:hover,
+.dark #opportunitiesTable tbody tr:hover td,
+.dark .table-container tbody tr:hover,
+.dark .table-container tbody tr:hover td {
+    background-color: var(--bg-row-hover) !important;
+    color: var(--text-row) !important;
+}
+
+/* Ensure loading text is properly styled in dark mode */
+.dark .loading-text {
+    color: var(--text-row) !important;
+    background-color: var(--bg-container) !important;
+}
+
+/* Dark mode specific table border fixes */
+.dark #opportunitiesTable th,
+.dark #opportunitiesTable td,
+.dark .table-container th,
+.dark .table-container td {
+    border-right: 1px solid var(--border-table) !important;
+    border-bottom: 1px solid var(--border-table) !important;
+    border-color: var(--border-table) !important;
+}
+
+/* Ensure status-based row colors work in dark mode */
+.dark tr.bg-op100,
+.dark tr.bg-op100 td {
+    background-color: var(--bg-op100) !important;
+    color: var(--text-op100) !important;
+}
+
+.dark tr.bg-lost,
+.dark tr.bg-lost td {
+    background-color: var(--bg-lost) !important;
+    color: var(--text-lost) !important;
+}
+
+.dark tr.bg-declined,
+.dark tr.bg-declined td {
+    background-color: var(--bg-declined) !important;
+    color: var(--text-declined) !important;
+}
+
+/* Dark mode hover states for status rows */
+.dark tr.bg-op100:hover,
+.dark tr.bg-op100:hover td {
+    background-color: var(--bg-op100-hover) !important;
+    color: var(--text-op100) !important;
+}
+
+.dark tr.bg-lost:hover,
+.dark tr.bg-lost:hover td {
+    background-color: var(--bg-lost-hover) !important;
+    color: var(--text-lost) !important;
+}
+
+.dark tr.bg-declined:hover,
+.dark tr.bg-declined:hover td {
+    background-color: var(--bg-declined-hover) !important;
+    color: var(--text-declined) !important;
+}
+
+/* === END COMPREHENSIVE DARK MODE TABLE FIXES === */
+
+/* --- THEME BUTTON FIXES FOR ACTION BUTTONS --- */
+/* Universal theme for action buttons */
+.action-button, .theme-button {
+    background-color: var(--bg-theme-button) !important;
+    color: var(--text-theme-button) !important;
+    border: 1px solid var(--border-theme-button) !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.action-button:hover, .theme-button:hover {
+    background-color: var(--bg-theme-button-hover) !important;
+    color: var(--text-theme-button) !important;
+    border-color: var(--border-theme-button) !important;
+}
+
+/* === COMPREHENSIVE FORM INPUT STYLING === */
+/* Universal form input, select, and textarea styling */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border: 1px solid var(--border-control) !important;
+    border-radius: 4px !important;
+    padding: 0.5rem !important;
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Focus states for all form inputs */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 2px var(--shadow-focus) !important;
+}
+
+/* Placeholder styling */
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+textarea::placeholder {
+    color: var(--placeholder-control) !important;
+    opacity: 0.7 !important;
+}
+
+/* Select dropdown arrow styling */
+select {
+    background-image: var(--select-arrow-url) !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.5rem center !important;
+    background-size: 1rem !important;
+    padding-right: 2.5rem !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+}
+
+/* Option styling */
+select option {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    padding: 0.5rem !important;
+}
+
+/* Textarea specific styling */
+textarea {
+    resize: vertical !important;
+    min-height: 4rem !important;
+    font-family: inherit !important;
+    line-height: 1.5 !important;
+}
+
+/* Form group styling */
+.form-group {
+    margin-bottom: 1rem !important;
+}
+
+.form-group label {
+    display: block !important;
+    margin-bottom: 0.5rem !important;
+    font-weight: 500 !important;
+    color: var(--text-label) !important;
+}
+
+/* Tailwind-like utility classes for compatibility */
+.w-full {
+    width: 100% !important;
+}
+
+.p-2 {
+    padding: 0.5rem !important;
+}
+
+.border {
+    border: 1px solid var(--border-control) !important;
+}
+
+.rounded {
+    border-radius: 4px !important;
+}
+
+.mb-4 {
+    margin-bottom: 1rem !important;
+}
+
+/* Modal form specific overrides */
+.modal input[type="text"],
+.modal input[type="number"],
+.modal input[type="date"],
+.modal input[type="email"],
+.modal input[type="password"],
+.modal select,
+.modal textarea {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border: 1px solid var(--border-control) !important;
+}
+
+/* Dark mode specific form styling */
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark select,
+.dark textarea {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+}
+
+.dark select option {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+}
+
+/* Light mode specific form styling */
+body:not(.dark) input[type="text"],
+body:not(.dark) input[type="number"],
+body:not(.dark) input[type="date"],
+body:not(.dark) input[type="email"],
+body:not(.dark) input[type="password"],
+body:not(.dark) select,
+body:not(.dark) textarea {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+}
+
+body:not(.dark) select option {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+}
+
+/* Ensure input fields in dropdowns have proper styling */
+.dropdown-field {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border: 1px solid var(--border-control) !important;
+}
+
+/* Dashboard Delta Styling */
+.dashboard-delta {
+    font-weight: 600;
+    font-size: 12px;
+    margin-left: 8px;
+}
+
+.dashboard-delta.positive {
+    color: #16a34a; /* Green text only */
+    font-weight: 600;
+}
+
+.dashboard-delta.negative {
+    color: #dc2626; /* Red text only */
+    font-weight: 600;
+}
+
+/* Dark mode adjustments for better visibility */
+.dark .dashboard-delta.positive {
+    color: #22c55e; /* Brighter green for dark mode */
+    font-weight: 600;
+}
+
+.dark .dashboard-delta.negative {
+    color: #ef4444; /* Brighter red for dark mode */
+    font-weight: 600;
+}
+
+/* Higher specificity for table context to override any conflicting table styles */
+.table-container .dashboard-delta.positive,
+.dashboard-table .dashboard-delta.positive,
+table .dashboard-delta.positive {
+    color: #16a34a !important; /* Green text only */
+    font-weight: 600 !important;
+}
+
+.table-container .dashboard-delta.negative,
+.dashboard-table .dashboard-delta.negative,
+table .dashboard-delta.negative {
+    color: #dc2626 !important; /* Red text only */
+    font-weight: 600 !important;
+}
+
+/* Dark mode table context */
+.dark .table-container .dashboard-delta.positive,
+.dark .dashboard-table .dashboard-delta.positive,
+.dark table .dashboard-delta.positive {
+    color: #22c55e !important; /* Brighter green for dark mode */
+    font-weight: 600 !important;
+}
+
+.dark .table-container .dashboard-delta.negative,
+.dark .dashboard-table .dashboard-delta.negative,
+.dark table .dashboard-delta.negative {
+    color: #ef4444 !important; /* Brighter red for dark mode */
+    font-weight: 600 !important;
+}
+
+/* === ULTRA HIGH SPECIFICITY TAILWIND OVERRIDE FOR FILTER LABELS === */
+/* These selectors must override Tailwind CSS utility classes */
+
+/* MAXIMUM SPECIFICITY SELECTORS FOR FILTER DROPDOWN LABELS - UPDATED TO MATCH CURRENT HTML */
+html body.container .main-content div.main-container div div label.text-sm.font-medium,
+html body .main-content .main-container div div label.text-sm.font-medium,
+html body div.main-container div div label.text-sm.font-medium,
+html body.main-container label.text-sm.font-medium,
+html body label.text-sm.font-medium,
+body.container label.text-sm.font-medium,
+body label.text-sm.font-medium,
+.main-container label.text-sm.font-medium,
+label.text-sm.font-medium,
+/* Also cover spans and other elements */
+html body span.text-sm.font-medium,
+html body .text-sm.font-medium,
+body span.text-sm.font-medium,
+body .text-sm.font-medium,
+span.text-sm.font-medium,
+.text-sm.font-medium {
+    color: var(--text-label) !important;
+    transition: color 0.2s ease !important;
+}
+
+/* DARK THEME - ULTRA HIGH SPECIFICITY */
+html body.dark.container .main-content div.main-container div div label.text-sm.font-medium,
+html body.dark .main-content .main-container div div label.text-sm.font-medium,
+html body.dark div.main-container div div label.text-sm.font-medium,
+html body.dark.main-container label.text-sm.font-medium,
+html body.dark label.text-sm.font-medium,
+body.dark.container label.text-sm.font-medium,
+body.dark label.text-sm.font-medium,
+.dark .main-container label.text-sm.font-medium,
+.dark label.text-sm.font-medium,
+/* Also cover spans and other elements in dark mode */
+html body.dark span.text-sm.font-medium,
+html body.dark .text-sm.font-medium,
+body.dark span.text-sm.font-medium,
+body.dark .text-sm.font-medium,
+.dark span.text-sm.font-medium,
+.dark .text-sm.font-medium {
+    color: #f3f4f6 !important;
+}
+
+/* LIGHT THEME - ULTRA HIGH SPECIFICITY */
+html body:not(.dark).container .main-content div.main-container div div label.text-sm.font-medium,
+html body:not(.dark) .main-content .main-container div div label.text-sm.font-medium,
+html body:not(.dark) div.main-container div div label.text-sm.font-medium,
+html body:not(.dark).main-container label.text-sm.font-medium,
+html body:not(.dark) label.text-sm.font-medium,
+body:not(.dark).container label.text-sm.font-medium,
+body:not(.dark) label.text-sm.font-medium,
+:not(.dark) .main-container label.text-sm.font-medium,
+:not(.dark) label.text-sm.font-medium,
+/* Also cover spans and other elements in light mode */
+html body:not(.dark) span.text-sm.font-medium,
+html body:not(.dark) .text-sm.font-medium,
+body:not(.dark) span.text-sm.font-medium,
+body:not(.dark) .text-sm.font-medium,
+:not(.dark) span.text-sm.font-medium,
+:not(.dark) .text-sm.font-medium {
+    color: #374151 !important;
+}
+
+/* Additional Tailwind utility overrides for theme compatibility */
+
+/* Revision History Table Column Widths */
+#revisionHistoryContent table th:nth-child(1),
+#revisionHistoryContent table td:nth-child(1) {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+    text-align: center;
+}
+
+#revisionHistoryContent table th:nth-child(2),
+#revisionHistoryContent table td:nth-child(2) {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+}
+
+#revisionHistoryContent table th:nth-child(3),
+#revisionHistoryContent table td:nth-child(3) {
+    width: 160px;
+          min-width: 160px;
+    max-width: 160px;
+}
+
+#revisionHistoryContent table th:nth-child(4),
+#revisionHistoryContent table td:nth-child(4) {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+}
+
+#revisionHistoryContent table th:nth-child(5),
+#revisionHistoryContent table td:nth-child(5) {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+}
+
+#revisionHistoryContent table th:nth-child(6),
+#revisionHistoryContent table td:nth-child(6) {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+}
+
+/* =================================================================
+   SURGICAL FIX: Filter Labels Dark Theme
+   Targeted fix for specific filter labels only
+   ================================================================= */
+
+/* Fix for "Show changes from:" label specifically */
+.dark .comparison-label.text-sm.font-medium,
+.dark label.comparison-label {
+    color: #f3f4f6 !important;
+}
+
+/* Fix for filter labels with text-sm font-medium classes specifically */
+.dark label.text-sm.font-medium {
+    color: #f3f4f6 !important;
+}
+
+/* Ensure light theme labels remain dark */
+body:not(.dark) label.text-sm.font-medium {
+    color: #374151 !important;
+}
+
+body:not(.dark) .comparison-label.text-sm.font-medium,
+body:not(.dark) label.comparison-label {
+    color: #374151 !important;
+}
+
+/* =================================================================
+   END SURGICAL FIX
+   ================================================================= */
+
+/* SCHEDULE VIEW ADD BUTTONS - ENHANCED VISIBILITY */
+.add-day-item-btn {
+    position: absolute !important;
+    top: 28px !important;
+    right: 2px !important;
+    background-color: #3b82f6 !important; /* Bright blue */
+    color: white !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 20 !important;
+    opacity: 0.9 !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.add-day-item-btn:hover {
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+    background-color: #2563eb !important; /* Darker blue on hover */
+}
+
+.add-day-item-btn .material-icons {
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.add-day-item-bottom-btn {
+    position: absolute !important;
+    bottom: 4px !important;
+    right: 4px !important;
+    background-color: #e5e7eb !important; /* Light gray */
+    color: #4b5563 !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    opacity: 0.8 !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+}
+
+.dark .add-day-item-bottom-btn {
+    background-color: #4b5563 !important; /* Dark gray in dark mode */
+    color: #e5e7eb !important;
+}
+
+.add-day-item-bottom-btn:hover {
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+}
+
+.add-day-item-bottom-btn .material-icons {
+    font-size: 20px !important;
+    line-height: 1 !important;
+}
+
+.day-column:hover .add-day-item-bottom-btn {
+    opacity: 0.9 !important;
+}
+
+/* Day Action Menu Styles */
+#dayActionMenu {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 180px;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.dark #dayActionMenu {
+    background-color: #374151;
+    border: 1px solid #4b5563;
+}
+
+#dayActionMenu button {
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+
+#dayActionMenu button:hover {
+    background-color: #f3f4f6;
+}
+
+.dark #dayActionMenu button:hover {
+    background-color: #4b5563;
+}
+
+#dayActionMenu .material-icons {
+    margin-right: 0.5rem;
+    font-size: 18px;
+}
+
+/* WEEKEND HEADER VISIBILITY FIX */
+
+/* Dark mode - all headers use dark background with white text */
+.dark .schedule-header {
+    background-color: #0C2135 !important;
+}
+
+.dark .schedule-header .day-name,
+.dark .schedule-header .day-date {
+    color: white !important;
+}
+
+/* Light mode - regular headers use dark background with white text */
+body:not(.dark) .schedule-header:not(.weekend-day) {
+    background-color: #0C2135 !important;
+}
+
+body:not(.dark) .schedule-header:not(.weekend-day) .day-name,
+body:not(.dark) .schedule-header:not(.weekend-day) .day-date {
+    color: white !important;
+}
+
+/* Light mode - weekend headers use darker gray background with white text */
+body:not(.dark) .schedule-header.weekend-day {
+    background-color: #6b7280 !important; /* Darker gray background */
+}
+
+body:not(.dark) .schedule-header.weekend-day .day-name,
+body:not(.dark) .schedule-header.weekend-day .day-date {
+    color: #ffffff !important; /* White text for better contrast */
+    font-weight: 500 !important;
+}
+
+/* =================================================================
+   ENHANCED DARK MODE MODAL SUPPORT 
+   Modern styling for all modals with dark theme compatibility
+   ================================================================= */
+
+/* Dark mode modal support */
+.dark .modal {
+    background-color: var(--bg-modal, #1f2937);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.dark .modal-header {
+    background: var(--bg-modal, #1f2937);
+    border-bottom-color: var(--border-modal, #4b5563);
+}
+
+.dark .modal-header h2 {
+    color: var(--text-modal-title, #f9fafb);
+}
+
+.dark .modal-close-x {
+    color: var(--text-secondary, #9ca3af);
+}
+
+.dark .modal-close-x:hover {
+    background-color: var(--bg-hover, #374151);
+    color: var(--text-label, #f3f4f6);
+}
+
+.dark .modal-actions {
+    background: var(--bg-modal, #1f2937);
+    border-top-color: var(--border-modal, #4b5563);
+}
+
+.dark .modal .form-group label {
+    color: var(--text-label, #f3f4f6);
+}
+
+.dark .modal .form-group input,
+.dark .modal .form-group select,
+.dark .modal .form-group textarea {
+    background-color: var(--bg-control, #374151);
+    color: var(--text-control, #f3f4f6);
+    border-color: var(--border-control, #4b5563);
+}
+
+.dark .modal .form-group input:focus,
+.dark .modal .form-group select:focus,
+.dark .modal .form-group textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    background-color: var(--bg-control, #374151);
+}
+
+.dark .modal .modal-close-btn {
+    color: var(--text-secondary, #9ca3af) !important;
+    border-color: var(--border-control, #4b5563) !important;
+}
+
+.dark .modal .modal-close-btn:hover {
+    background-color: var(--bg-control-hover, #4b5563) !important;
+    color: var(--text-label, #f3f4f6) !important;
+    border-color: var(--text-secondary, #9ca3af) !important;
+}
+
+/* Dark mode sync button styles */
+.dark .modal .modal-sync-btn {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
+}
+
+.dark .modal .modal-sync-btn:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.5);
+}
+
+/* Modal animation improvements */
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none !important;
+}
+
+.modal.hidden {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+    display: none !important;
+}
+
+.modal-overlay:not(.hidden) {
+    display: flex !important;
+}
+
+.modal:not(.hidden) {
+    display: block !important;
+}
+
+/* ESC key support for modals */
+.modal-overlay[data-keyboard-accessible="true"] {
+    outline: none;
+}
+
+/* =================================================================
+   END ENHANCED MODAL SUPPORT
+   ================================================================= */
+
+/* =================================================================
+   SECTIONED FORM STYLING (from proposal workbench)
+   ================================================================= */
+
+/* Style for enhanced form sections */
+.form-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: #f9fafb;
+}
+
+.dark .form-section {
+    border-color: #4b5563;
+    background-color: #374151;
+}
+
+.form-section-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dark .form-section-title {
+    color: #d1d5db;
+}
+
+/* Two-column layout for form fields */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row.single-column {
+    grid-template-columns: 1fr;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+/* Enhanced field styling */
+.enhanced-field {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.enhanced-field label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-label, #374151);
+    margin-bottom: 0.25rem;
+}
+
+.dark .enhanced-field label {
+    color: var(--text-label, #d1d5db);
+}
+
+.enhanced-field input,
+.enhanced-field select,
+.enhanced-field textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-control, #d1d5db);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background-color: var(--bg-control, #ffffff);
+    color: var(--text-control, #1f2937);
+    transition: all 0.2s ease;
+}
+
+.enhanced-field input:focus,
+.enhanced-field select:focus,
+.enhanced-field textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.dark .enhanced-field input,
+.dark .enhanced-field select,
+.dark .enhanced-field textarea {
+    background-color: var(--bg-control, #374151);
+    border-color: var(--border-control, #4b5563);
+    color: var(--text-control, #f3f4f6);
+}
+
+.dark .enhanced-field input:focus,
+.dark .enhanced-field select:focus,
+.dark .enhanced-field textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* =================================================================
+   END SECTIONED FORM STYLING
+   ================================================================= */
+
+html.dark .online-user-item:hover {
+    background-color: #374151 !important;
+}
+
+/* Base online user item styles */
+.online-user-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-container);
+    transition: background-color 0.15s ease;
+}
+
+.online-user-item:last-child {
+    border-bottom: none;
+}
+
+/* Online Users Dropdown Hover Functionality */
+.online-users-display:hover .online-users-list,
+.online-users-list:hover {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+/* Additional hover trigger for better UX */
+.online-users-container:hover .online-users-list {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+/* Base styles for online user page info */
+.online-user-page {
+    font-size: 0.75rem !important;
+    opacity: 0.7;
+}
+
+/* =================================================================
+   GOOGLE DRIVE FOLDER FIELD STYLING
+   ================================================================= */
+
+.google-drive-field {
+    grid-column: 1 / -1; /* Take full width */
+}
+
+.drive-folder-info {
+    margin-top: 0.5rem;
+}
+
+.drive-folder-existing {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--bg-drive-folder);
+    border: 1px solid var(--border-drive-folder);
+    border-radius: 6px;
+}
+
+.drive-folder-existing .material-icons {
+    color: #1a73e8;
+    font-size: 20px;
+}
+
+.drive-folder-link {
+    flex: 1;
+    color: var(--text-link);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.drive-folder-link:hover {
+    color: var(--text-link-hover);
+    text-decoration: underline;
+}
+
+.drive-folder-unlink-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.drive-folder-unlink-btn:hover {
+    background-color: #c82333;
+}
+
+.drive-folder-unlink-btn .material-icons {
+    font-size: 16px;
+}
+
+.drive-folder-controls {
+    margin-top: 0.5rem;
+}
+
+.drive-folder-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.drive-folder-create-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-drive-btn);
+    color: var(--text-drive-btn);
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.drive-folder-create-btn:hover {
+    background-color: var(--bg-drive-btn-hover);
+}
+
+.drive-folder-create-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.drive-folder-or {
+    text-align: center;
+    color: var(--text-label);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.drive-folder-link-section {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.drive-folder-id-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--border-control);
+    border-radius: 4px;
+    background-color: var(--bg-control);
+    color: var(--text-control);
+    font-size: 0.875rem;
+}
+
+.drive-folder-id-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--shadow-focus);
+}
+
+.drive-folder-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+.drive-folder-link-btn:hover {
+    background-color: #218838;
+}
+
+.drive-folder-link-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.drive-folder-link-btn .material-icons {
+    font-size: 16px;
+}
+
+/* Dark theme adjustments for Google Drive fields */
+.dark .drive-folder-existing {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+.dark .drive-folder-id-input {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+}
+
+.dark .drive-folder-id-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.dark .drive-folder-or {
+    color: #9ca3af;
+}
+
+/* Google Drive folder table cell styling */
+.drive-folder-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 32px;
+}
+
+.drive-folder-table-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    /* Color and text-decoration now handled by the general table link styling above */
+}
+
+.drive-folder-table-link:hover {
+    background-color: var(--bg-control-hover);
+    /* Color and text-decoration now handled by the general table link styling above */
+}
+
+.drive-folder-table-link .material-icons {
+    font-size: 16px;
+    color: inherit; /* Match the link color */
+}
+
+.drive-folder-none {
+    color: var(--text-label);
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* Dark theme adjustments for table folder cells */
+.dark .drive-folder-table-link:hover {
+    background-color: #374151;
+}
+
+.dark .drive-folder-none {
+    color: #9ca3af;
+}
+
+/* Google Drive Search Modal Styles */
+.drive-search-section {
+    margin-bottom: 1.5rem;
+}
+
+.drive-search-input-container {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.drive-search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--border-control);
+    border-radius: 4px;
+    background-color: var(--bg-control);
+    color: var(--text-control);
+    font-size: 0.875rem;
+}
+
+.drive-search-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--shadow-focus);
+}
+
+.drive-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.drive-search-btn:hover {
+    background-color: #1557b0;
+}
+
+.drive-search-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.drive-folder-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.drive-folder-search-btn:hover {
+    background-color: #1557b0;
+}
+
+.search-help {
+    font-size: 0.8rem;
+    color: var(--text-label);
+    font-style: italic;
+}
+
+.search-results-container {
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-control);
+    border-radius: 4px;
+    background-color: var(--bg-control);
+}
+
+.search-loading,
+.search-error,
+.search-no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-label);
+}
+
+.search-loading .material-icons.rotating {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.search-error {
+    color: #dc3545;
+}
+
+.search-error .material-icons {
+    color: #dc3545;
+    font-size: 2rem;
+}
+
+.search-no-results .material-icons {
+    font-size: 2rem;
+    color: var(--text-label);
+}
+
+.search-results-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-control);
+    background-color: var(--bg-header);
+}
+
+.search-results-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.search-results-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-control);
+    transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+    background-color: var(--bg-control-hover);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.result-icon {
+    flex-shrink: 0;
+}
+
+.result-icon .material-icons {
+    font-size: 2rem;
+    color: #1a73e8;
+}
+
+.result-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.result-name {
+    font-weight: 500;
+    color: var(--text-primary) !important;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
+}
+
+.result-info {
+    font-size: 0.8rem;
+    color: var(--text-label) !important;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.relevance-score {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    padding: 0.125rem 0.375rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.result-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.link-folder-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.link-folder-btn:hover {
+    background-color: #218838;
+}
+
+.link-folder-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.view-folder-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.view-folder-btn:hover {
+    background-color: #5a6268;
+    text-decoration: none;
+    color: white;
+}
+
+/* Dark theme adjustments for search modal */
+.dark .search-help {
+    color: #9ca3af;
+}
+
+.dark .drive-search-input {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+}
+
+.dark .drive-search-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+}
+
+.dark .search-results-container {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+.dark .search-results-header {
+    background-color: #4b5563;
+    border-color: #6b7280;
+}
+
+.dark .search-result-item {
+    border-color: #4b5563;
+}
+
+.dark .search-result-item:hover {
+    background-color: #4b5563;
+}
+
+/* Ensure search result text colors are applied correctly */
+.search-result-item .result-name,
+html:not(.dark) .search-result-item .result-name {
+    color: var(--text-primary, #202124) !important;
+}
+
+.search-result-item .result-info,
+html:not(.dark) .search-result-item .result-info {
+    color: var(--text-label, #5f6368) !important;
+}
+
+.dark .search-result-item .result-name {
+    color: var(--text-primary, #ffffff) !important;
+}
+
+.dark .search-result-item .result-info {
+    color: var(--text-label, #c0c0c0) !important;
+}
+
+.dark .relevance-score {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+}
+
+/* Google Drive Notification Styles */
+.drive-notification {
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: slideInDown 0.3s ease-out;
+}
+
+.drive-notification-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.drive-notification-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.drive-notification-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+}
+
+.notification-content .material-icons {
+    font-size: 20px;
+}
+
+.notification-message {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.notification-close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.notification-close .material-icons {
+    font-size: 16px;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Dark theme adjustments for notifications */
+.dark .drive-notification-success {
+    background-color: #1e4d22;
+    border-color: #2d5a31;
+    color: #84d988;
+}
+
+.dark .drive-notification-error {
+    background-color: #4a1e1e;
+    border-color: #5a2a2a;
+    color: #f56565;
+}
+
+.dark .drive-notification-info {
+    background-color: #1e3a4a;
+    border-color: #2a4a5a;
+    color: #63b3ed;
+}
+
+.dark .notification-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* =================================================================
+   END GOOGLE DRIVE FOLDER FIELD STYLING
+   ================================================================= */
+
+/* =================================================================
+   TABLE COLUMN RESIZE FUNCTIONALITY
+   ================================================================= */
+
+/* Resizable table headers */
+.table-container th {
+    position: relative;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Dedicated resize handle styling */
+.column-resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+    background: transparent;
+    transition: background-color 0.2s ease;
+}
+
+/* Resize handle hover effect */
+.column-resize-handle:hover:not(.resizing) {
+    background-color: var(--border-focus);
+    opacity: 0.3;
+}
+
+/* Active resize state */
+th.resizing .column-resize-handle {
+    background-color: var(--border-focus);
+    opacity: 1;
+}
+
+/* Prevent text selection during resize */
+.table-container.resizing {
+    user-select: none;
+}
+
+/* Resize cursor for the entire table when resizing */
+.table-container.resizing * {
+    cursor: col-resize !important;
+}
+
+/* Visual indicator line during resize */
+.resize-line {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    background-color: var(--border-focus);
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Dark theme adjustments for resize handles */
+.dark .table-container th::after:hover,
+.dark .table-container th.resizing::after {
+    background-color: var(--border-focus);
+}
+
+/* Minimum and maximum width constraints */
+.table-container th,
+.table-container td {
+    min-width: 30px; /* Allow very narrow columns with ellipsis */
+    max-width: 500px;
+}
+
+/* Improve table layout for resizing */
+.table-container table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Force all table cells to respect manual width settings and allow very narrow columns */
+.table-container th,
+.table-container td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+/* Critical: Override browser's content-based width calculation */
+.table-container th[style*="width"] {
+    min-width: 20px !important;
+    max-width: none !important;
+}
+
+/* Override any existing min-width constraints with higher specificity */
+.table-container table th,
+.table-container table td {
+    min-width: 20px !important;
+}
+
+/* Force inline width styles to take absolute precedence */
+.table-container th[style*="width"]:not(.no-resize) {
+    width: attr(style) !important;
+}
+
+/* Nuclear option: disable all automatic width calculations */
+.table-container {
+    table-layout: fixed !important;
+}
+
+.table-container table {
+    table-layout: fixed !important;
+    width: auto !important; /* Allow table to exceed container width for horizontal scrolling */
+}
+
+.table-container colgroup,
+.table-container col {
+    display: none !important;
+}
+
+/* =================================================================
+   END TABLE COLUMN RESIZE FUNCTIONALITY
+   ================================================================= */
+
+/* =================================================================
+   OPP STATUS COLOR CODING
+   ================================================================= */
+
+/* Clean table link styling - inherit row colors, use bold for distinction */
+table a.project-name-link,
+#opportunitiesTable a.project-name-link,
+tr a.project-name-link,
+td a.project-name-link,
+table a.drive-folder-table-link,
+#opportunitiesTable a.drive-folder-table-link,
+tr a.drive-folder-table-link,
+td a.drive-folder-table-link {
+    color: inherit !important; /* Use the same color as the row text */
+    font-weight: 700 !important; /* Bold to indicate it's a link */
+    text-decoration: none !important; /* No underline by default */
+    cursor: pointer !important;
+}
+
+table a.project-name-link:hover,
+#opportunitiesTable a.project-name-link:hover,
+tr a.project-name-link:hover,
+td a.project-name-link:hover,
+table a.drive-folder-table-link:hover,
+#opportunitiesTable a.drive-folder-table-link:hover,
+tr a.drive-folder-table-link:hover,
+td a.drive-folder-table-link:hover {
+    color: inherit !important; /* Keep same color on hover */
+    text-decoration: underline !important; /* Underline on hover for feedback */
+    font-weight: 700 !important;
+}
+
+/* OP30 Status Colors */
+tr.op30,
+tr.op30 td {
+    background-color: var(--bg-op30) !important;
+    color: var(--text-op30) !important;
+}
+
+tr.op30:hover,
+tr.op30:hover td {
+    background-color: var(--bg-op30-hover) !important;
+}
+
+
+/* OP60 Status Colors */
+tr.op60,
+tr.op60 td {
+    background-color: var(--bg-op60) !important;
+    color: var(--text-op60) !important;
+}
+
+tr.op60:hover,
+tr.op60:hover td {
+    background-color: var(--bg-op60-hover) !important;
+}
+
+
+/* OP90 Status Colors */
+tr.op90,
+tr.op90 td {
+    background-color: var(--bg-op90) !important;
+    color: var(--text-op90) !important;
+}
+
+tr.op90:hover,
+tr.op90:hover td {
+    background-color: var(--bg-op90-hover) !important;
+}
+
+
+/* OP100 Status Colors */
+tr.op100,
+tr.op100 td {
+    background-color: var(--bg-op100) !important;
+    color: var(--text-op100) !important;
+}
+
+tr.op100:hover,
+tr.op100:hover td {
+    background-color: var(--bg-op100-hover) !important;
+}
+
+
+/* Declined Status Colors */
+tr.declined,
+tr.declined td {
+    background-color: var(--bg-declined) !important;
+    color: var(--text-declined) !important;
+}
+
+tr.declined:hover,
+tr.declined:hover td {
+    background-color: var(--bg-declined-hover) !important;
+}
+
+/* Lost Status Colors */
+tr.lost,
+tr.lost td {
+    background-color: var(--bg-lost) !important;
+    color: var(--text-lost) !important;
+}
+
+tr.lost:hover,
+tr.lost:hover td {
+    background-color: var(--bg-lost-hover) !important;
+}
+
+/* Enhanced Inline Table Dropdown Styles */
+.inline-edit-dropdown {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+    padding: 0.5rem 2rem 0.5rem 0.75rem !important;
+    min-height: 2.25rem;
+    border: 2px solid #3b82f6 !important;
+    border-radius: 0.5rem !important;
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    width: 100% !important;
+    max-width: 250px;
+}
+
+.inline-edit-dropdown:focus {
+    outline: none;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.inline-edit-dropdown:hover {
+    border-color: #2563eb !important;
+    box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark mode inline dropdown */
+html.dark .inline-edit-dropdown {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
+    border-color: #60a5fa !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f3f4f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .inline-edit-dropdown:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .inline-edit-dropdown:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Dropdown options styling */
+.inline-edit-dropdown option {
+    background-color: #ffffff;
+    color: #1f2937;
+    padding: 0.5rem;
+    border: none;
+    font-size: 0.875rem;
+}
+
+.inline-edit-dropdown option:hover,
+.inline-edit-dropdown option:focus {
+    background-color: #f3f4f6;
+}
+
+html.dark .inline-edit-dropdown option {
+    background-color: #374151;
+    color: #f3f4f6;
+}
+
+html.dark .inline-edit-dropdown option:hover,
+html.dark .inline-edit-dropdown option:focus {
+    background-color: #4b5563;
+}
+
+/* Custom dropdown indicator animation */
+.inline-edit-dropdown:focus {
+    animation: dropdown-focus 0.2s ease;
+}
+
+@keyframes dropdown-focus {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* Enhanced Modal Improvements */
+.modal {
+    border: 1px solid var(--border-modal, #e5e7eb);
+}
+
+.dark .modal {
+    border-color: var(--border-modal, #4b5563);
+}
+
+/* Improved form section spacing in modals */
+.modal .form-section {
+    margin-bottom: 1.5rem;
+}
+
+.modal .form-section:last-child {
+    margin-bottom: 0;
+}
+
+.modal .form-section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-control, #e5e7eb);
+}
+
+.dark .modal .form-section-title {
+    color: var(--text-primary, #f9fafb);
+    border-bottom-color: var(--border-control, #4b5563);
+}
+
+/* Fix Edit Opportunity Modal for smaller screens */
+#editRowModalOverlay {
+    align-items: flex-start;
+    padding: 1rem;
+}
+
+#editRowModal {
+    max-height: calc(100vh - 2rem);
+    margin-top: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#editRowModal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+#editRowModal .modal-actions {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border-control, #e5e7eb);
+    margin-top: 0;
+}
+
+.dark #editRowModal .modal-actions {
+    border-top-color: var(--border-control, #4b5563);
+}
+
+/* Ensure the modal fits smaller screens like MacBook Air */
+@media (max-height: 800px) {
+    #editRowModal {
+        max-height: calc(100vh - 1rem);
+    }
+    
+    #editRowModalOverlay {
+        padding: 0.5rem;
+    }
+}
+
+/* Improved form row spacing */
+.modal .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.modal .form-row.single-column {
+    display: block;
+}
+
+.modal .enhanced-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal .enhanced-field label {
+    font-size: 0.875rem;
+    margin-bottom: 0.375rem;
+    display: block;
+}
+
+.modal .enhanced-field input,
+.modal .enhanced-field select,
+.modal .enhanced-field textarea {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+/* Tab Navigation Styles */
+.tab-navigation {
+    background: var(--bg-container);
+}
+
+.tab-button {
+    transition: all 0.2s ease;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+}
+
+.tab-button:hover {
+    background-color: var(--bg-row-hover);
+}
+
+.tab-button.active {
+    background-color: var(--bg-container);
+}
+
+.tab-content {
+    min-height: 400px;
+}
+
+/* Dark mode support for tabs */
+[class*="dark"] .tab-navigation {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+[class*="dark"] .tab-button:hover {
+    background-color: #4b5563;
+}
+
+[class*="dark"] .tab-button.active {
+    background-color: #374151;
+}
+
+/* === NOTIFICATION SYSTEM STYLES === */
+
+/* Notifications Container */
+.notifications-container {
+    position: relative;
+    margin-right: 1rem;
+}
+
+/* Notification Bell */
+.notifications-bell {
+    position: relative;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+}
+
+.notifications-bell:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.notifications-bell .material-icons {
+    color: var(--text-header);
+    font-size: 1.5rem;
+}
+
+/* Notification Badge */
+.notifications-badge {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    background-color: #ea4335;
+    color: white;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-header);
+    line-height: 1;
+}
+
+/* Notifications Dropdown */
+.notifications-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-container);
+    border: 1px solid var(--border-container);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    min-width: 380px;
+    max-width: 420px;
+    max-height: 500px;
+    z-index: 1000;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.notifications-dropdown.hidden {
+    display: none;
+}
+
+/* Notifications Header */
+.notifications-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-container);
+    background: var(--bg-container);
+}
+
+.notifications-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-title);
+}
+
+.mark-all-read-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.mark-all-read-btn:hover {
+    background-color: var(--bg-row-hover);
+}
+
+.mark-all-read-btn .material-icons {
+    font-size: 1.25rem;
+}
+
+/* Notifications List */
+.notifications-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Empty State */
+.notifications-empty {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.notifications-empty .material-icons {
+    font-size: 3rem;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+}
+
+.notifications-empty p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Notification Item */
+.notification-item {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-container-subtle);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.notification-item:hover {
+    background-color: var(--bg-row-hover);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item.unread {
+    background-color: rgba(26, 115, 232, 0.04);
+}
+
+.notification-item.unread:hover {
+    background-color: rgba(26, 115, 232, 0.08);
+}
+
+/* Notification Content */
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.125rem;
+}
+
+.notification-icon .material-icons {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+/* Icon colors by notification type */
+.notification-item[data-notification-id] .notification-icon {
+    background-color: #f8f9fa;
+}
+
+.notification-item .notification-icon .material-icons {
+    color: #5f6368;
+}
+
+/* Assignment notification icons */
+.notification-item:has(.material-icons:is([class*="person_add"], [class*="engineering"], [class*="manage_accounts"])) .notification-icon {
+    background-color: #e8f5e8;
+}
+
+.notification-item:has(.material-icons:is([class*="person_add"], [class*="engineering"], [class*="manage_accounts"])) .notification-icon .material-icons {
+    color: #137333;
+}
+
+/* Mention notification icons */
+.notification-item:has(.material-icons[class*="alternate_email"]) .notification-icon {
+    background-color: #e3f2fd;
+}
+
+.notification-item:has(.material-icons[class*="alternate_email"]) .notification-icon .material-icons {
+    color: #1976d2;
+}
+
+/* Status change notification icons */
+.notification-item:has(.material-icons[class*="update"]) .notification-icon {
+    background-color: #fff3e0;
+}
+
+.notification-item:has(.material-icons[class*="update"]) .notification-icon .material-icons {
+    color: #f57c00;
+}
+
+.notification-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-title);
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+}
+
+.notification-message {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.project-name {
+    font-weight: 500;
+    color: var(--text-link);
+}
+
+.notification-time {
+    opacity: 0.8;
+}
+
+/* Unread indicator dot */
+.notification-unread-dot {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 8px;
+    height: 8px;
+    background-color: #1976d2;
+    border-radius: 50%;
+}
+
+/* Notifications Footer */
+.notifications-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border-container);
+    background: var(--bg-container);
+}
+
+.view-all-btn {
+    width: 100%;
+    padding: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-control);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-link);
+    transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+    background-color: var(--bg-row-hover);
+    border-color: var(--text-link);
+}
+
+/* Row highlighting for navigation */
+.highlighted-row {
+    background-color: rgba(255, 235, 59, 0.3) !important;
+    animation: highlight-fade 3s ease-out;
+}
+
+@keyframes highlight-fade {
+    0% {
+        background-color: rgba(255, 235, 59, 0.6);
+    }
+    100% {
+        background-color: rgba(255, 235, 59, 0.1);
+    }
+}
+
+/* Dark Theme Support */
+.dark .notifications-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.dark .notifications-header {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .notifications-header h3 {
+    color: #f9fafb;
+}
+
+.dark .mark-all-read-btn {
+    color: #9ca3af;
+}
+
+.dark .mark-all-read-btn:hover {
+    background-color: #374151;
+}
+
+.dark .notifications-empty {
+    color: #9ca3af;
+}
+
+.dark .notifications-empty .material-icons {
+    color: #6b7280;
+}
+
+.dark .notification-item {
+    border-color: #374151;
+}
+
+.dark .notification-item:hover {
+    background-color: #374151;
+}
+
+.dark .notification-item.unread {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.dark .notification-item.unread:hover {
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+.dark .notification-icon {
+    background-color: #374151;
+}
+
+.dark .notification-icon .material-icons {
+    color: #9ca3af;
+}
+
+.dark .notification-title {
+    color: #f9fafb;
+}
+
+.dark .notification-message {
+    color: #d1d5db;
+}
+
+.dark .notification-meta {
+    color: #9ca3af;
+}
+
+.dark .project-name {
+    color: #60a5fa;
+}
+
+.dark .notifications-footer {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .view-all-btn {
+    border-color: #374151;
+    color: #60a5fa;
+}
+
+.dark .view-all-btn:hover {
+    background-color: #374151;
+    border-color: #60a5fa;
+}
+
+.dark .highlighted-row {
+    background-color: rgba(251, 191, 36, 0.2) !important;
+}
+
+/* === MENTION SYSTEM STYLES === */
+
+/* Mention Dropdown */
+.mention-dropdown {
+    position: absolute;
+    background: var(--bg-container);
+    border: 1px solid var(--border-container);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    max-height: 300px;
+    overflow: hidden;
+    z-index: 10000;
+    min-width: 300px;
+}
+
+.mention-dropdown.hidden {
+    display: none;
+}
+
+/* Dropdown Header */
+.mention-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-container-subtle);
+    background: var(--bg-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.mention-dropdown-header .material-icons {
+    font-size: 1.125rem;
+    color: var(--text-link);
+}
+
+/* Dropdown List */
+.mention-dropdown-list {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+/* Mention Item */
+.mention-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--border-container-subtle);
+}
+
+.mention-item:hover,
+.mention-item.selected {
+    background-color: var(--bg-row-hover);
+}
+
+.mention-item:last-child {
+    border-bottom: none;
+}
+
+/* Mention Avatar */
+.mention-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mention-avatar .material-icons {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+/* Mention Info */
+.mention-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mention-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-title);
+    margin-bottom: 0.125rem;
+}
+
+.mention-email {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Mention Highlighting */
+.mention-highlight-overlay {
+    background-color: transparent !important;
+}
+
+.mention-highlight {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #1976d2;
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
+    font-weight: 600;
+    position: relative;
+}
+
+.mention-highlight::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #1976d2;
+    opacity: 0.5;
+}
+
+/* Textarea with mentions */
+textarea[data-mention-attached] {
+    position: relative;
+    z-index: 2;
+}
+
+/* Dark Theme Support for Mentions */
+.dark .mention-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.dark .mention-dropdown-header {
+    background: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+}
+
+.dark .mention-dropdown-header .material-icons {
+    color: #60a5fa;
+}
+
+.dark .mention-item {
+    border-color: #374151;
+}
+
+.dark .mention-item:hover,
+.dark .mention-item.selected {
+    background-color: #374151;
+}
+
+.dark .mention-avatar {
+    background-color: #374151;
+}
+
+.dark .mention-avatar .material-icons {
+    color: #9ca3af;
+}
+
+.dark .mention-name {
+    color: #f9fafb;
+}
+
+.dark .mention-email {
+    color: #d1d5db;
+}
+
+.dark .mention-highlight {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.dark .mention-highlight::before {
+    background-color: #60a5fa;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .mention-dropdown {
+        min-width: 280px;
+        max-width: calc(100vw - 2rem);
+        font-size: 0.875rem;
+    }
+    
+    .mention-item {
+        padding: 0.625rem 0.875rem;
+    }
+    
+    .mention-avatar {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+    
+    .mention-name {
+        font-size: 0.8125rem;
+    }
+    
+    .mention-email {
+        font-size: 0.6875rem;
+    }
+}
+
+/* Animation for dropdown appearance */
+.mention-dropdown {
+    animation: mentionDropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes mentionDropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scrollbar styling for dropdown */
+.mention-dropdown-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mention-dropdown-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mention-dropdown-list::-webkit-scrollbar-thumb {
+    background-color: var(--text-secondary);
+    border-radius: 3px;
+    opacity: 0.3;
+}
+
+.mention-dropdown-list::-webkit-scrollbar-thumb:hover {
+    opacity: 0.5;
+}
+
+/* Project Code Validation Styles */
+.validation-error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.validation-success {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+}
+
+.validation-message {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    padding: 0.25rem 0;
+}
+
+.validation-error-msg {
+    color: #dc3545;
+}
+
+.validation-success-msg {
+    color: #28a745;
+}
+
+/* Ensure modal has relative positioning for loading overlay */
+#createOpportunityModal {
+    position: relative;
+}
+
+/* Project Code Loading Overlay */
+.project-code-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: 8px;
+}
+
+.project-code-loading-overlay.hidden {
+    display: none;
+}
+
+.project-code-loading-overlay .loading-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.project-code-loading-overlay .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0070f3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+.project-code-loading-overlay .loading-text {
+    color: #666;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Dark theme support for loading overlay */
+html.dark .project-code-loading-overlay {
+    background-color: rgba(30, 30, 30, 0.95);
+}
+
+html.dark .project-code-loading-overlay .loading-text {
+    color: #ccc;
+}
+
+html.dark .project-code-loading-overlay .loading-spinner {
+    border-color: #555;
+    border-top-color: #0070f3;
+}
+
+/* =================================================================
+   GOOGLE CALENDAR CONNECTION STYLES
+   ================================================================= */
+
+/* Calendar Connection Container */
+.calendar-connection-container {
+    position: relative;
+    margin-right: 1rem;
+}
+
+/* Calendar Connection Button */
+.calendar-connection-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-header);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.calendar-connection-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.calendar-connection-btn .material-icons {
+    font-size: 1.125rem;
+}
+
+/* Calendar connection status indicators */
+.calendar-connection-btn.connected {
+    border-color: #16a34a;
+    background-color: rgba(22, 163, 74, 0.1);
+}
+
+.calendar-connection-btn.connected:hover {
+    background-color: rgba(22, 163, 74, 0.2);
+}
+
+.calendar-connection-btn.disconnected {
+    border-color: #dc2626;
+    background-color: rgba(220, 38, 38, 0.1);
+}
+
+.calendar-connection-btn.disconnected:hover {
+    background-color: rgba(220, 38, 38, 0.2);
+}
+
+/* Calendar Dropdown */
+.calendar-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-container);
+    border: 1px solid var(--border-container);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    min-width: 320px;
+    max-width: 380px;
+    z-index: 1000;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.calendar-dropdown.hidden {
+    display: none;
+}
+
+/* Calendar Dropdown Header */
+.calendar-dropdown-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-container);
+    background: var(--bg-container);
+}
+
+.calendar-dropdown-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-title);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Calendar Status Content */
+.calendar-status-loading,
+.calendar-status-error,
+.calendar-status-disconnected,
+.calendar-status-connected {
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+}
+
+.calendar-status-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.calendar-status-loading .material-icons {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+}
+
+.calendar-status-error {
+    color: #dc2626;
+}
+
+.calendar-status-error .material-icons {
+    font-size: 2rem;
+    color: #dc2626;
+    margin-bottom: 0.5rem;
+}
+
+.calendar-status-disconnected {
+    color: var(--text-secondary);
+}
+
+.calendar-status-disconnected .material-icons {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+/* Connected Status */
+.calendar-status-connected {
+    color: var(--text-primary);
+}
+
+.calendar-connected-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: rgba(22, 163, 74, 0.1);
+    border: 1px solid rgba(22, 163, 74, 0.2);
+    border-radius: 6px;
+}
+
+.calendar-connected-info .material-icons {
+    color: #16a34a;
+    font-size: 1.25rem;
+}
+
+.calendar-connected-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.calendar-connected-email {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    margin-bottom: 0.125rem;
+}
+
+.calendar-last-sync {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Calendar Action Buttons */
+.calendar-action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+}
+
+.calendar-action-button:last-child {
+    margin-bottom: 0;
+}
+
+.calendar-connect-btn {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.calendar-connect-btn:hover {
+    background-color: #1557b0;
+}
+
+.calendar-sync-btn {
+    background-color: #16a34a;
+    color: white;
+}
+
+.calendar-sync-btn:hover {
+    background-color: #15803d;
+}
+
+.calendar-disconnect-btn {
+    background-color: #dc2626;
+    color: white;
+}
+
+.calendar-disconnect-btn:hover {
+    background-color: #b91c1c;
+}
+
+.calendar-action-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.calendar-action-button .material-icons {
+    font-size: 1.125rem;
+}
+
+/* Sync Status Indicator */
+.sync-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.sync-status-success {
+    background-color: rgba(22, 163, 74, 0.1);
+    color: #16a34a;
+}
+
+.sync-status-syncing {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.sync-status-error {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* Dark Theme Support for Calendar */
+.dark .calendar-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.dark .calendar-dropdown-header {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .calendar-dropdown-header h3 {
+    color: #f9fafb;
+}
+
+.dark .calendar-status-loading,
+.dark .calendar-status-disconnected {
+    color: #d1d5db;
+}
+
+.dark .calendar-connected-info {
+    background-color: rgba(22, 163, 74, 0.15);
+    border-color: rgba(22, 163, 74, 0.3);
+}
+
+.dark .calendar-connected-email {
+    color: #f9fafb;
+}
+
+.dark .calendar-last-sync {
+    color: #d1d5db;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .calendar-connection-container {
+        margin-right: 0.5rem;
+    }
+    
+    .calendar-connection-btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8125rem;
+    }
+    
+    .calendar-connection-btn .material-icons {
+        font-size: 1rem;
+    }
+    
+    .calendar-dropdown {
+        min-width: 280px;
+        max-width: calc(100vw - 2rem);
+        right: -1rem;
+    }
+}
+
+/* Animation for dropdown */
+.calendar-dropdown {
+    animation: calendarDropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes calendarDropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =================================================================
+   END GOOGLE CALENDAR CONNECTION STYLES
+   ================================================================= */

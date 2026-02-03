@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+    <title>Final Missing Functions Resolution Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result { 
+            padding: 8px 12px; 
+            margin: 4px 0; 
+            border-radius: 4px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pass { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border-left: 4px solid #28a745;
+        }
+        .fail { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border-left: 4px solid #dc3545;
+        }
+        .summary {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-success { background: #28a745; color: white; }
+        .badge-danger { background: #dc3545; color: white; }
+        h1 { color: #333; margin-bottom: 10px; }
+        h2 { color: #555; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Final Missing Functions Resolution Test</h1>
+        <p>Testing the specific functions that were causing errors in the console</p>
+        
+        <div class="summary" id="testSummary">
+            <!-- Test summary will be populated -->
+        </div>
+        
+        <h2>Previously Missing Functions</h2>
+        <div id="testResults"></div>
+        
+        <h2>Core Application Functions</h2>
+        <div id="coreResults"></div>
+    </div>
+
+    <!-- Minimal DOM elements for testing -->
+    <div id="loadingText" style="display: none;">Loading...</div>
+    <table id="opportunitiesTable" style="display: none;">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    <div id="modalOverlay" style="display: none;"></div>
+    <div id="opportunityModal" style="display: none;"></div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Functions that were specifically causing errors
+            const previouslyMissingFunctions = [
+                'saveManualSnapshot',
+                'initializeDashboardToggles',
+                'setComparisonMode',
+                'updateDashboardComparison'
+            ];
+
+            // Core functions that should be working
+            const coreFunctions = [
+                'initializeTable',
+                'loadOpportunities',
+                'renderTable',
+                'displayOpportunities',
+                'showEditRowModal',
+                'closeOpportunityModal',
+                'populateFilterDropdowns',
+                'isTokenValid',
+                'handleLogout',
+                'showAuthErrorBanner',
+                'hideAuthErrorBanner'
+            ];
+
+            function testFunctions(functions, containerId, title) {
+                const container = document.getElementById(containerId);
+                let passed = 0;
+                
+                functions.forEach(funcName => {
+                    const exists = typeof window[funcName] === 'function';
+                    
+                    if (exists) {
+                        passed++;
+                    } else {
+                        console.error(`Missing function: ${funcName}`);
+                    }
+                    
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = `test-result ${exists ? 'pass' : 'fail'}`;
+                    resultDiv.innerHTML = `
+                        <span>${funcName}()</span>
+                        <span class="badge ${exists ? 'badge-success' : 'badge-danger'}">
+                            ${exists ? '✅ EXISTS' : '❌ MISSING'}
+                        </span>
+                    `;
+                    container.appendChild(resultDiv);
+                });
+                
+                return { passed, total: functions.length };
+            }
+
+            // Test previously missing functions
+            const missingResults = testFunctions(previouslyMissingFunctions, 'testResults', 'Previously Missing');
+            
+            // Test core functions
+            const coreResults = testFunctions(coreFunctions, 'coreResults', 'Core Functions');
+            
+            // Calculate totals
+            const totalPassed = missingResults.passed + coreResults.passed;
+            const totalFunctions = missingResults.total + coreResults.total;
+            const percentage = Math.round((totalPassed / totalFunctions) * 100);
+            
+            // Update summary
+            const summaryContainer = document.getElementById('testSummary');
+            summaryContainer.innerHTML = `
+                <h3>📋 Final Resolution Test Results</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0;">
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: #2196f3;">${totalFunctions}</div>
+                        <div style="color: #666;">Total Tests</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: #28a745;">${totalPassed}</div>
+                        <div style="color: #666;">Passed</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: #dc3545;">${totalFunctions - totalPassed}</div>
+                        <div style="color: #666;">Failed</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: ${percentage === 100 ? '#28a745' : '#dc3545'};">${percentage}%</div>
+                        <div style="color: #666;">Success</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px; padding: 15px; border-radius: 8px; ${percentage === 100 ? 'background: #d4edda; color: #155724;' : 'background: #f8d7da; color: #721c24;'}">
+                    <strong>
+                        ${percentage === 100 
+                            ? '🎉 SUCCESS! All missing functions have been resolved!' 
+                            : `⚠️ ${totalFunctions - totalPassed} functions still missing - more work needed.`}
+                    </strong>
+                </div>
+                <div style="margin-top: 15px; text-align: center;">
+                    <h4>Breakdown:</h4>
+                    <p>Previously Missing Functions: ${missingResults.passed}/${missingResults.total} ✅</p>
+                    <p>Core Functions: ${coreResults.passed}/${coreResults.total} ✅</p>
+                </div>
+            `;
+
+            console.log(`Final Resolution Test Complete: ${totalPassed}/${totalFunctions} functions found (${percentage}%)`);
+            console.log(`Previously Missing: ${missingResults.passed}/${missingResults.total}`);
+            console.log(`Core Functions: ${coreResults.passed}/${coreResults.total}`);
+            
+            if (percentage === 100) {
+                console.log(`🎉 SUCCESS: All function resolution issues have been fixed!`);
+            } else {
+                console.log(`⚠️ WARNING: ${totalFunctions - totalPassed} functions are still missing`);
+            }
+        });
+    </script>
+</body>
+</html>

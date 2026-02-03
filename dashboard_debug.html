@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Debug Test</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Dashboard Debug Test</h1>
+        
+        <!-- Test comparison period label -->
+        <div style="padding: 20px; background: white; margin: 10px; border-radius: 8px;">
+            <span class="text-sm font-medium mr-2">Comparison Period:</span>
+            <span>This should be visible in light theme</span>
+        </div>
+        
+        <!-- Test dashboard cards -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; padding: 20px;">
+            <div class="dashboard-card">
+                <div class="dashboard-title">Test Card</div>
+                <div id="testValue" class="dashboard-value">--</div>
+                <div id="testValueChange" class="dashboard-change">--</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="dashboard-title">Test Card 2</div>
+                <div id="testValue2" class="dashboard-value">--</div>
+                <div id="testValue2Change" class="dashboard-change">--</div>
+            </div>
+        </div>
+        
+        <button onclick="testDashboardCards()" style="padding: 10px 20px; margin: 20px;">Test Dashboard Cards</button>
+    </div>
+
+    <script>
+        // Include minimal required functions
+        function formatMetricValue(value) {
+            if (typeof value === 'number' && value >= 1000000) {
+                return `₱${(value / 1000000).toFixed(1)}M`;
+            } else if (typeof value === 'number' && value >= 1000) {
+                return `₱${(value / 1000).toFixed(1)}K`;
+            } else if (typeof value === 'number') {
+                return value.toLocaleString();
+            }
+            return value;
+        }
+
+        function formatDeltaValue(value) {
+            if (Math.abs(value) >= 1000000) {
+                return `${(value / 1000000).toFixed(1)}M`;
+            } else if (Math.abs(value) >= 1000) {
+                return `${(value / 1000).toFixed(1)}K`;
+            }
+            return Math.abs(value).toLocaleString();
+        }
+
+        function withDelta(currentValue, previousValue) {
+            if (previousValue === undefined || previousValue === null) {
+                return formatMetricValue(currentValue);
+            }
+            
+            const delta = currentValue - previousValue;
+            const deltaStr = delta > 0 ? `(+${formatDeltaValue(delta)})` : delta < 0 ? `(${formatDeltaValue(delta)})` : '(0)';
+            const deltaClass = delta > 0 ? 'positive' : delta < 0 ? 'negative' : '';
+            
+            return `${formatMetricValue(currentValue)} <span class="dashboard-delta ${deltaClass}">${deltaStr}</span>`;
+        }
+
+        function setDashboardValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                // Check if this is a formatted value with delta (contains HTML)
+                if (typeof value === 'string' && value.includes('<span class="dashboard-delta')) {
+                    // Use regex to properly split value and delta
+                    const match = value.match(/^(.*?)\s*(<span class="dashboard-delta.*?<\/span>)$/);
+                    if (match) {
+                        const mainValue = match[1].trim();
+                        const deltaHtml = match[2];
+                        
+                        // Update the main value element
+                        element.innerHTML = mainValue;
+                        
+                        // Update the corresponding change element (HTML uses 'Change' suffix, not '-change')
+                        const changeElementId = elementId + 'Change';
+                        const changeElement = document.getElementById(changeElementId);
+                        if (changeElement) {
+                            changeElement.innerHTML = deltaHtml;
+                        }
+                    } else {
+                        // Fallback if regex doesn't match
+                        element.innerHTML = value;
+                    }
+                } else {
+                    // Simple value without delta
+                    element.innerHTML = value;
+                    
+                    // Clear the corresponding change element
+                    const changeElementId = elementId + 'Change';
+                    const changeElement = document.getElementById(changeElementId);
+                    if (changeElement) {
+                        changeElement.innerHTML = '--';
+                    }
+                }
+            }
+        }
+
+        function testDashboardCards() {
+            console.log('Testing dashboard cards...');
+            
+            // Test with delta values
+            setDashboardValue('testValue', withDelta(1500000, 1200000));
+            setDashboardValue('testValue2', withDelta(85, 92));
+            
+            console.log('Dashboard cards updated');
+        }
+    </script>
+</body>
+</html>

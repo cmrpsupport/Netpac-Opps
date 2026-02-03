@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com https://cdn.jsdelivr.net;">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>oppX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="styles.css?v=1750741890">
+    <link rel="stylesheet" href="filter-fixes.css">
+    <link rel="stylesheet" href="proposal_workbench_style_fixes.css">
+    
+    <!-- EMERGENCY FILTER FIX - Maximum specificity override -->
+    <style>
+        /* All previous override styles will be removed and handled by fix-labels.css */
+        
+        /* Enhanced Schedule Styles */
+        .week-overview {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .dark .week-overview {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+        
+        .schedule-day-summary {
+            backdrop-filter: blur(10px);
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+            position: sticky !important;
+            bottom: 0;
+            z-index: 10;
+            order: 999999;
+            pointer-events: none; /* Prevent interference with drag operations */
+        }
+        
+        .schedule-day-summary:hover {
+            border-left-color: #3b82f6;
+            transform: translateX(2px);
+        }
+        
+        /* Day columns should be flex containers to support order */
+        .day-column {
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 200px;
+        }
+        
+        /* Task completion checkbox styling */
+        .task-completion-checkbox {
+            transform: scale(1.1);
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .task-completion-checkbox:checked + * .font-bold {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        /* Ensure proposals in schedule are draggable */
+        .schedule-task[data-task-type="proposal"] {
+            cursor: grab !important;
+        }
+        
+        .schedule-task[data-task-type="proposal"]:active {
+            cursor: grabbing !important;
+        }
+        
+        /* Additional summary styling to prevent drag interference */
+        .schedule-day-summary * {
+            pointer-events: none !important;
+            user-select: none;
+        }
+        
+        .priority-dot {
+            display: inline-block;
+            font-size: 10px;
+        }
+        
+        .task-meta {
+            opacity: 0.8;
+            font-size: 0.7rem;
+        }
+        
+        .task-meta span {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        
+        .dark .task-meta span {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Enhanced priority-based task styling */
+        .schedule-task.priority-high {
+            border-left: 4px solid #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #fecaca;
+        }
+        
+        .schedule-task.priority-medium {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #fed7aa;
+        }
+        
+        .schedule-task.priority-low {
+            border-left: 4px solid #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #bbf7d0;
+        }
+        
+        /* Default styling for tasks without priority (proposal tasks) */
+        .schedule-task.proposal-task {
+            border-left: 4px solid #6366f1;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-color: #bfdbfe;
+        }
+        
+        .schedule-task.general-task {
+            border-left: 4px solid #8b5cf6;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border-color: #ddd6fe;
+        }
+        
+        /* Dark theme priority styles */
+        .dark .schedule-task.priority-high {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            border-color: #7f1d1d;
+        }
+        
+        .dark .schedule-task.priority-medium {
+            background: linear-gradient(135deg, #92400e 0%, #78350f 100%);
+            border-color: #78350f;
+        }
+        
+        .dark .schedule-task.priority-low {
+            background: linear-gradient(135deg, #166534 0%, #14532d 100%);
+            border-color: #14532d;
+        }
+        
+        .dark .schedule-task.proposal-task {
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+            border-color: #312e81;
+        }
+        
+        .dark .schedule-task.general-task {
+            background: linear-gradient(135deg, #581c87 0%, #4c1d95 100%);
+            border-color: #581c87;
+        }
+        
+        /* Stat card animations */
+        .stat-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Enhanced form field styling */
+        .form-field label {
+            color: var(--text-primary);
+        }
+        
+        .form-field select,
+        .form-field input {
+            transition: all 0.2s ease;
+        }
+        
+        .form-field select:focus,
+        .form-field input:focus {
+            ring: 2px solid #3b82f6;
+            border-color: #3b82f6;
+            transform: scale(1.02);
+        }
+        
+        /* Week navigation enhancements */
+        #week-navigation button {
+            transition: all 0.2s ease;
+        }
+        
+        #week-navigation button:hover {
+            background-color: var(--bg-secondary);
+            transform: scale(1.1);
+        }
+        
+        /* Enhanced schedule task styling */
+        .schedule-task {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .schedule-task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: grab;
+        }
+        
+        .schedule-task:active {
+            cursor: grabbing;
+        }
+        
+        .dark .schedule-task {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dark .schedule-task:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Make task text more readable */
+        .schedule-task .task-title,
+        .schedule-task .font-bold {
+            font-weight: 600;
+            font-size: 0.875rem;
+            line-height: 1.2;
+        }
+        
+        .schedule-task .task-meta {
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+        
+        .schedule-task .task-comment {
+            font-style: italic;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        /* Sort indicator for drag-and-drop */
+        .sort-indicator {
+            transition: all 0.2s ease;
+        }
+        
+        /* Task action buttons styling */
+        .task-action-btn {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin: 0 1px;
+            transition: all 0.2s ease;
+            font-size: 12px !important;
+            line-height: 1;
+        }
+        
+        .task-action-btn:hover {
+            background: rgba(0, 0, 0, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .dark .task-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark .task-action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .duplicate-task-btn {
+            color: #10b981 !important;
+        }
+        
+        .duplicate-proposal-btn {
+            color: #f59e0b !important;
+        }
+        
+        .edit-task-btn {
+            color: #3b82f6 !important;
+        }
+        
+        .remove-task-btn {
+            color: #ef4444 !important;
+        }
+        
+        /* Task type badges */
+        .task-type-badge {
+            z-index: 10;
+            font-size: 10px;
+            line-height: 1;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .schedule-task {
+            position: relative;
+            padding-right: 0.75rem; /* Add padding to make room for badge */
+        }
+    </style>
+    
+    <!-- Load configuration and utilities -->
+    <script src="config.js"></script>
+    <script src="api-utils.js"></script>
+    
+    <!-- Include label fix script -->
+    <script src="label-fix.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen">
+    <div id="main-content" class="hidden">
+        <!-- Shared Top Bar -->
+        <div id="shared-topbar"></div>
+        
+        <!-- Layout Container -->
+        <div class="layout-container">
+            <!-- Shared Side Navigation Bar -->
+            <div id="shared-sidebar"></div>
+
+            <div class="main-content">
+            <main class="main-container mx-auto p-4 sm:p-6 lg:p-8" style="margin-top: 2rem;">
+            <!-- Integrated Control Bar -->
+            <div class="mb-6">
+                <!-- Primary Controls Row -->
+                <div class="flex justify-between items-center mb-4">
+                    <!-- View Toggle Buttons -->
+                    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                        <button id="proposalViewBtn" class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 bg-indigo-600 text-white shadow-sm">
+                            <i class="material-icons text-sm mr-2">dashboard</i>
+                            Proposal Board
+                        </button>
+                        <button id="scheduleViewBtn" class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i class="material-icons text-sm mr-2">calendar_today</i>
+                            Weekly Schedule
+                        </button>
+                    </div>
+
+                    <!-- Search Field -->
+                    <div class="flex-1 mx-6">
+                        <div class="relative max-w-sm mx-auto">
+                            <input type="text" 
+                                   id="proposalSearch" 
+                                   placeholder="Search proposals..." 
+                                   class="w-full pl-4 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 shadow-sm transition-all duration-200"
+                            >
+                            <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 hidden">
+                                <span class="material-icons" style="font-size: 16px;">clear</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- No Decision Yet Button -->
+                    <div class="flex items-center">
+                        <button id="noDecisionToggleBtn" class="inline-flex items-center px-4 py-2 border border-yellow-400 text-sm font-medium rounded-lg text-yellow-800 bg-yellow-200 hover:bg-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-200 dark:border-yellow-500 dark:hover:bg-yellow-900/60 transition-all duration-200">
+                            <i class="material-icons text-sm mr-1">help_outline</i>
+                            No Decision Yet (<span id="noDecisionCount">0</span>)
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filter section (only visible in proposal view) -->
+                <div id="filterSection" class="flex justify-between items-center">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Filter & customize your view
+                    </div>
+                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center gap-2">
+                        <label for="picFilter" class="filter-label text-sm font-medium text-gray-700 dark:text-gray-300">PIC/BOM:</label>
+                        <select id="picFilter" class="filter-dropdown mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">All PICs/BOMs</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="clientFilter" class="filter-label text-sm font-medium text-gray-700 dark:text-gray-300">Client:</label>
+                        <select id="clientFilter" class="filter-dropdown filter-dropdown-wide mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option>All Clients</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="accountManagerFilter" class="filter-label text-sm font-medium text-gray-700 dark:text-gray-300">Account Mgr:</label>
+                        <select id="accountManagerFilter" class="filter-dropdown mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option>All Account Managers</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="solutionFilter" class="filter-label text-sm font-medium text-gray-700 dark:text-gray-300">Solution:</label>
+                        <select id="solutionFilter" class="filter-dropdown mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">All Solutions</option>
+                            <option value="Digitalization">Digitalization</option>
+                            <option value="Automation">Automation</option>
+                            <option value="Electrification">Electrification</option>
+                        </select>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- View Container -->
+            <div id="viewContainer">
+                <!-- Proposal Board View -->
+                <div id="proposalView">
+                    <!-- Kanban Board -->
+                    <div class="mb-8">
+                    <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Proposal Status Board</h2>
+                
+                <!-- Main Workflow Row -->
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Main Workflow</h3>
+                    <div id="kanbanBoard" class="kanban-board grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <!-- Not Yet Started Column -->
+                        <div id="notStartedColumn" class="kanban-column bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
+                            <div class="kanban-column-header flex justify-between items-center p-3 font-semibold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
+                                <span><i class="material-icons text-sm mr-2">hourglass_empty</i>Not Yet Started</span>
+                                <span id="notStartedCount" class="bg-gray-200 dark:bg-gray-700 text-xs font-semibold px-2 py-1 rounded-full">0</span>
+                            </div>
+                            <div id="notStartedBody" class="kanban-column-body p-3 space-y-3">
+                                <!-- Proposal cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- On-going Column -->
+                        <div id="ongoingColumn" class="kanban-column bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
+                            <div class="kanban-column-header flex justify-between items-center p-3 font-semibold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
+                                <span><i class="material-icons text-sm mr-2">trending_up</i>On-going</span>
+                                <span id="ongoingCount" class="bg-gray-200 dark:bg-gray-700 text-xs font-semibold px-2 py-1 rounded-full">0</span>
+                            </div>
+                            <div id="ongoingBody" class="kanban-column-body p-3 space-y-3">
+                                <!-- Proposal cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- For Revision Column -->
+                        <div id="forRevisionColumn" class="kanban-column bg-orange-50 dark:bg-orange-900/20 rounded-lg shadow border-l-4 border-orange-400">
+                            <div class="kanban-column-header flex justify-between items-center p-3 font-semibold text-gray-700 dark:text-gray-200 border-b border-orange-200 dark:border-orange-700">
+                                <span><i class="material-icons text-sm mr-2 text-orange-600">edit</i>For Revision</span>
+                                <span id="forRevisionCount" class="bg-orange-200 dark:bg-orange-700 text-xs font-semibold px-2 py-1 rounded-full">0</span>
+                            </div>
+                            <div id="forRevisionBody" class="kanban-column-body p-3 space-y-3">
+                                <!-- Proposal cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- For Approval Column -->
+                        <div id="forApprovalColumn" class="kanban-column bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
+                            <div class="kanban-column-header flex justify-between items-center p-3 font-semibold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
+                                <span><i class="material-icons text-sm mr-2">gavel</i>For Approval</span>
+                                <span id="forApprovalCount" class="bg-gray-200 dark:bg-gray-700 text-xs font-semibold px-2 py-1 rounded-full">0</span>
+                            </div>
+                            <div id="forApprovalBody" class="kanban-column-body p-3 space-y-3">
+                                <!-- Proposal cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- Submitted Column -->
+                        <div id="submittedColumn" class="kanban-column bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
+                            <div class="kanban-column-header flex justify-between items-center p-3 font-semibold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
+                                <span><i class="material-icons text-sm mr-2">check_circle</i>Submitted</span>
+                                <div class="flex items-center">
+                                    <span id="submittedCount" class="bg-gray-200 dark:bg-gray-700 text-xs font-semibold px-2 py-1 rounded-full mr-2">0</span>
+                                    <label for="hideOldSubmitted" class="flex items-center text-xs cursor-pointer">
+                                        <input type="checkbox" id="hideOldSubmitted" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-1" checked>
+                                        Last 10 only
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="submittedBody" class="kanban-column-body p-3 space-y-3">
+                                <!-- Proposal cards will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                </div>
+                
+            </div> <!-- End proposalView -->
+            
+            <!-- Weekly Schedule View -->
+            <div id="scheduleView" class="hidden">
+                <!-- Schedule filter section will be created dynamically by JavaScript -->
+
+            <!-- Weekly Schedule -->
+            <div class="mt-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Weekly Schedule</h2>
+                    <div class="flex items-center space-x-4">
+                        <div id="week-navigation" class="flex items-center space-x-2">
+                            <button id="prev-week-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <span class="material-icons">chevron_left</span>
+                            </button>
+                            <span id="current-week-display" class="text-sm font-medium text-gray-700 dark:text-gray-300">Current Week</span>
+                            <button id="next-week-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <span class="material-icons">chevron_right</span>
+                            </button>
+                            <button id="current-week-btn" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Today</button>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="weekend-toggle" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
+                            <label for="weekend-toggle" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Include weekends</label>
+                        </div>
+                        <!-- Removed global Add Task button -->
+                    </div>
+                </div>
+                <div class="schedule-container overflow-x-auto pb-2">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 italic mb-2">Scroll horizontally to see all days of the week.</p>
+                    <div id="schedule" class="schedule-board grid grid-cols-7 gap-1">
+                        <div id="scheduleHeaderRow" class="contents">
+                            <!-- Day headers will be injected here -->
+                        </div>
+                        <div id="scheduleBodyRow" class="contents">
+                            <!-- Day columns will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End scheduleView -->
+            </div> <!-- End viewContainer -->
+            </main>
+        </div> <!-- End main-content -->
+    </div> <!-- End layout-container -->
+
+    <!-- Proposal Edit Modal -->
+    <div id="proposalEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="mx-auto mt-12 mb-12 p-6 border w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">Edit Proposal</h3>
+                <button id="closeProposalEditModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <form id="proposalEditForm" class="space-y-6">
+                <input type="hidden" id="editProposalId">
+                
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Basic Information</div>
+                    <div class="form-row single-column">
+                        <div class="enhanced-field">
+                            <label for="editProposalName">Project Name</label>
+                            <input type="text" id="editProposalName" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editClient">Client</label>
+                            <input type="text" id="editClient" readonly>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editRevision">Revision Number</label>
+                            <input type="number" id="editRevision" min="1" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editSolution">Solution</label>
+                            <input type="text" id="editSolution" readonly>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editIndustry">Industry</label>
+                            <input type="text" id="editIndustry" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment Information Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Assignment Information</div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editPic">PIC (Person in Charge)</label>
+                            <input type="text" id="editPic" readonly>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editBom">BOM (Bill of Materials)</label>
+                            <input type="text" id="editBom" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editAccountManager">Account Manager</label>
+                            <input type="text" id="editAccountManager" readonly>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editStatus">Current Status</label>
+                            <select id="editStatus" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="not_yet_started">Not Started</option>
+                                <option value="ongoing">Ongoing</option>
+                                <option value="for_revision">For Revision</option>
+                                <option value="for_approval">For Approval</option>
+                                <option value="submitted">Submitted</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Information Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Financial Information</div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editMargin">Margin (%)</label>
+                            <input type="number" id="editMargin" step="0.01" min="0" max="100" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div class="enhanced-field">
+                            <!-- Empty slot for layout balance -->
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editFinalAmount">Final Amount</label>
+                            <input type="text" id="editFinalAmount" placeholder="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editOpportunityStatus">OP Status</label>
+                            <select id="editOpportunityStatus" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">Select OP Status</option>
+                                <option value="OP30">OP30</option>
+                                <option value="OP60">OP60</option>
+                                <option value="OP90">OP90</option>
+                                <option value="OP100">OP100</option>
+                                <option value="LOST">LOST</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dates Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Important Dates</div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editSubmissionDate">Submission Date</label>
+                            <input type="date" id="editSubmissionDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editDateAwarded">Date Awarded</label>
+                            <input type="text" id="editDateAwarded" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="enhanced-field">
+                            <label for="editForecastDate">Forecast Date</label>
+                            <input type="text" id="editForecastDate" readonly>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="editDecision">Decision</label>
+                            <input type="text" id="editDecision" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="form-section">
+                    <div class="form-section-title">Comments & Notes</div>
+                    <div class="form-row single-column">
+                        <div class="enhanced-field">
+                            <label for="editComment">Add/Edit Comment</label>
+                            <textarea id="editComment" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Add your comments or notes here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row single-column">
+                        <div class="enhanced-field">
+                            <label for="editRemarks">Existing Remarks</label>
+                            <textarea id="editRemarks" rows="3" readonly class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <button id="cancelProposalEdit" type="button" class="px-6 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
+                        Cancel
+                    </button>
+                    <button id="syncFromDriveBtn" type="button" class="px-6 py-2 bg-green-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center">
+                        <span class="material-icons text-sm mr-2">sync</span>
+                        Sync from Drive
+                    </button>
+                    <button id="saveProposalChanges" type="submit" class="px-6 py-2 bg-indigo-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Task Modal -->
+    <div id="taskModalOverlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50" aria-labelledby="task-modal-title" role="dialog" aria-modal="true">
+        <div class="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="taskModalTitle" class="text-lg font-medium text-gray-900 dark:text-white">Add Task</h3>
+                <button id="taskModalCloseBtn" class="text-gray-400 hover:text-gray-500">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <input type="hidden" id="taskIsEdit" value="false">
+                <input type="hidden" id="taskDayIndex">
+                
+                <div class="mb-4">
+                    <label for="taskTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                    <input type="text" id="taskTitle" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="taskDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                    <textarea id="taskDescription" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white" rows="3"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="taskDay" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Day</label>
+                        <select id="taskDay" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white" required>
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="taskTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                        <input type="time" id="taskTime" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
+                        <div class="mt-2">
+                            <input type="checkbox" id="taskIsAllDay" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="taskIsAllDay" class="ml-2 text-sm text-gray-700 dark:text-gray-300">All Day</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="taskComment" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comment</label>
+                    <textarea id="taskComment" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white" rows="2"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="taskModalCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Proposal Selection Modal -->
+    <div id="proposalSelectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="relative mx-auto mt-16 mb-8 p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800 max-h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-lg font-medium text-gray-900 dark:text-white">
+                    Select Proposal
+                </h3>
+                <button id="proposalModalCloseBtn" class="text-gray-400 hover:text-gray-500">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <!-- Search Field -->
+            <div class="mb-4">
+                <div class="relative">
+                    <input type="text" id="proposalSearchInput" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 text-sm" placeholder="Search proposals...">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-icons text-gray-400 text-lg">search</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Options -->
+            <div class="mb-4 grid grid-cols-2 gap-3">
+                <div>
+                    <select id="proposalStatusFilter" class="w-full text-sm border border-gray-300 rounded-md py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Statuses</option>
+                        <option value="Not Started">Not Started</option>
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="For Approval">For Approval</option>
+                        <option value="For Revision">For Revision</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="proposalPicFilter" class="w-full text-sm border border-gray-300 rounded-md py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All PICs</option>
+                        <!-- PIC options will be populated dynamically -->
+                    </select>
+                </div>
+            </div>
+            
+            <div id="proposalList" class="flex-1 overflow-y-auto min-h-0 pr-2">
+                <!-- Proposals will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- No Decision Yet Modal -->
+    <div id="noDecisionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50" aria-labelledby="no-decision-title" role="dialog" aria-modal="true">
+        <div id="noDecisionModalContent" class="modal-content mx-auto mt-8 mb-8 p-6 border rounded-lg shadow-xl bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 w-96 max-w-md cursor-move max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h3 id="no-decision-title" class="text-lg font-medium text-yellow-800 dark:text-yellow-300">
+                    <i class="material-icons text-sm mr-2">help_outline</i>No Decision Yet
+                </h3>
+                <button id="closeNoDecisionBtn" class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div id="noDecisionBody" class="kanban-column-body flex-1 overflow-y-auto p-2 space-y-2 min-h-0">
+                <!-- No Decision proposals will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Action Menu -->
+    <div id="dayActionMenu" class="fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 hidden">
+        <button id="addTaskAction" class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center add-task-action">
+            <span class="material-icons mr-2 text-indigo-500 add-task-icon">add_task</span>
+            <span class="action-text">Add Task</span>
+        </button>
+        <button id="addProposalAction" class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center">
+            <span class="material-icons mr-2 text-green-500 add-proposal-icon">description</span>
+            <span class="action-text">Add Proposal</span>
+        </button>
+    </div>
+
+    <!-- Auth loading screen -->
+    <div id="auth-loading-screen" class="fixed inset-0 bg-gray-100 dark:bg-gray-900 flex items-center justify-center z-50">
+        <div class="text-center">
+            <svg class="animate-spin h-10 w-10 text-indigo-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-lg font-medium text-gray-700 dark:text-gray-300">Authenticating...</p>
+        </div>
+    </div>
+    
+    <!-- Schedule header template -->
+    <div id="scheduleTemplate">
+        <div id="day-header-{index}" class="schedule-header relative p-2 rounded-t-lg text-center font-semibold text-sm {weekend}">
+            <div class="day-name">{dayName}</div>
+            <div class="day-date text-xs font-normal">{date}</div>
+            {today}
+        </div>
+        <div id="day-column-{index}" class="day-column bg-white dark:bg-gray-700 p-2 min-h-[150px] rounded-b-lg">
+        </div>
+    </div>
+    
+    <!-- Initialize shared navigation first -->
+    <script src="shared-navigation.js?v=1750741789"></script>
+    <script src="proposal_workbench.js"></script>
+    <script src="sidebar-toggle.js"></script>
+</body>
+</html> 

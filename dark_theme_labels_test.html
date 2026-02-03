@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Theme Filter Labels Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-section {
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        .theme-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background: #333;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .dark .theme-indicator {
+            background: #f3f4f6;
+            color: #333;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="theme-indicator" id="themeIndicator">LIGHT THEME</div>
+    
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800 dark:text-gray-200">
+            Dark Theme Filter Labels Test
+        </h1>
+        
+        <div class="mb-6 text-center">
+            <button id="themeToggle" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200">
+                Toggle Dark Theme
+            </button>
+        </div>
+
+        <!-- Test Section 1: "Show changes from:" Label -->
+        <div class="test-section bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-400">Test 1: "Show changes from:" Label</h2>
+            <div class="mb-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <label class="comparison-label text-sm font-medium">Show changes from:</label>
+                    <div class="dashboard-toggle-container">
+                        <button class="dashboard-toggle-btn active bg-blue-600 text-white px-3 py-1 rounded">
+                            Last Week
+                        </button>
+                        <button class="dashboard-toggle-btn bg-gray-300 text-gray-700 px-3 py-1 rounded ml-2">
+                            Last Month
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Section 2: Filter Labels and Dropdowns -->
+        <div class="test-section bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-400">Test 2: Filter Labels and Dropdowns</h2>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Solutions:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="option1">Option 1</option>
+                        <option value="option2">Option 2</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Account Mgr:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="john">John Doe</option>
+                        <option value="jane">Jane Smith</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">PIC:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="person1">Person 1</option>
+                        <option value="person2">Person 2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Section 3: Various Other Labels -->
+        <div class="test-section bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-400">Test 3: Various Other Labels</h2>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Status:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium">Search:</span>
+                    <input type="text" class="filter-dropdown" placeholder="Enter search term...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Section 4: Color Reference -->
+        <div class="test-section bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-400">Test 4: Expected Colors</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded">
+                    <h3 class="font-semibold mb-2">Light Theme Expected Colors:</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><strong>Labels:</strong> <span style="color: #374151">#374151 (dark gray)</span></li>
+                        <li><strong>Dropdown BG:</strong> <span style="color: #000000">#ffffff (white)</span></li>
+                        <li><strong>Dropdown Text:</strong> <span style="color: #374151">#374151 (dark gray)</span></li>
+                        <li><strong>Dropdown Border:</strong> <span style="color: #d1d5db">#d1d5db (light gray)</span></li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded">
+                    <h3 class="font-semibold mb-2">Dark Theme Expected Colors:</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><strong>Labels:</strong> <span style="color: #f3f4f6">#f3f4f6 (light gray)</span></li>
+                        <li><strong>Dropdown BG:</strong> <span style="color: #374151">#374151 (dark gray)</span></li>
+                        <li><strong>Dropdown Text:</strong> <span style="color: #f3f4f6">#f3f4f6 (light gray)</span></li>
+                        <li><strong>Dropdown Border:</strong> <span style="color: #6b7280">#6b7280 (medium gray)</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIndicator = document.getElementById('themeIndicator');
+        const htmlElement = document.documentElement;
+        const bodyElement = document.body;
+
+        function updateThemeIndicator() {
+            const isDark = bodyElement.classList.contains('dark');
+            themeIndicator.textContent = isDark ? 'DARK THEME' : 'LIGHT THEME';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            bodyElement.classList.toggle('dark');
+            htmlElement.classList.toggle('dark');
+            updateThemeIndicator();
+            
+            // Log current theme for debugging
+            console.log('Theme toggled. Current classes:', {
+                body: bodyElement.className,
+                html: htmlElement.className
+            });
+        });
+
+        // Initialize theme indicator
+        updateThemeIndicator();
+
+        // Log current styles for debugging
+        function logElementStyles(selector, description) {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach((el, index) => {
+                const styles = window.getComputedStyle(el);
+                console.log(`${description} ${index + 1}:`, {
+                    color: styles.color,
+                    backgroundColor: styles.backgroundColor,
+                    borderColor: styles.borderColor
+                });
+            });
+        }
+
+        // Debug function to check styles
+        window.debugStyles = function() {
+            console.log('=== CURRENT THEME DEBUG ===');
+            console.log('Body classes:', bodyElement.className);
+            console.log('HTML classes:', htmlElement.className);
+            
+            logElementStyles('label.text-sm.font-medium', 'Filter Label');
+            logElementStyles('label.comparison-label', 'Comparison Label');
+            logElementStyles('select.filter-dropdown', 'Filter Dropdown');
+        };
+
+        // Auto-debug on theme change
+        themeToggle.addEventListener('click', () => {
+            setTimeout(window.debugStyles, 100);
+        });
+
+        // Initial debug
+        setTimeout(window.debugStyles, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Role-Based Filtering Validation Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .test-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .test-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-body {
+            padding: 20px;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #bdc3c7;
+        }
+        .test-item.pending {
+            border-left-color: #f39c12;
+            background: #fef9e7;
+        }
+        .test-item.pass {
+            border-left-color: #27ae60;
+            background: #eafaf1;
+        }
+        .test-item.fail {
+            border-left-color: #e74c3c;
+            background: #fdedec;
+        }
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .status-pending { background: #f39c12; }
+        .status-pass { background: #27ae60; }
+        .status-fail { background: #e74c3c; }
+        .test-details {
+            flex: 1;
+        }
+        .test-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .test-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .controls {
+            margin: 30px 0;
+            text-align: center;
+        }
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        .btn.success {
+            background: linear-gradient(45deg, #27ae60, #229954);
+        }
+        .btn.danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        .summary {
+            background: linear-gradient(45deg, #f8f9fa, #ffffff);
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .summary h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .links {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .links h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .link-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #2c3e50;
+            border: 2px solid #ecf0f1;
+            transition: all 0.3s ease;
+        }
+        .link-item:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+        .role-mapping {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .role-mapping h4 {
+            margin-top: 0;
+            color: #27ae60;
+        }
+        .role-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .role-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #27ae60;
+        }
+        .role-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .role-filter {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Role-Based Filtering Validation</h1>
+            <p>CMRP Opportunities Management System - Final Testing Report</p>
+        </div>
+        
+        <div class="content">
+            <div class="role-mapping">
+                <h4>🎯 Role-Based Filter Mapping</h4>
+                <div class="role-list">
+                    <div class="role-item">
+                        <div class="role-name">DS (Data Science)</div>
+                        <div class="role-filter">Filters: data, analytics, intelligence, ds</div>
+                    </div>
+                    <div class="role-item">
+                        <div class="role-name">SE (Systems Engineering)</div>
+                        <div class="role-filter">Filters: engineering, technical, se</div>
+                    </div>
+                    <div class="role-item">
+                        <div class="role-name">Sales</div>
+                        <div class="role-filter">No automatic filtering (full access)</div>
+                    </div>
+                    <div class="role-item">
+                        <div class="role-name">Admin</div>
+                        <div class="role-filter">No filtering (full system access)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="links">
+                <h3>🔗 Testing Resources</h3>
+                <div class="link-grid">
+                    <a href="user_management.html" class="link-item" target="_blank">
+                        <strong>User Management</strong><br>
+                        Create test users with roles
+                    </a>
+                    <a href="/" class="link-item" target="_blank">
+                        <strong>Main Dashboard</strong><br>
+                        Test opportunity filtering
+                    </a>
+                    <a href="executive_dashboard.html" class="link-item" target="_blank">
+                        <strong>Executive Dashboard</strong><br>
+                        Test executive view filtering
+                    </a>
+                    <a href="win-loss_dashboard.html" class="link-item" target="_blank">
+                        <strong>Win-Loss Dashboard</strong><br>
+                        Test win-loss filtering
+                    </a>
+                    <a href="forecast_dashboard.html" class="link-item" target="_blank">
+                        <strong>Forecast Dashboard</strong><br>
+                        Test forecast filtering
+                    </a>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="startTesting()">🚀 Start Testing</button>
+                <button class="btn success" onclick="markAllPass()">✅ Mark All Pass</button>
+                <button class="btn danger" onclick="resetTests()">🔄 Reset Tests</button>
+                <button class="btn" onclick="exportReport()">📋 Export Report</button>
+            </div>
+
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>🔐 Authentication & Role System Tests</h2>
+                </div>
+                <div class="test-body">
+                    <div class="test-item pending" data-test="auth-login">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">User Authentication</div>
+                            <div class="test-description">Verify login functionality and JWT token generation</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="role-extraction">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Role Extraction from JWT</div>
+                            <div class="test-description">Verify getCurrentUserRoles() extracts roles correctly from token</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="role-mapping">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Role-to-Filter Mapping</div>
+                            <div class="test-description">Verify mapUserRolesToFilters() maps roles to correct solution filters</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>🎯 DS Role Testing</h2>
+                </div>
+                <div class="test-body">
+                    <div class="test-item pending" data-test="ds-user-creation">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Create DS Test User</div>
+                            <div class="test-description">Create user with DS role in user management</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="ds-dashboard-filter">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">DS Dashboard Filtering</div>
+                            <div class="test-description">Verify DS user sees only data/analytics/intelligence/ds solutions</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="ds-cross-dashboard">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">DS Cross-Dashboard Consistency</div>
+                            <div class="test-description">Verify filtering works across all 4 dashboards</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>⚙️ SE Role Testing</h2>
+                </div>
+                <div class="test-body">
+                    <div class="test-item pending" data-test="se-user-creation">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Create SE Test User</div>
+                            <div class="test-description">Create user with SE role in user management</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="se-dashboard-filter">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">SE Dashboard Filtering</div>
+                            <div class="test-description">Verify SE user sees only engineering/technical/se solutions</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="se-cross-dashboard">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">SE Cross-Dashboard Consistency</div>
+                            <div class="test-description">Verify filtering works across all 4 dashboards</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>💼 Sales Role Testing</h2>
+                </div>
+                <div class="test-body">
+                    <div class="test-item pending" data-test="sales-user-creation">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Create Sales Test User</div>
+                            <div class="test-description">Create user with Sales role in user management</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="sales-no-filter">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Sales Full Access</div>
+                            <div class="test-description">Verify Sales user sees all opportunities (no filtering)</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="sales-cross-dashboard">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Sales Cross-Dashboard Access</div>
+                            <div class="test-description">Verify full access across all 4 dashboards</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>👑 Admin Role Testing</h2>
+                </div>
+                <div class="test-body">
+                    <div class="test-item pending" data-test="admin-user-creation">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Create Admin Test User</div>
+                            <div class="test-description">Create user with Admin role in user management</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="admin-full-access">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Admin Full System Access</div>
+                            <div class="test-description">Verify Admin user has complete access to all data</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="admin-user-management">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Admin User Management Access</div>
+                            <div class="test-description">Verify Admin can access and modify user management</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <div class="test-header">
+                    <h2>🔄 Edge Cases & Integration</h2>
+                </div>
+                <div class="test-body">
+                    <div class="test-item pending" data-test="multiple-roles">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Multiple Role Assignment</div>
+                            <div class="test-description">Test user with multiple roles (e.g., DS + SE)</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="no-role-fallback">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">No Role Fallback</div>
+                            <div class="test-description">Test user with no roles falls back to username-based filtering</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="token-refresh">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Token Refresh & Role Update</div>
+                            <div class="test-description">Verify role changes reflect after token refresh</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                    <div class="test-item pending" data-test="performance">
+                        <div class="status-icon status-pending">⏳</div>
+                        <div class="test-details">
+                            <div class="test-title">Performance Impact</div>
+                            <div class="test-description">Verify role-based filtering doesn't slow down dashboard loading</div>
+                        </div>
+                        <button class="btn" onclick="toggleTest(this, 'pass')">✅ Pass</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary">
+                <h3>📊 Testing Summary</h3>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-number" style="color: #f39c12;" id="pending-count">16</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" style="color: #27ae60;" id="pass-count">0</span>
+                        <span class="stat-label">Passed</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" style="color: #e74c3c;" id="fail-count">0</span>
+                        <span class="stat-label">Failed</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" style="color: #3498db;" id="progress">0%</span>
+                        <span class="stat-label">Complete</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTest(button, status) {
+            const testItem = button.closest('.test-item');
+            const statusIcon = testItem.querySelector('.status-icon');
+            
+            // Remove all status classes
+            testItem.classList.remove('pending', 'pass', 'fail');
+            statusIcon.classList.remove('status-pending', 'status-pass', 'status-fail');
+            
+            // Add new status
+            testItem.classList.add(status);
+            statusIcon.classList.add(`status-${status}`);
+            
+            // Update icon
+            switch(status) {
+                case 'pass':
+                    statusIcon.textContent = '✅';
+                    button.textContent = '❌ Fail';
+                    button.onclick = () => toggleTest(button, 'fail');
+                    break;
+                case 'fail':
+                    statusIcon.textContent = '❌';
+                    button.textContent = '⏳ Pending';
+                    button.onclick = () => toggleTest(button, 'pending');
+                    break;
+                case 'pending':
+                    statusIcon.textContent = '⏳';
+                    button.textContent = '✅ Pass';
+                    button.onclick = () => toggleTest(button, 'pass');
+                    break;
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const pending = document.querySelectorAll('.test-item.pending').length;
+            const passed = document.querySelectorAll('.test-item.pass').length;
+            const failed = document.querySelectorAll('.test-item.fail').length;
+            const total = pending + passed + failed;
+            const progress = total > 0 ? Math.round(((passed + failed) / total) * 100) : 0;
+            
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('pass-count').textContent = passed;
+            document.getElementById('fail-count').textContent = failed;
+            document.getElementById('progress').textContent = progress + '%';
+        }
+
+        function startTesting() {
+            alert('🚀 Starting Role-Based Filtering Tests!\n\n' +
+                  '1. Use User Management to create test users with different roles\n' +
+                  '2. Login as each user and test dashboard filtering\n' +
+                  '3. Mark each test as Pass/Fail based on results\n' +
+                  '4. Export final report when complete\n\n' +
+                  'Good luck! 🍀');
+        }
+
+        function markAllPass() {
+            if (confirm('⚠️ Are you sure you want to mark ALL tests as PASSED?\n\nThis should only be done after thorough testing.')) {
+                document.querySelectorAll('.test-item').forEach(item => {
+                    const button = item.querySelector('button');
+                    item.classList.remove('pending', 'fail');
+                    item.classList.add('pass');
+                    item.querySelector('.status-icon').classList.remove('status-pending', 'status-fail');
+                    item.querySelector('.status-icon').classList.add('status-pass');
+                    item.querySelector('.status-icon').textContent = '✅';
+                    button.textContent = '❌ Fail';
+                    button.onclick = () => toggleTest(button, 'fail');
+                });
+                updateStats();
+            }
+        }
+
+        function resetTests() {
+            if (confirm('🔄 Reset all tests to pending status?')) {
+                document.querySelectorAll('.test-item').forEach(item => {
+                    const button = item.querySelector('button');
+                    item.classList.remove('pass', 'fail');
+                    item.classList.add('pending');
+                    item.querySelector('.status-icon').classList.remove('status-pass', 'status-fail');
+                    item.querySelector('.status-icon').classList.add('status-pending');
+                    item.querySelector('.status-icon').textContent = '⏳';
+                    button.textContent = '✅ Pass';
+                    button.onclick = () => toggleTest(button, 'pass');
+                });
+                updateStats();
+            }
+        }
+
+        function exportReport() {
+            const pending = document.querySelectorAll('.test-item.pending').length;
+            const passed = document.querySelectorAll('.test-item.pass').length;
+            const failed = document.querySelectorAll('.test-item.fail').length;
+            const total = pending + passed + failed;
+            
+            let report = `CMRP Role-Based Filtering Validation Report\n`;
+            report += `Generated: ${new Date().toLocaleString()}\n`;
+            report += `========================================\n\n`;
+            report += `SUMMARY:\n`;
+            report += `- Total Tests: ${total}\n`;
+            report += `- Passed: ${passed}\n`;
+            report += `- Failed: ${failed}\n`;
+            report += `- Pending: ${pending}\n`;
+            report += `- Completion: ${Math.round(((passed + failed) / total) * 100)}%\n\n`;
+            
+            report += `ROLE MAPPING:\n`;
+            report += `- DS: Filters by data, analytics, intelligence, ds\n`;
+            report += `- SE: Filters by engineering, technical, se\n`;
+            report += `- Sales: No automatic filtering (full access)\n`;
+            report += `- Admin: No filtering (full system access)\n\n`;
+            
+            report += `DETAILED RESULTS:\n`;
+            
+            const sections = document.querySelectorAll('.test-section');
+            sections.forEach(section => {
+                const title = section.querySelector('h2').textContent;
+                report += `\n${title}\n${'-'.repeat(title.length)}\n`;
+                
+                const tests = section.querySelectorAll('.test-item');
+                tests.forEach(test => {
+                    const testTitle = test.querySelector('.test-title').textContent;
+                    const testDesc = test.querySelector('.test-description').textContent;
+                    let status = 'PENDING';
+                    if (test.classList.contains('pass')) status = 'PASS';
+                    if (test.classList.contains('fail')) status = 'FAIL';
+                    
+                    report += `[${status}] ${testTitle}\n`;
+                    report += `        ${testDesc}\n`;
+                });
+            });
+            
+            // Create and download the report
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `CMRP_Role_Filtering_Report_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('📋 Report exported successfully!');
+        }
+
+        // Initialize stats on page load
+        updateStats();
+    </script>
+</body>
+</html>

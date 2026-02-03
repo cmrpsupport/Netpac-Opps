@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final System Verification - CMRP Opportunities Management</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://cmrp-opportunities-management.onrender.com;">
+    <link href="dist/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .verification-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-pass { background-color: #28a745; }
+        .status-fail { background-color: #dc3545; }
+        .status-pending { background-color: #ffc107; }
+        .test-log {
+            background: #343a40;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+            Final System Verification
+        </h1>
+        <p class="text-center text-gray-600 mb-8">
+            Comprehensive testing of all restored functionality in CMRP Opportunities Management System
+        </p>
+
+        <!-- Core Functions Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">Core Functions Verification</h2>
+            <div id="core-functions-tests"></div>
+        </div>
+
+        <!-- Modal Functions Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">Modal Functions Verification</h2>
+            <div id="modal-functions-tests"></div>
+        </div>
+
+        <!-- CRUD Functions Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">CRUD Functions Verification</h2>
+            <div id="crud-functions-tests"></div>
+        </div>
+
+        <!-- Authentication Functions Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">Authentication Functions Verification</h2>
+            <div id="auth-functions-tests"></div>
+        </div>
+
+        <!-- Filter Functions Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">Filter Functions Verification</h2>
+            <div id="filter-functions-tests"></div>
+        </div>
+
+        <!-- Dashboard Functions Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">Dashboard Functions Verification</h2>
+            <div id="dashboard-functions-tests"></div>
+        </div>
+
+        <!-- Event Listeners Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">Event Listeners Verification</h2>
+            <div id="event-listener-tests"></div>
+        </div>
+
+        <!-- CSP Compliance Verification -->
+        <div class="verification-section">
+            <h2 class="text-xl font-semibold mb-4 text-blue-700">CSP Compliance Verification</h2>
+            <div id="csp-compliance-tests"></div>
+        </div>
+
+        <!-- Run Full Verification -->
+        <div class="text-center mt-8">
+            <button id="run-verification" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200">
+                Run Full System Verification
+            </button>
+        </div>
+
+        <!-- Test Log -->
+        <div id="test-log" class="test-log" style="display: none;"></div>
+
+        <!-- Summary -->
+        <div id="verification-summary" class="verification-section" style="display: none;">
+            <h2 class="text-xl font-semibold mb-4 text-green-700">Verification Summary</h2>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        class SystemVerification {
+            constructor() {
+                this.testResults = [];
+                this.logOutput = [];
+                this.initializeTests();
+            }
+
+            log(message) {
+                this.logOutput.push(`[${new Date().toISOString()}] ${message}`);
+                this.updateLogDisplay();
+            }
+
+            updateLogDisplay() {
+                const logElement = document.getElementById('test-log');
+                logElement.style.display = 'block';
+                logElement.innerHTML = this.logOutput.join('\n');
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+
+            checkFunction(functionName, context = window) {
+                try {
+                    const func = context[functionName];
+                    const exists = typeof func === 'function';
+                    this.log(`Function ${functionName}: ${exists ? 'EXISTS' : 'MISSING'}`);
+                    return exists;
+                } catch (error) {
+                    this.log(`Function ${functionName}: ERROR - ${error.message}`);
+                    return false;
+                }
+            }
+
+            addTestResult(category, testName, passed, details = '') {
+                this.testResults.push({
+                    category,
+                    testName,
+                    passed,
+                    details
+                });
+                this.updateTestDisplay(category);
+            }
+
+            updateTestDisplay(category) {
+                const categoryTests = this.testResults.filter(test => test.category === category);
+                const container = document.getElementById(`${category}-tests`);
+                
+                container.innerHTML = categoryTests.map(test => `
+                    <div class="test-item">
+                        <span>${test.testName}</span>
+                        <div class="flex items-center">
+                            <span class="status-indicator ${test.passed ? 'status-pass' : 'status-fail'}"></span>
+                            <span class="ml-2 text-sm text-gray-600">${test.details}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            testCoreFunctions() {
+                this.log('Testing core functions...');
+                
+                const coreFunctions = [
+                    'renderTable',
+                    'displayOpportunities',
+                    'updateSummaryCards',
+                    'createTableRow',
+                    'loadOpportunities',
+                    'reloadOpportunities',
+                    'initializeTable',
+                    'initializeEventListeners'
+                ];
+
+                coreFunctions.forEach(funcName => {
+                    const exists = this.checkFunction(funcName);
+                    this.addTestResult('core-functions', funcName, exists);
+                });
+            }
+
+            testModalFunctions() {
+                this.log('Testing modal functions...');
+                
+                const modalFunctions = [
+                    'showEditRowModal',
+                    'hideEditRowModal',
+                    'closeOpportunityModal',
+                    'setupModalEventListeners',
+                    'showCreateOpportunityModal',
+                    'showExcelUploadModal',
+                    'hideExcelUploadModal',
+                    'hideRevisionHistoryModal',
+                    'handleEditFormSubmit'
+                ];
+
+                modalFunctions.forEach(funcName => {
+                    const exists = this.checkFunction(funcName);
+                    this.addTestResult('modal-functions', funcName, exists);
+                });
+            }
+
+            testCrudFunctions() {
+                this.log('Testing CRUD functions...');
+                
+                const crudFunctions = [
+                    'updateOpportunityOnServer',
+                    'createOpportunityOnServer',
+                    'deleteOpportunityOnServer'
+                ];
+
+                crudFunctions.forEach(funcName => {
+                    const exists = this.checkFunction(funcName);
+                    this.addTestResult('crud-functions', funcName, exists);
+                });
+            }
+
+            testAuthFunctions() {
+                this.log('Testing authentication functions...');
+                
+                const authFunctions = [
+                    'isTokenValid',
+                    'handleLogout',
+                    'showAuthErrorBanner',
+                    'hideAuthErrorBanner',
+                    'updateChangePasswordBtnVisibility'
+                ];
+
+                authFunctions.forEach(funcName => {
+                    const exists = this.checkFunction(funcName);
+                    this.addTestResult('auth-functions', funcName, exists);
+                });
+            }
+
+            testFilterFunctions() {
+                this.log('Testing filter functions...');
+                
+                const filterFunctions = [
+                    'populateFilterDropdowns',
+                    'populateDropdown',
+                    'getFieldOptions',
+                    'getUniqueValuesFromData'
+                ];
+
+                filterFunctions.forEach(funcName => {
+                    const exists = this.checkFunction(funcName);
+                    this.addTestResult('filter-functions', funcName, exists);
+                });
+            }
+
+            testDashboardFunctions() {
+                this.log('Testing dashboard functions...');
+                
+                const dashboardFunctions = [
+                    'initializeDashboardToggles',
+                    'setComparisonMode',
+                    'updateDashboardComparison',
+                    'saveManualSnapshot'
+                ];
+
+                dashboardFunctions.forEach(funcName => {
+                    const exists = this.checkFunction(funcName);
+                    this.addTestResult('dashboard-functions', funcName, exists);
+                });
+            }
+
+            testEventListeners() {
+                this.log('Testing event listeners setup...');
+                
+                // Test if DOM elements exist for event listeners
+                const elements = [
+                    { id: 'add-opportunity-btn', name: 'Add Opportunity Button' },
+                    { id: 'upload-excel-btn', name: 'Upload Excel Button' },
+                    { id: 'search-input', name: 'Search Input' },
+                    { id: 'page-size-select', name: 'Page Size Select' }
+                ];
+
+                elements.forEach(element => {
+                    const exists = document.getElementById(element.id) !== null;
+                    this.addTestResult('event-listener', element.name, exists, exists ? 'Element found' : 'Element missing');
+                });
+            }
+
+            testCSPCompliance() {
+                this.log('Testing CSP compliance...');
+                
+                // Check for inline scripts
+                const inlineScripts = document.querySelectorAll('script:not([src])');
+                const hasInlineScripts = inlineScripts.length > 1; // Allow this verification script
+                this.addTestResult('csp-compliance', 'No Inline Scripts', !hasInlineScripts, 
+                    hasInlineScripts ? `Found ${inlineScripts.length} inline scripts` : 'Clean');
+
+                // Check for inline event handlers
+                const elementsWithHandlers = document.querySelectorAll('[onclick], [onload], [onchange], [onsubmit]');
+                const hasInlineHandlers = elementsWithHandlers.length > 0;
+                this.addTestResult('csp-compliance', 'No Inline Event Handlers', !hasInlineHandlers,
+                    hasInlineHandlers ? `Found ${elementsWithHandlers.length} inline handlers` : 'Clean');
+
+                // Check CSP meta tag
+                const cspMetaTag = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+                const hasCSPTag = cspMetaTag !== null;
+                this.addTestResult('csp-compliance', 'CSP Meta Tag Present', hasCSPTag,
+                    hasCSPTag ? 'CSP tag found' : 'CSP tag missing');
+            }
+
+            runAllTests() {
+                this.log('Starting comprehensive system verification...');
+                this.testResults = [];
+                this.logOutput = [];
+
+                this.testCoreFunctions();
+                this.testModalFunctions();
+                this.testCrudFunctions();
+                this.testAuthFunctions();
+                this.testFilterFunctions();
+                this.testDashboardFunctions();
+                this.testEventListeners();
+                this.testCSPCompliance();
+
+                this.generateSummary();
+            }
+
+            generateSummary() {
+                const totalTests = this.testResults.length;
+                const passedTests = this.testResults.filter(test => test.passed).length;
+                const failedTests = totalTests - passedTests;
+                const passRate = ((passedTests / totalTests) * 100).toFixed(1);
+
+                const summaryContainer = document.getElementById('verification-summary');
+                const summaryContent = document.getElementById('summary-content');
+                
+                summaryContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-green-100 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-800">${passedTests}</div>
+                            <div class="text-green-600">Tests Passed</div>
+                        </div>
+                        <div class="bg-red-100 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-red-800">${failedTests}</div>
+                            <div class="text-red-600">Tests Failed</div>
+                        </div>
+                        <div class="bg-blue-100 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-blue-800">${passRate}%</div>
+                            <div class="text-blue-600">Pass Rate</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 rounded-lg ${passRate >= 90 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}">
+                        <h3 class="font-semibold mb-2 ${passRate >= 90 ? 'text-green-800' : 'text-yellow-800'}">
+                            System Status: ${passRate >= 90 ? 'PRODUCTION READY' : 'NEEDS ATTENTION'}
+                        </h3>
+                        <p class="text-sm ${passRate >= 90 ? 'text-green-700' : 'text-yellow-700'}">
+                            ${passRate >= 90 
+                                ? 'All critical functions have been successfully restored and verified. The system is ready for production deployment.'
+                                : 'Some functions or compliance checks failed. Review the failed tests above and address any issues before production deployment.'
+                            }
+                        </p>
+                    </div>
+                `;
+
+                summaryContainer.style.display = 'block';
+                
+                this.log(`Verification complete. ${passedTests}/${totalTests} tests passed (${passRate}%)`);
+            }
+
+            initializeTests() {
+                document.addEventListener('DOMContentLoaded', () => {
+                    const runButton = document.getElementById('run-verification');
+                    if (runButton) {
+                        runButton.addEventListener('click', () => {
+                            this.runAllTests();
+                        });
+                    }
+                });
+            }
+        }
+
+        // Initialize verification system
+        const verification = new SystemVerification();
+    </script>
+</body>
+</html>

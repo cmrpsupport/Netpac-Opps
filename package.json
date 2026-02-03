@@ -1,0 +1,52 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3"
+  },
+  "dependencies": {
+    "@sqlitecloud/drivers": "^1.0.653",
+    "@tailwindcss/vite": "^4.1.4",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.5.0",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.0.1",
+    "fast-csv": "^5.0.2",
+    "googleapis": "^156.0.0",
+    "http-proxy-middleware": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.2",
+    "node-cron": "^4.2.1",
+    "node-excel-export": "^1.4.4",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.15.6",
+    "pptxgenjs": "^4.0.1",
+    "tailwindcss": "^4.1.4",
+    "uuid": "^11.1.0",
+    "xlsx": "^0.18.5",
+    "xlsx-populate": "^1.21.0"
+  },
+  "name": "cmrp-opps-management",
+  "version": "1.0.0",
+  "description": "A project to manage CMRP opportunities",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "prod": "NODE_ENV=production node server.js",
+    "build": "tailwindcss -i src/input.css -o assets/tailwind.css --minify",
+    "build-css": "tailwindcss -i src/input.css -o assets/tailwind.css --minify",
+    "read-excel": "node readExcel.js",
+    "snapshot-server": "node snapshot_server.js",
+    "dev-snapshot": "nodemon snapshot_server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

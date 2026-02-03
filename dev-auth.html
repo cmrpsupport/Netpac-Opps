@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Authentication Helper</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0056b3; }
+        .success { color: green; margin: 10px 0; }
+        .info { color: #666; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Development Authentication Helper</h1>
+        <p class="info">This page helps set up authentication tokens for development testing.</p>
+        
+        <button onclick="setMockToken()">Set Mock Development Token</button>
+        <button onclick="clearToken()">Clear Token</button>
+        <button onclick="checkToken()">Check Current Token</button>
+        
+        <div id="status"></div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <h3>Quick Links:</h3>
+        <a href="proposal_workbench.html" style="display: inline-block; margin: 5px 10px 5px 0; padding: 8px 16px; background: #28a745; color: white; text-decoration: none; border-radius: 4px;">📊 Proposal Workbench</a>
+        <a href="index.html" style="display: inline-block; margin: 5px 10px 5px 0; padding: 8px 16px; background: #17a2b8; color: white; text-decoration: none; border-radius: 4px;">🏠 Main Dashboard</a>
+        <a href="login.html" style="display: inline-block; margin: 5px 10px 5px 0; padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">🔐 Login Page</a>
+    </div>
+
+    <script>
+        function setMockToken() {
+            // Valid token generated from the mock login system with proper UUID
+            const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIsImVtYWlsIjoiZGV2QGV4YW1wbGUuY29tIiwibmFtZSI6IkRldmVsb3BtZW50IFVzZXIiLCJyb2xlcyI6WyJEUyIsIlNFIl0sImFjY291bnRUeXBlIjoiVXNlciIsImlhdCI6MTc1MDUzODkyMCwiZXhwIjoxNzUwNjI1MzIwfQ.tqAGAMhrW5x5WRWmyKH3B8CvSIghQLrEj-uxYdOb2J8";
+            
+            localStorage.setItem('authToken', mockToken);
+            document.getElementById('status').innerHTML = '<p class="success">✅ Mock development token has been set!</p><p class="info">You can now access the proposal workbench and other authenticated pages.</p>';
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('authToken');
+            document.getElementById('status').innerHTML = '<p class="success">🗑️ Authentication token has been cleared.</p>';
+        }
+        
+        function checkToken() {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                const preview = token.substring(0, 50) + '...';
+                document.getElementById('status').innerHTML = `<p class="success">✅ Token found!</p><p class="info">Preview: ${preview}</p>`;
+            } else {
+                document.getElementById('status').innerHTML = '<p class="info">❌ No authentication token found.</p>';
+            }
+        }
+        
+        // Check token status on page load
+        window.addEventListener('load', checkToken);
+    </script>
+</body>
+</html> 

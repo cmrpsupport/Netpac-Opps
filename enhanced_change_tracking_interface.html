@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Change Tracking & Solution Categorization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                📊 Enhanced Change Tracking & Solution Analysis
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">
+                Comprehensive view of changes categorized by solutions, business impact, and change types
+            </p>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">🔍 Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Solution Category:</label>
+                    <select id="solutionCategoryFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Solutions</option>
+                        <option value="ELECTRIFICATION">⚡ Electrification</option>
+                        <option value="AUTOMATION">🤖 Automation</option>
+                        <option value="DIGITALIZATION">💻 Digitalization</option>
+                        <option value="OTHER">🔧 Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Change Category:</label>
+                    <select id="changeCategoryFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Categories</option>
+                        <option value="FINANCIAL">💰 Financial</option>
+                        <option value="TIMELINE">⏰ Timeline</option>
+                        <option value="SOLUTION_SCOPE">🎯 Solution Scope</option>
+                        <option value="PROJECT_STATUS">📊 Project Status</option>
+                        <option value="PERSONNEL">👥 Personnel</option>
+                        <option value="CLIENT_DETAILS">🏢 Client Details</option>
+                        <option value="SOLUTION_CATEGORY">🔄 Solution Category</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Business Impact:</label>
+                    <select id="businessImpactFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Impacts</option>
+                        <option value="critical">🔴 Critical</option>
+                        <option value="high">🟠 High</option>
+                        <option value="medium">🟡 Medium</option>
+                        <option value="low">🟢 Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range:</label>
+                    <select id="dateRangeFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex gap-2">
+                <button onclick="applyFilters()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                    Apply Filters
+                </button>
+                <button onclick="clearFilters()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">
+                    Clear Filters
+                </button>
+                <button onclick="exportData()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md">
+                    📥 Export Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Changes</p>
+                        <p id="totalChanges" class="text-2xl font-bold text-gray-900 dark:text-gray-100">--</p>
+                    </div>
+                    <div class="text-blue-500 text-3xl">📊</div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">High Impact Changes</p>
+                        <p id="highImpactChanges" class="text-2xl font-bold text-red-600">--</p>
+                    </div>
+                    <div class="text-red-500 text-3xl">🔴</div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Solution Categories</p>
+                        <p id="solutionCategories" class="text-2xl font-bold text-green-600">--</p>
+                    </div>
+                    <div class="text-green-500 text-3xl">⚡</div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Recent Changes</p>
+                        <p id="recentChanges" class="text-2xl font-bold text-purple-600">--</p>
+                    </div>
+                    <div class="text-purple-500 text-3xl">🕒</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Message -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Enhanced Change Tracking System</h2>
+            <p class="text-blue-800 dark:text-blue-200 mb-4">
+                This system provides robust change tracking with solution categorization. Here's what it offers:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">📈 Automatic Categorization:</h3>
+                    <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• Financial changes (amounts, margins)</li>
+                        <li>• Timeline adjustments (deadlines, dates)</li>
+                        <li>• Solution scope modifications</li>
+                        <li>• Status changes and progressions</li>
+                        <li>• Personnel reassignments</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">🎯 Solution-Based Analysis:</h3>
+                    <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>⚡ Electrification projects</li>
+                        <li>🤖 Automation solutions</li>
+                        <li>💻 Digitalization initiatives</li>
+                        <li>🔧 Other solution types</li>
+                        <li>📊 Cross-category impact analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">📋 Sample Change Tracking Data</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                The following table shows how changes would be categorized and tracked:
+            </p>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solution</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Change Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Impact</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Changes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                <div class="font-medium">Metro Manila Solar Grid</div>
+                                <div class="text-gray-500 dark:text-gray-400">Manila Electric Co.</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">⚡ Electrification</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">💰 Financial</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">🟠 High</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                Final Amount: ₱45M → ₱52M
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                <div class="font-medium">Smart Factory Automation</div>
+                                <div class="text-gray-500 dark:text-gray-400">Jollibee Foods Corp</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">🤖 Automation</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">⏰ Timeline</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">🟡 Medium</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                Deadline: Dec 2025 → Feb 2026
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                <div class="font-medium">Digital Banking Platform</div>
+                                <div class="text-gray-500 dark:text-gray-400">BDO Unibank</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">💻 Digitalization</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">👥 Personnel</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">🟡 Medium</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                Account Manager: J. Santos → M. Cruz
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                <div class="font-medium">Cebu Port Automation</div>
+                                <div class="text-gray-500 dark:text-gray-400">Cebu Port Authority</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">🤖 Automation</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">📊 Status</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">🔴 Critical</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                Status: OP90 → Lost
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Implementation Steps -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">🛠️ Implementation Steps</h3>
+            <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100">Database Enhancement</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Run the enhanced_change_tracking_system.sql migration to add categorization fields and functions.</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100">Server-Side Integration</h4>
+                        <p class="text-gray-600 dark:text-gray-400">The existing revision tracking automatically gets enhanced with categorization via database triggers.</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100">API Endpoints</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Add new endpoints for accessing categorized change data and analytics.</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100">Frontend Interface</h4>
+                        <p class="text-gray-600 dark:text-gray-400">This interface provides comprehensive change analysis and reporting capabilities.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Details Modal -->
+    <div id="changeDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">🔍 Change Details</h3>
+                        <button onclick="closeChangeDetails()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="changeDetailsContent">
+                        <!-- Content will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const recordsPerPage = 25;
+        let charts = {};
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChangeData();
+            initializeEventListeners();
+        });
+
+        function initializeEventListeners() {
+            // Add event listeners for filter changes
+            const filters = ['solutionCategoryFilter', 'changeCategoryFilter', 'businessImpactFilter', 'dateRangeFilter'];
+            filters.forEach(filterId => {
+                document.getElementById(filterId).addEventListener('change', applyFilters);
+            });
+
+            // Search input
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchChanges();
+                }
+            });
+        }
+
+        async function loadChangeData() {
+            try {
+                // Load both the change analysis summary and detailed revision data
+                const [summaryResponse, detailsResponse] = await Promise.all([
+                    fetch('/api/change-analysis-summary'),
+                    fetch('/api/opportunities/revisions/categorized')
+                ]);
+
+                if (!summaryResponse.ok || !detailsResponse.ok) {
+                    throw new Error('Failed to load change data');
+                }
+
+                const summaryData = await summaryResponse.json();
+                const detailsData = await detailsResponse.json();
+
+                currentData = detailsData;
+                filteredData = currentData;
+
+                updateSummaryCards(summaryData);
+                updateCharts(summaryData);
+                updateTable();
+
+            } catch (error) {
+                console.error('Error loading change data:', error);
+                showError('Failed to load change tracking data. Please try again.');
+            }
+        }
+
+        function updateSummaryCards(data) {
+            const totalChanges = data.reduce((sum, item) => sum + item.change_count, 0);
+            const highImpactChanges = data.filter(item => 
+                item.business_impact === 'high' || item.business_impact === 'critical'
+            ).reduce((sum, item) => sum + item.change_count, 0);
+            const solutionCategories = [...new Set(data.map(item => item.solution_category))].length;
+            const recentChanges = data.length;
+
+            document.getElementById('totalChanges').textContent = totalChanges.toLocaleString();
+            document.getElementById('highImpactChanges').textContent = highImpactChanges.toLocaleString();
+            document.getElementById('solutionCategories').textContent = solutionCategories;
+            document.getElementById('recentChanges').textContent = recentChanges;
+        }
+
+        function updateCharts(data) {
+            updateSolutionCategoryChart(data);
+            updateBusinessImpactChart(data);
+            updateTimelineChart(data);
+        }
+
+        function updateSolutionCategoryChart(data) {
+            const ctx = document.getElementById('solutionCategoryChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts.solutionCategory) {
+                charts.solutionCategory.destroy();
+            }
+
+            const solutionData = data.reduce((acc, item) => {
+                if (!acc[item.solution_category]) {
+                    acc[item.solution_category] = 0;
+                }
+                acc[item.solution_category] += item.change_count;
+                return acc;
+            }, {});
+
+            const colors = {
+                'ELECTRIFICATION': '#F59E0B',
+                'AUTOMATION': '#10B981', 
+                'DIGITALIZATION': '#3B82F6',
+                'OTHER': '#6B7280'
+            };
+
+            charts.solutionCategory = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(solutionData),
+                    datasets: [{
+                        data: Object.values(solutionData),
+                        backgroundColor: Object.keys(solutionData).map(key => colors[key] || '#6B7280'),
+                        borderWidth: 2,
+                        borderColor: '#FFFFFF'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBusinessImpactChart(data) {
+            const ctx = document.getElementById('businessImpactChart').getContext('2d');
+            
+            if (charts.businessImpact) {
+                charts.businessImpact.destroy();
+            }
+
+            const impactData = data.reduce((acc, item) => {
+                if (!acc[item.business_impact]) {
+                    acc[item.business_impact] = 0;
+                }
+                acc[item.business_impact] += item.change_count;
+                return acc;
+            }, {});
+
+            const colors = {
+                'critical': '#EF4444',
+                'high': '#F97316',
+                'medium': '#EAB308',
+                'low': '#22C55E'
+            };
+
+            charts.businessImpact = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(impactData).map(key => key.charAt(0).toUpperCase() + key.slice(1)),
+                    datasets: [{
+                        label: 'Changes',
+                        data: Object.values(impactData),
+                        backgroundColor: Object.keys(impactData).map(key => colors[key] || '#6B7280'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTimelineChart(data) {
+            const ctx = document.getElementById('changesTimelineChart').getContext('2d');
+            
+            if (charts.timeline) {
+                charts.timeline.destroy();
+            }
+
+            // Group changes by date
+            const timelineData = filteredData.reduce((acc, item) => {
+                const date = new Date(item.changed_at).toDateString();
+                if (!acc[date]) {
+                    acc[date] = 0;
+                }
+                acc[date]++;
+                return acc;
+            }, {});
+
+            const sortedDates = Object.keys(timelineData).sort((a, b) => new Date(a) - new Date(b));
+
+            charts.timeline = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates.slice(-30), // Last 30 days
+                    datasets: [{
+                        label: 'Changes per Day',
+                        data: sortedDates.slice(-30).map(date => timelineData[date]),
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('changesTableBody');
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            No changes found matching your criteria.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = pageData.map(change => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                        ${formatDateTime(change.changed_at)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                        <div class="font-medium">${change.project_name || 'N/A'}</div>
+                        <div class="text-gray-500 dark:text-gray-400">${change.client || 'N/A'}</div>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        ${getSolutionCategoryBadge(change.solution_category || change.current_solution_category)}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        ${getChangeCategoryBadge(change.change_category)}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        ${getBusinessImpactBadge(change.business_impact)}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                        ${change.changed_by || 'System'}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                        ${formatChangedFields(change.changed_fields)}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        <button onclick="showChangeDetails('${change.opportunity_uid}', ${change.revision_number})" 
+                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            updatePagination();
+        }
+
+        function getSolutionCategoryBadge(category) {
+            const badges = {
+                'ELECTRIFICATION': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">⚡ Electrification</span>',
+                'AUTOMATION': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">🤖 Automation</span>',
+                'DIGITALIZATION': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">💻 Digitalization</span>',
+                'OTHER': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">🔧 Other</span>'
+            };
+            return badges[category] || badges['OTHER'];
+        }
+
+        function getChangeCategoryBadge(category) {
+            const badges = {
+                'FINANCIAL': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">💰 Financial</span>',
+                'TIMELINE': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">⏰ Timeline</span>',
+                'SOLUTION_SCOPE': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">🎯 Solution</span>',
+                'PROJECT_STATUS': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">📊 Status</span>',
+                'PERSONNEL': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">👥 Personnel</span>',
+                'CLIENT_DETAILS': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">🏢 Client</span>'
+            };
+            return badges[category] || '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">📝 General</span>';
+        }
+
+        function getBusinessImpactBadge(impact) {
+            const badges = {
+                'critical': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">🔴 Critical</span>',
+                'high': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">🟠 High</span>',
+                'medium': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">🟡 Medium</span>',
+                'low': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">🟢 Low</span>'
+            };
+            return badges[impact] || badges['low'];
+        }
+
+        function formatChangedFields(changedFields) {
+            if (!changedFields) return 'No changes recorded';
+            
+            try {
+                const fields = typeof changedFields === 'string' ? JSON.parse(changedFields) : changedFields;
+                const fieldNames = Object.keys(fields);
+                
+                if (fieldNames.length === 0) return 'No changes recorded';
+                if (fieldNames.length === 1) return fieldNames[0].replace(/_/g, ' ');
+                if (fieldNames.length <= 3) return fieldNames.map(f => f.replace(/_/g, ' ')).join(', ');
+                
+                return `${fieldNames.slice(0, 2).map(f => f.replace(/_/g, ' ')).join(', ')} +${fieldNames.length - 2} more`;
+            } catch (e) {
+                return 'Invalid change data';
+            }
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function applyFilters() {
+            const solutionCategory = document.getElementById('solutionCategoryFilter').value;
+            const changeCategory = document.getElementById('changeCategoryFilter').value;
+            const businessImpact = document.getElementById('businessImpactFilter').value;
+            const dateRange = document.getElementById('dateRangeFilter').value;
+
+            filteredData = currentData.filter(item => {
+                // Solution category filter
+                if (solutionCategory && (item.solution_category || item.current_solution_category) !== solutionCategory) {
+                    return false;
+                }
+
+                // Change category filter
+                if (changeCategory && item.change_category !== changeCategory) {
+                    return false;
+                }
+
+                // Business impact filter
+                if (businessImpact && item.business_impact !== businessImpact) {
+                    return false;
+                }
+
+                // Date range filter
+                if (dateRange) {
+                    const changeDate = new Date(item.changed_at);
+                    const now = new Date();
+                    
+                    switch (dateRange) {
+                        case 'today':
+                            if (changeDate.toDateString() !== now.toDateString()) return false;
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            if (changeDate < weekAgo) return false;
+                            break;
+                        case 'month':
+                            const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                            if (changeDate < monthAgo) return false;
+                            break;
+                        case 'quarter':
+                            const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+                            if (changeDate < quarterAgo) return false;
+                            break;
+                    }
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            updateTable();
+            updateTimelineChart(filteredData);
+        }
+
+        function clearFilters() {
+            document.getElementById('solutionCategoryFilter').value = '';
+            document.getElementById('changeCategoryFilter').value = '';
+            document.getElementById('businessImpactFilter').value = '';
+            document.getElementById('dateRangeFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            
+            filteredData = currentData;
+            currentPage = 1;
+            updateTable();
+            updateTimelineChart(filteredData);
+        }
+
+        function searchChanges() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                applyFilters();
+                return;
+            }
+
+            filteredData = currentData.filter(item => {
+                return (
+                    (item.project_name && item.project_name.toLowerCase().includes(searchTerm)) ||
+                    (item.client && item.client.toLowerCase().includes(searchTerm)) ||
+                    (item.changed_by && item.changed_by.toLowerCase().includes(searchTerm)) ||
+                    (item.change_category && item.change_category.toLowerCase().includes(searchTerm)) ||
+                    (item.change_type && item.change_type.toLowerCase().includes(searchTerm))
+                );
+            });
+
+            currentPage = 1;
+            updateTable();
+        }
+
+        function updatePagination() {
+            const totalRecords = filteredData.length;
+            const startRecord = Math.min((currentPage - 1) * recordsPerPage + 1, totalRecords);
+            const endRecord = Math.min(currentPage * recordsPerPage, totalRecords);
+
+            document.getElementById('startRecord').textContent = startRecord;
+            document.getElementById('endRecord').textContent = endRecord;
+            document.getElementById('totalRecords').textContent = totalRecords;
+            document.getElementById('currentPage').textContent = currentPage;
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                updateTable();
+            }
+        }
+
+        function nextPage() {
+            const maxPage = Math.ceil(filteredData.length / recordsPerPage);
+            if (currentPage < maxPage) {
+                currentPage++;
+                updateTable();
+            }
+        }
+
+        function showChangeDetails(opportunityUid, revisionNumber) {
+            const modal = document.getElementById('changeDetailsModal');
+            const content = document.getElementById('changeDetailsContent');
+            
+            // Find the specific change
+            const change = filteredData.find(c => 
+                c.opportunity_uid === opportunityUid && 
+                c.revision_number === revisionNumber
+            );
+
+            if (!change) {
+                showError('Change details not found');
+                return;
+            }
+
+            let changedFields = {};
+            try {
+                changedFields = typeof change.changed_fields === 'string' ? 
+                    JSON.parse(change.changed_fields) : 
+                    change.changed_fields || {};
+            } catch (e) {
+                changedFields = {};
+            }
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Opportunity Details</h4>
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                                <p><strong>Project:</strong> ${change.project_name || 'N/A'}</p>
+                                <p><strong>Client:</strong> ${change.client || 'N/A'}</p>
+                                <p><strong>Solution:</strong> ${change.solutions || 'N/A'}</p>
+                                <p><strong>Amount:</strong> ${change.final_amt ? '₱' + Number(change.final_amt).toLocaleString() : 'N/A'}</p>
+                                <p><strong>Status:</strong> ${change.opp_status || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Change Information</h4>
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                                <p><strong>Revision:</strong> #${change.revision_number}</p>
+                                <p><strong>Changed By:</strong> ${change.changed_by || 'System'}</p>
+                                <p><strong>Date/Time:</strong> ${formatDateTime(change.changed_at)}</p>
+                                <p><strong>Category:</strong> ${getChangeCategoryBadge(change.change_category)}</p>
+                                <p><strong>Impact:</strong> ${getBusinessImpactBadge(change.business_impact)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Field Changes</h4>
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                            ${Object.keys(changedFields).length === 0 ? 
+                                '<p class="text-gray-500 dark:text-gray-400">No specific field changes recorded</p>' :
+                                Object.entries(changedFields).map(([field, change]) => `
+                                    <div class="mb-4 p-3 bg-white dark:bg-gray-800 rounded border">
+                                        <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                            ${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        </h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <span class="text-sm text-gray-500 dark:text-gray-400">Old Value:</span>
+                                                <p class="font-mono text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 p-2 rounded">
+                                                    ${change.old !== null && change.old !== undefined ? change.old : '(empty)'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm text-gray-500 dark:text-gray-400">New Value:</span>
+                                                <p class="font-mono text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 p-2 rounded">
+                                                    ${change.new !== null && change.new !== undefined ? change.new : '(empty)'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeChangeDetails() {
+            document.getElementById('changeDetailsModal').classList.add('hidden');
+        }
+
+        function exportData() {
+            const csvContent = [
+                ['Date/Time', 'Project', 'Client', 'Solution Category', 'Change Category', 'Business Impact', 'Changed By', 'Changes'].join(','),
+                ...filteredData.map(change => [
+                    formatDateTime(change.changed_at),
+                    `"${(change.project_name || '').replace(/"/g, '""')}"`,
+                    `"${(change.client || '').replace(/"/g, '""')}"`,
+                    change.solution_category || change.current_solution_category || '',
+                    change.change_category || '',
+                    change.business_impact || '',
+                    change.changed_by || '',
+                    `"${formatChangedFields(change.changed_fields).replace(/"/g, '""')}"`
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `change_tracking_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showError(message) {
+            // Simple error display - you can enhance this
+            alert(message);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('changeDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeChangeDetails();
+            }
+        });
+    </script>
+</body>
+</html> 

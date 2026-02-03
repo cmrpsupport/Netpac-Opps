@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revision History Fix Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { 
+            background: #f5f5f5; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+        }
+        .result { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #0056b3; }
+        .console-log { 
+            background: #333; 
+            color: #0f0; 
+            padding: 15px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Revision History Fix Verification</h1>
+        
+        <div class="test-section">
+            <h2>✅ Frontend Improvements Applied</h2>
+            <p>The revision history display has been enhanced with:</p>
+            <ul>
+                <li>✅ Better debugging information in browser console</li>
+                <li>✅ Improved handling of different data types (string vs object)</li>
+                <li>✅ Better display for initial revisions vs general updates</li>
+                <li>✅ Enhanced error handling for parsing issues</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Changes Made</h2>
+            <ol>
+                <li><strong>Enhanced Data Type Handling:</strong> Now handles cases where <code>changed_fields</code> might be returned as an object or string from the database</li>
+                <li><strong>Better Visual Indicators:</strong> Initial revisions show "Initial revision" instead of "General update"</li>
+                <li><strong>Improved Styling:</strong> Added gray styling for empty revision entries</li>
+                <li><strong>Debug Logging:</strong> Added comprehensive console logging to trace parsing issues</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Testing Instructions</h2>
+            <ol>
+                <li><strong>Open the main application:</strong> <button onclick="openMainApp()">Open Main App</button></li>
+                <li><strong>Log in</strong> to the application</li>
+                <li><strong>Click "Revision History"</strong> on any opportunity</li>
+                <li><strong>Open browser console</strong> (F12) to see debug information</li>
+                <li><strong>Look for:</strong>
+                    <ul>
+                        <li>DEBUG messages showing raw revision data</li>
+                        <li>Proper parsing of <code>changed_fields</code></li>
+                        <li>Field names and counts</li>
+                        <li>Specific field changes with old/new values</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Expected Results</h2>
+            <div class="result success">
+                <strong>✅ Success Indicators:</strong>
+                <ul>
+                    <li>Console shows detailed debug information for each revision</li>
+                    <li>Revisions with actual field changes show specific field names</li>
+                    <li>Revisions with no changes show "Initial revision" or "General update"</li>
+                    <li>Field changes display old and new values clearly</li>
+                    <li>No JavaScript errors in console</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🐛 Root Cause Analysis</h2>
+            <p>The issue was likely caused by:</p>
+            <ul>
+                <li><strong>Database Data Type Handling:</strong> PostgreSQL might return JSON columns as objects rather than strings</li>
+                <li><strong>Empty Baseline Revisions:</strong> Some revisions have empty <code>changed_fields</code> by design (like initial revisions)</li>
+                <li><strong>Parsing Robustness:</strong> The frontend wasn't handling all possible data formats</li>
+            </ul>
+            
+            <p><strong>Solution:</strong> Enhanced the frontend to handle multiple data types and provide better visual feedback for different types of revisions.</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Debug Console Output</h2>
+            <p>When testing, you should see console output like:</p>
+            <pre style="background: #333; color: #0f0; padding: 10px; border-radius: 4px;">
+DEBUG: Raw revision data: {revision_number: 2, changed_by: "user@example.com", ...}
+DEBUG: revision.changed_fields: {"margin":{"old":10,"new":15},"status":{"old":"Active","new":"Won"}}
+DEBUG: typeof revision.changed_fields: object
+DEBUG: Parsed changedFields: {margin: {old: 10, new: 15}, status: {old: "Active", new: "Won"}}
+DEBUG: fieldNames array: ["margin", "status"]
+DEBUG: fieldNames.length: 2
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        function openMainApp() {
+            window.open('http://localhost:3000', '_blank');
+            alert('Main app opened! Now:\n1. Log in\n2. Click "Revision History" on any opportunity\n3. Check browser console (F12) for debug output');
+        }
+    </script>
+</body>
+</html>

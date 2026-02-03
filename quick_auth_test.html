@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Auth Test</title>
+</head>
+<body>
+    <h1>Quick Auth Test</h1>
+    <button onclick="setAuth()">Set Test Auth Token</button>
+    <button onclick="clearAuth()">Clear Auth Token</button>
+    <button onclick="checkAuth()">Check Auth Status</button>
+    <button onclick="openDashboard()">Open Dashboard</button>
+    
+    <div id="status"></div>
+    
+    <script>
+        function setAuth() {
+            const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJhY2NvdW50VHlwZSI6IkFkbWluIiwiaWF0IjoxNzQzNDcyNjAwfQ.test';
+            localStorage.setItem('authToken', testToken);
+            document.getElementById('status').innerHTML = '<p style="color: green;">Auth token set</p>';
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('authToken');
+            document.getElementById('status').innerHTML = '<p style="color: red;">Auth token cleared</p>';
+        }
+        
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            document.getElementById('status').innerHTML = `<p>Auth token: ${token ? 'Present' : 'Not found'}</p>`;
+        }
+        
+        function openDashboard() {
+            window.open('win-loss_dashboard.html', '_blank');
+        }
+    </script>
+</body>
+</html>

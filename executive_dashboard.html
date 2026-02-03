@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com https://cdn.jsdelivr.net;">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>oppX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    
+    <!-- Load configuration and utilities -->
+    <script src="config.js"></script>
+    <script src="api-utils.js"></script>
+    
+    <!-- Shared Navigation Script -->
+    <script src="shared-navigation.js?v=1750741456"></script>
+    
+    <!-- EMERGENCY FILTER FIX - Maximum specificity override -->
+    <style>
+        /* FORCE light theme colors with maximum specificity */
+        html body:not(.dark) label.text-sm.font-medium,
+        html body:not(.dark) .text-sm.font-medium,
+        html body:not(.dark) [class*="text-sm"][class*="font-medium"],
+        html body:not(.dark) label {
+            color: #374151 !important;
+            background-color: transparent !important;
+        }
+        
+        html body:not(.dark) select {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+        }
+        
+        /* FORCE dark theme colors with maximum specificity - FIXED FOR HTML.DARK */
+        html.dark body label.text-sm.font-medium,
+        html.dark body .text-sm.font-medium,
+        html.dark body [class*="text-sm"][class*="font-medium"],
+        html.dark body label,
+        html.dark label.text-sm.font-medium,
+        html.dark .text-sm.font-medium,
+        html.dark [class*="text-sm"][class*="font-medium"],
+        html.dark label {
+            color: #f3f4f6 !important;
+            background-color: transparent !important;
+        }
+        
+        html.dark body select,
+        html.dark select,
+        html.dark select.filter-dropdown,
+        html.dark body select.filter-dropdown {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+            border-color: var(--border-control) !important;
+        }
+        
+        /* Dark mode dropdown options */
+        html.dark select option,
+        html.dark select.filter-dropdown option,
+        html.dark body select option,
+        html.dark body select.filter-dropdown option {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+        }
+        
+        /* Additional nuclear option for stubborn elements */
+        [data-theme="dark"] label,
+        [data-theme="dark"] .text-sm.font-medium,
+        html.dark label,
+        html.dark .text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        [data-theme="light"] label,
+        [data-theme="light"] .text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* Specific styling for comparison period labels */
+        html.dark .comparison-period-label,
+        html.dark body .comparison-period-label {
+            color: #f3f4f6 !important;
+        }
+        
+        html:not(.dark) .comparison-period-label,
+        html:not(.dark) body .comparison-period-label {
+            color: #374151 !important;
+        }
+        
+        /* User Info and Online Users Styles */
+        .top-bar-user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+        
+        .user-info-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .user-info-display:hover {
+            background: var(--bg-hover);
+        }
+        
+        .user-avatar {
+            font-size: 1.5rem !important;
+            color: var(--text-secondary);
+        }
+        
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+        
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .online-users-container {
+            position: relative;
+        }
+        
+        .online-users-display {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .online-users-display:hover {
+            background: var(--bg-hover);
+        }
+        
+        .online-indicator {
+            font-size: 0.875rem !important;
+            color: #10b981; /* Green for online status */
+            animation: pulse 2s infinite;
+        }
+        
+        .online-count {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            min-width: 1rem;
+            text-align: center;
+        }
+        
+        /* Enhanced Glassmorphism Effect for Online Users Dropdown */
+        .online-users-list {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: rgba(255, 255, 255, 0.6); /* Light mode: 60% white transparency */
+            border: 1px solid var(--border-primary);
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px); /* Glass effect with 10px blur */
+        }
+        
+        /* NEW ORGANIZED DASHBOARD LAYOUT STYLES */
+        .dashboard-metrics-container {
+            max-width: 1200px; /* Perfect for MacBook Air */
+            margin: 0 auto;
+        }
+        
+        .metrics-row {
+            margin-bottom: 1.5rem;
+        }
+        
+        .metrics-row-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            padding-left: 0.25rem;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 0.75rem;
+        }
+        
+        /* Enhanced card styles for grouped metrics */
+        .opportunity-status-card,
+        .final-status-card {
+            min-height: 140px;
+            text-align: center;
+        }
+        
+        .status-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            align-items: center;
+        }
+        
+        .metric-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .dashboard-value-secondary {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        /* Compact metrics for "Other Status" card */
+        .compact-metrics {
+            gap: 0.375rem;
+        }
+        
+        .metric-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 50px;
+            flex-shrink: 0;
+        }
+        
+        .dashboard-value-compact {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+        
+        .dashboard-change-compact {
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: auto;
+        }
+        
+        /* Apply the same color styling to compact change elements */
+        .dashboard-change-compact .dashboard-delta.positive {
+            color: #16a34a; /* Green text only */
+            font-weight: 600;
+        }
+
+        .dashboard-change-compact .dashboard-delta.negative {
+            color: #dc2626; /* Red text only */
+            font-weight: 600;
+        }
+
+        html.dark .dashboard-change-compact .dashboard-delta.positive {
+            color: #22c55e; /* Brighter green for dark mode */
+            font-weight: 600;
+        }
+
+        html.dark .dashboard-change-compact .dashboard-delta.negative {
+            color: #ef4444; /* Brighter red for dark mode */
+            font-weight: 600;
+        }
+        
+        /* Responsive adjustments for MacBook Air and smaller screens */
+        @media (max-width: 1200px) {
+            .dashboard-metrics-container {
+                max-width: 100%;
+                padding: 0 1rem;
+            }
+            
+            .metrics-row .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .metrics-row .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .metrics-row .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-row-title {
+                font-size: 1rem;
+            }
+        }
+
+        /* Dark mode glassmorphism with enhanced contrast */
+        html.dark .online-users-list {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: rgba(17, 24, 39, 0.75); /* Dark mode: 75% dark gray transparency */
+            border-color: rgba(55, 65, 81, 0.5);
+        }
+        
+        .online-users-display:hover .online-users-list,
+        .online-users-list:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .online-user-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-primary);
+            transition: background-color 0.15s ease;
+        }
+        
+        .online-user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .online-user-item:hover {
+            background: var(--bg-hover);
+        }
+        
+        .online-user-item .material-icons {
+            font-size: 1.25rem !important;
+            color: var(--text-secondary);
+        }
+        
+        .online-user-name {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .top-bar-user-section {
+                gap: 0.5rem;
+            }
+            
+            .user-details {
+                display: none;
+            }
+            
+            .user-info-display {
+                padding: 0.5rem;
+            }
+            
+            .online-users-list {
+                right: -1rem;
+                min-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Shared Top Bar Container -->
+    <div id="shared-topbar"></div>
+    
+    <!-- Layout Container -->
+    <div class="layout-container">
+        <!-- Shared Sidebar Container -->
+        <div id="shared-sidebar"></div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+        <div class="main-container container mx-auto p-6 rounded-lg shadow-md">
+            <!-- Enhanced Comparison Controls -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-4">
+                        <label class="comparison-label text-sm font-medium">Show changes from:</label>
+                        <div class="dashboard-toggle-container">
+                            <button id="presidentReportToggle" class="dashboard-toggle-btn active" title="Compare to previous Wednesday (for Weekly reports)">
+                                📋 Weekly Report
+                            </button>
+                            <button id="townhallToggle" class="dashboard-toggle-btn" title="Compare to first day of previous month (for Townhall meetings)">
+                                🏛️ Townhall
+                            </button>
+                            <button id="customDateToggle" class="dashboard-toggle-btn" title="Select any custom comparison date">
+                                📅 Custom Date
+                            </button>
+                            <button id="noCompareToggle" class="dashboard-toggle-btn" title="Show current metrics only">
+                                🚫 No Comparison
+                            </button>
+                        </div>
+                    </div>
+                    <button id="saveSnapshotBtn" class="dashboard-save-snapshot-btn" title="Save current data as snapshot">
+                        Save Snapshot
+                    </button>
+                </div>
+                
+                <!-- Custom Date Selection (hidden by default) -->
+                <div id="customDateSelection" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4" style="display: none;">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="comparison-label text-sm font-medium">Available Snapshot Dates:</label>
+                        <button id="refreshSnapshotDates" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                            Refresh Dates
+                        </button>
+                    </div>
+                    
+                    <div id="availableSnapshotDates" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 p-2">Loading snapshot dates...</div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div id="currentSnapshotSelection" class="text-sm text-gray-600 dark:text-gray-300">
+                            No snapshot date selected
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="date" id="manualSnapshotDate" class="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800">
+                            <input type="text" id="snapshotDescription" placeholder="Description (optional)" class="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800" maxlength="100">
+                            <button id="createCustomSnapshotBtn" class="btn-primary text-sm">Create Snapshot</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters Section -->
+            <div class="mb-6">
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Solution:</label>
+                        <select id="solutionFilter" class="filter-dropdown">
+                            <option value="">All Solutions</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Account Manager:</label>
+                        <select id="accountMgrFilter" class="filter-dropdown">
+                            <option value="">All Account Managers</option>
+                        </select>
+                    </div>
+                    <button id="clearFilters" class="filter-button px-3 py-1 rounded text-xs">Clear Filters</button>
+                </div>
+            </div>
+
+            <!-- Main Metrics Grid - Organized by Category -->
+            <div class="dashboard-metrics-container mb-8">
+                <!-- Row 1: Overview Cards -->
+                <div class="metrics-row mb-4">
+                    <h3 class="metrics-row-title">Overview</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Total Opportunities</div>
+                            <div id="totalOpportunities" class="dashboard-value">--</div>
+                            <div id="totalOpportunitiesChange" class="dashboard-change">--</div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Submitted Count</div>
+                            <div id="submittedCount" class="dashboard-value">--</div>
+                            <div id="submittedCountChange" class="dashboard-change">--</div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Submitted Amount</div>
+                            <div id="submittedAmount" class="dashboard-value">--</div>
+                            <div id="submittedAmountChange" class="dashboard-change">--</div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Revised Count</div>
+                            <div id="revisedCount" class="dashboard-value">--</div>
+                            <div id="revisedCountChange" class="dashboard-change">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Opportunity Status (Count + Amount Grouped) -->
+                <div class="metrics-row mb-4">
+                    <h3 class="metrics-row-title">Opportunity Status</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- OP100 Group -->
+                        <div class="dashboard-card opportunity-status-card">
+                            <div class="dashboard-title">OP100</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="op100Count" class="dashboard-value">--</div>
+                                    <div id="op100CountChange" class="dashboard-change">--</div>
+                                </div>
+                                <div class="metric-group">
+                                    <div id="op100Amount" class="dashboard-value-secondary">--</div>
+                                    <div id="op100AmountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- OP90 Group -->
+                        <div class="dashboard-card opportunity-status-card">
+                            <div class="dashboard-title">OP90</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="op90Count" class="dashboard-value">--</div>
+                                    <div id="op90CountChange" class="dashboard-change">--</div>
+                                </div>
+                                <div class="metric-group">
+                                    <div id="op90Amount" class="dashboard-value-secondary">--</div>
+                                    <div id="op90AmountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- OP60 Group -->
+                        <div class="dashboard-card opportunity-status-card">
+                            <div class="dashboard-title">OP60</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="op60Count" class="dashboard-value">--</div>
+                                    <div id="op60CountChange" class="dashboard-change">--</div>
+                                </div>
+                                <div class="metric-group">
+                                    <div id="op60Amount" class="dashboard-value-secondary">--</div>
+                                    <div id="op60AmountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- OP30 Group -->
+                        <div class="dashboard-card opportunity-status-card">
+                            <div class="dashboard-title">OP30</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="op30Count" class="dashboard-value">--</div>
+                                    <div id="op30CountChange" class="dashboard-change">--</div>
+                                </div>
+                                <div class="metric-group">
+                                    <div id="op30Amount" class="dashboard-value-secondary">--</div>
+                                    <div id="op30AmountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Final Status -->
+                <div class="metrics-row">
+                    <h3 class="metrics-row-title">Final Status</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Lost Group -->
+                        <div class="dashboard-card final-status-card">
+                            <div class="dashboard-title">Lost</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="lostCount" class="dashboard-value">--</div>
+                                    <div id="lostCountChange" class="dashboard-change">--</div>
+                                </div>
+                                <div class="metric-group">
+                                    <div id="lostAmount" class="dashboard-value-secondary">--</div>
+                                    <div id="lostAmountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Declined -->
+                        <div class="dashboard-card final-status-card">
+                            <div class="dashboard-title">Declined</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="declinedCount" class="dashboard-value">--</div>
+                                    <div id="declinedCountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Inactive -->
+                        <div class="dashboard-card final-status-card">
+                            <div class="dashboard-title">Inactive</div>
+                            <div class="status-metrics">
+                                <div class="metric-group">
+                                    <div id="inactiveCount" class="dashboard-value">--</div>
+                                    <div id="inactiveCountChange" class="dashboard-change">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Other Status -->
+                        <div class="dashboard-card final-status-card">
+                            <div class="dashboard-title">Other Status</div>
+                            <div class="status-metrics compact-metrics">
+                                <div class="metric-row">
+                                    <span class="metric-label">Ongoing:</span>
+                                    <div id="ongoingCount" class="dashboard-value-compact">--</div>
+                                    <div id="ongoingCountChange" class="dashboard-change-compact">--</div>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-label">Pending:</span>
+                                    <div id="pendingCount" class="dashboard-value-compact">--</div>
+                                    <div id="pendingCountChange" class="dashboard-change-compact">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solution Breakdown Section -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">Solution Breakdown</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="dashboard-card category-card border-l-4 border-yellow-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="dashboard-title">⚡ Electrification</div>
+                            <span class="text-xs bg-yellow-500 text-black px-2 py-1 rounded font-medium">ELECTRIC</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
+                                <div id="electrificationCount" class="dashboard-value text-lg">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
+                                <div id="electrificationValue" class="dashboard-value text-lg">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
+                                <div id="electrificationActive" class="text-sm font-semibold text-green-600 dark:text-green-400">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
+                                <div id="electrificationSubmitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card category-card border-l-4 border-blue-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="dashboard-title">⚙️ Automation</div>
+                            <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded font-medium">AUTO</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
+                                <div id="automationCount" class="dashboard-value text-lg">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
+                                <div id="automationValue" class="dashboard-value text-lg">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
+                                <div id="automationActive" class="text-sm font-semibold text-green-600 dark:text-green-400">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
+                                <div id="automationSubmitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card category-card border-l-4 border-green-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="dashboard-title">💻 Digitalization</div>
+                            <span class="text-xs bg-green-500 text-white px-2 py-1 rounded font-medium">DIGITAL</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
+                                <div id="digitalizationCount" class="dashboard-value text-lg">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
+                                <div id="digitalizationValue" class="dashboard-value text-lg">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
+                                <div id="digitalizationActive" class="text-sm font-semibold text-green-600 dark:text-green-400">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
+                                <div id="digitalizationSubmitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trends Charts Section -->
+            <div class="chart-section-container p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Business Metrics Trends</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Opportunity Pipeline Chart -->
+                    <div>
+                        <h4 class="text-md font-medium mb-2">Opportunity Pipeline</h4>
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas id="pipelineChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Distribution Chart -->
+                    <div>
+                        <h4 class="text-md font-medium mb-2">Status Distribution</h4>
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historical Trends -->
+            <div class="chart-section-container p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Historical Performance</h3>
+                <div class="chart-container" style="position: relative; height: 500px;">
+                    <canvas id="historicalChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Tables Section -->
+            <div class="mb-4">
+                <div class="flex gap-2 mb-4">
+                    <button id="showSummaryTable" class="filter-button px-3 py-1 rounded text-xs active">Summary Table</button>
+                    <button id="showDetailedTable" class="filter-button px-3 py-1 rounded text-xs">Detailed Breakdown</button>
+                </div>
+            </div>
+
+            <!-- Summary Table -->
+            <div id="summaryTableContainer" class="table-section-container p-6">
+                <h3 class="text-lg font-semibold mb-4">Current Period Summary</h3>
+                <div class="table-container">
+                    <table class="dashboard-table" id="summaryTable">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th class="text-right">Current</th>
+                                <th class="text-right">Previous</th>
+                                <th class="text-right">Change</th>
+                                <th class="text-right">% Change</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Table -->
+            <div id="detailedTableContainer" class="table-section-container p-6" style="display: none;">
+                <h3 class="text-lg font-semibold mb-4">Detailed Opportunity Breakdown</h3>
+                <div class="table-container">
+                    <table class="dashboard-table" id="detailedTable">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                                <th class="text-right">Amount</th>
+                                <th>Date Received</th>
+                                <th>Account Manager</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedTableBody"></tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="filter-label-fix.js"></script>
+    <script src="executive_dashboard.js" defer></script>
+    <script src="executive_dashboard_init.js" defer></script>
+
+    <!-- External Scripts for User Info and Navigation -->
+
+    <script src="sidebar-toggle.js"></script>
+
+</body>
+</html>

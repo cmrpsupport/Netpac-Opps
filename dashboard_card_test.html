@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Card Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Card Test</h1>
+    
+    <div class="test-section">
+        <h3>Current User Info</h3>
+        <div id="userInfo" class="result info">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Filter Status</h3>
+        <div id="filterStatus" class="result info">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Dashboard Data Test</h3>
+        <button onclick="testDashboardCards()">Test Dashboard Cards</button>
+        <div id="dashboardTest" class="result info">Click button to test</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Manual Filter Test</h3>
+        <button onclick="testAccountMgrFilter()">Test Account Manager Filter</button>
+        <div id="filterTest" class="result info">Click button to test</div>
+    </div>
+
+    <script>
+        function getCurrentUserFromToken() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return null;
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    username: payload.username,
+                    role: payload.role,
+                    roles: payload.roles || [payload.role]
+                };
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function updateUserInfo() {
+            const user = getCurrentUserFromToken();
+            const userInfoDiv = document.getElementById('userInfo');
+            
+            if (user) {
+                userInfoDiv.innerHTML = `
+                    <strong>Username:</strong> ${user.username}<br>
+                    <strong>Role:</strong> ${user.role}<br>
+                    <strong>Roles:</strong> ${user.roles.join(', ')}<br>
+                    <strong>Is SALES:</strong> ${user.roles.includes('SALES') ? 'Yes' : 'No'}
+                `;
+                userInfoDiv.className = 'result success';
+            } else {
+                userInfoDiv.innerHTML = 'No valid user token found';
+                userInfoDiv.className = 'result error';
+            }
+        }
+
+        function updateFilterStatus() {
+            const filterStatusDiv = document.getElementById('filterStatus');
+            
+            // Check if we can access the parent window (if in iframe) or current window
+            let accountMgrFilter = null;
+            try {
+                if (window.parent && window.parent !== window) {
+                    accountMgrFilter = window.parent.document.getElementById('accountMgrFilter');
+                } else {
+                    accountMgrFilter = document.getElementById('accountMgrFilter');
+                }
+            } catch (e) {
+                // Cross-origin access blocked
+            }
+            
+            if (accountMgrFilter) {
+                filterStatusDiv.innerHTML = `
+                    <strong>Account Manager Filter Value:</strong> ${accountMgrFilter.value}<br>
+                    <strong>Filter Options Count:</strong> ${accountMgrFilter.options.length}
+                `;
+                filterStatusDiv.className = 'result success';
+            } else {
+                filterStatusDiv.innerHTML = 'Cannot access filter dropdown (may be in different window/frame)';
+                filterStatusDiv.className = 'result info';
+            }
+        }
+
+        function testDashboardCards() {
+            const dashboardTestDiv = document.getElementById('dashboardTest');
+            const user = getCurrentUserFromToken();
+            
+            if (!user) {
+                dashboardTestDiv.innerHTML = 'No user token - cannot test dashboard';
+                dashboardTestDiv.className = 'result error';
+                return;
+            }
+            
+            dashboardTestDiv.innerHTML = `
+                <strong>Test Results:</strong><br>
+                User: ${user.username} (${user.roles.join(', ')})<br>
+                Expected behavior: ${user.roles.includes('SALES') ? 'Dashboard should reflect account manager filter' : 'Dashboard should show all data'}<br><br>
+                <em>To verify:</em><br>
+                1. Go to main application<br>
+                2. Check if dashboard cards change when account manager filter changes<br>
+                3. For SALES users, dashboard should update with filter<br>
+                4. For non-SALES users, dashboard should remain showing all data
+            `;
+            dashboardTestDiv.className = 'result info';
+        }
+
+        function testAccountMgrFilter() {
+            const filterTestDiv = document.getElementById('filterTest');
+            const user = getCurrentUserFromToken();
+            
+            if (!user) {
+                filterTestDiv.innerHTML = 'No user token - cannot test filter';
+                filterTestDiv.className = 'result error';
+                return;
+            }
+            
+            filterTestDiv.innerHTML = `
+                <strong>Filter Test for ${user.username}:</strong><br>
+                Role: ${user.roles.join(', ')}<br><br>
+                Expected behavior:<br>
+                - SALES role: Should auto-select their name in account manager filter<br>
+                - DS/SE roles: Should auto-select their name in PIC filter<br>
+                - ADMIN role: Should default to "all"<br><br>
+                <em>Check the main application to verify these behaviors</em>
+            `;
+            filterTestDiv.className = 'result info';
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUserInfo();
+            updateFilterStatus();
+        });
+    </script>
+</body>
+</html> 

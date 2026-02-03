@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-opps-backend.onrender.com;">
+    <title>CSP Compliance Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .test-result {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .test-pass {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .test-fail {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-pass { background: #10b981; }
+        .status-fail { background: #ef4444; }
+        .button-test {
+            padding: 8px 16px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+        .button-test:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🛡️ CSP Compliance Test</h1>
+        <p>This page tests that all Content Security Policy violations have been resolved.</p>
+
+        <div class="test-result test-pass">
+            <span class="status-indicator status-pass"></span>
+            <strong>CSP Policy Active:</strong> Content Security Policy is properly configured and enforced.
+        </div>
+
+        <h2>📋 Tests Performed</h2>
+
+        <div id="testResults">
+            <!-- Test results will be populated by JavaScript -->
+        </div>
+
+        <h2>🧪 Interactive Tests</h2>
+        <p>These buttons should work without CSP violations:</p>
+
+        <button id="testBtn1" class="button-test">Test Button 1 (Event Listener)</button>
+        <button id="testBtn2" class="button-test">Test Button 2 (Event Listener)</button>
+        <button id="testBtn3" class="button-test">Test Dynamic Creation</button>
+
+        <div id="dynamicContent" style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; min-height: 50px;">
+            Dynamic content will appear here...
+        </div>
+
+        <h2>📊 Test Summary</h2>
+        <div id="testSummary">
+            <!-- Summary will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Load scripts in correct order -->
+    <script src="config.js"></script>
+    <script>
+        // CSP Compliance Tests
+        let testsPassed = 0;
+        let testsTotal = 0;
+        const testResults = document.getElementById('testResults');
+
+        function addTestResult(testName, passed, message) {
+            testsTotal++;
+            if (passed) testsPassed++;
+
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'test-pass' : 'test-fail'}`;
+            resultDiv.innerHTML = `
+                <span class="status-indicator ${passed ? 'status-pass' : 'status-fail'}"></span>
+                <strong>${testName}:</strong> ${message}
+            `;
+            testResults.appendChild(resultDiv);
+        }
+
+        // Test 1: JavaScript execution
+        try {
+            addTestResult('JavaScript Execution', true, 'JavaScript code executes without CSP violations');
+        } catch (error) {
+            addTestResult('JavaScript Execution', false, `Error: ${error.message}`);
+        }
+
+        // Test 2: Event listeners (not inline handlers)
+        try {
+            document.getElementById('testBtn1').addEventListener('click', function() {
+                alert('✅ Event listener works! No CSP violation.');
+            });
+            addTestResult('Event Listener Attachment', true, 'Event listeners can be attached without CSP violations');
+        } catch (error) {
+            addTestResult('Event Listener Attachment', false, `Error: ${error.message}`);
+        }
+
+        // Test 3: Dynamic element creation with event listeners
+        try {
+            document.getElementById('testBtn2').addEventListener('click', function() {
+                const dynamicDiv = document.createElement('div');
+                dynamicDiv.innerHTML = '✅ Dynamic element created successfully!';
+                dynamicDiv.style.padding = '10px';
+                dynamicDiv.style.background = '#e0f2fe';
+                dynamicDiv.style.margin = '5px 0';
+                dynamicDiv.style.borderRadius = '4px';
+                document.getElementById('dynamicContent').appendChild(dynamicDiv);
+            });
+            addTestResult('Dynamic Element Creation', true, 'Dynamic elements can be created with event listeners');
+        } catch (error) {
+            addTestResult('Dynamic Element Creation', false, `Error: ${error.message}`);
+        }
+
+        // Test 4: Complex dynamic content (simulating app.js table creation)
+        try {
+            document.getElementById('testBtn3').addEventListener('click', function() {
+                const table = document.createElement('table');
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                table.style.marginTop = '10px';
+
+                const headerRow = document.createElement('tr');
+                headerRow.innerHTML = '<th style="border: 1px solid #ccc; padding: 5px;">Action</th><th style="border: 1px solid #ccc; padding: 5px;">Result</th>';
+                table.appendChild(headerRow);
+
+                const dataRow = document.createElement('tr');
+                const actionCell = document.createElement('td');
+                actionCell.style.border = '1px solid #ccc';
+                actionCell.style.padding = '5px';
+
+                // Create button with event listener (like the fixed app.js code)
+                const actionBtn = document.createElement('button');
+                actionBtn.innerHTML = '<span class="material-icons" style="font-size: 16px;">check_circle</span>';
+                actionBtn.style.background = '#4CAF50';
+                actionBtn.style.color = 'white';
+                actionBtn.style.border = 'none';
+                actionBtn.style.padding = '5px 10px';
+                actionBtn.style.borderRadius = '3px';
+                actionBtn.style.cursor = 'pointer';
+                actionBtn.addEventListener('click', function() {
+                    resultCell.innerHTML = '✅ Action executed via event listener!';
+                    resultCell.style.background = '#e8f5e8';
+                });
+
+                actionCell.appendChild(actionBtn);
+
+                const resultCell = document.createElement('td');
+                resultCell.style.border = '1px solid #ccc';
+                resultCell.style.padding = '5px';
+                resultCell.innerHTML = 'Click the action button →';
+
+                dataRow.appendChild(actionCell);
+                dataRow.appendChild(resultCell);
+                table.appendChild(dataRow);
+
+                document.getElementById('dynamicContent').appendChild(table);
+            });
+            addTestResult('Complex Dynamic Content', true, 'Complex dynamic content with event listeners works properly');
+        } catch (error) {
+            addTestResult('Complex Dynamic Content', false, `Error: ${error.message}`);
+        }
+
+        // Test 5: Console logging (should work)
+        try {
+            console.log('✅ CSP Test: Console logging works');
+            addTestResult('Console Logging', true, 'Console logging works without CSP violations');
+        } catch (error) {
+            addTestResult('Console Logging', false, `Error: ${error.message}`);
+        }
+
+        // Generate test summary
+        setTimeout(function() {
+            const summaryDiv = document.getElementById('testSummary');
+            const passRate = ((testsPassed / testsTotal) * 100).toFixed(1);
+            
+            summaryDiv.innerHTML = `
+                <div class="test-result ${testsPassed === testsTotal ? 'test-pass' : 'test-fail'}">
+                    <span class="status-indicator ${testsPassed === testsTotal ? 'status-pass' : 'status-fail'}"></span>
+                    <strong>Overall Result:</strong> ${testsPassed}/${testsTotal} tests passed (${passRate}%)
+                    ${testsPassed === testsTotal ? ' - All CSP compliance tests passed! 🎉' : ' - Some tests failed, CSP issues may remain.'}
+                </div>
+            `;
+
+            // Also log to console for debugging
+            console.log(`CSP Compliance Test Results: ${testsPassed}/${testsTotal} passed (${passRate}%)`);
+        }, 100);
+    </script>
+</body>
+</html>

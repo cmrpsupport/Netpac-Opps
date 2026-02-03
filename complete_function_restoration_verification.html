@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+    <title>Complete Function Restoration Verification</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-category {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-result { 
+            padding: 8px 12px; 
+            margin: 4px 0; 
+            border-radius: 4px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pass { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border-left: 4px solid #28a745;
+        }
+        .fail { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border-left: 4px solid #dc3545;
+        }
+        .summary {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-success { background: #28a745; color: white; }
+        .badge-danger { background: #dc3545; color: white; }
+        h1 { color: #333; margin-bottom: 10px; }
+        h2 { color: #555; margin-bottom: 15px; }
+        h3 { color: #666; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Complete Function Restoration Verification</h1>
+        <p>Comprehensive testing of all restored functions in the CMRP Opportunities Management system</p>
+        
+        <div class="summary" id="overallSummary">
+            <!-- Overall summary will be populated -->
+        </div>
+        
+        <div class="test-category">
+            <h2>1. 📊 Table Rendering Functions</h2>
+            <div id="tableTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>2. 🪟 Modal Management Functions</h2>
+            <div id="modalTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>3. 🔄 CRUD Operations</h2>
+            <div id="crudTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>4. 📡 Data Loading Functions</h2>
+            <div id="dataTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>5. 🔐 Authentication Functions</h2>
+            <div id="authTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>6. 🔍 Filter Functions</h2>
+            <div id="filterTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>7. ⚙️ Initialization Functions</h2>
+            <div id="initTests"></div>
+        </div>
+        
+        <div class="test-category">
+            <h2>8. 🛠️ Utility Functions</h2>
+            <div id="utilityTests"></div>
+        </div>
+    </div>
+
+    <!-- Minimal DOM elements for testing -->
+    <div id="loadingText" style="display: none;">Loading...</div>
+    <table id="opportunitiesTable" style="display: none;">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    <div id="modalOverlay" style="display: none;"></div>
+    <div id="opportunityModal" style="display: none;"></div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const functionCategories = {
+                'Table Rendering': [
+                    'renderTable',
+                    'displayOpportunities', 
+                    'createTableRow',
+                    'updateSummaryCards'
+                ],
+                'Modal Management': [
+                    'showEditRowModal',
+                    'showOpportunityModal',
+                    'closeOpportunityModal',
+                    'populateEditModal',
+                    'clearModalForm',
+                    'setupModalEventListeners'
+                ],
+                'CRUD Operations': [
+                    'saveOpportunity',
+                    'collectModalFormData',
+                    'createOpportunityOnServer',
+                    'updateOpportunityOnServer',
+                    'deleteOpportunity',
+                    'deleteOpportunityOnServer'
+                ],
+                'Data Loading': [
+                    'loadOpportunities',
+                    'reloadOpportunities'
+                ],
+                'Authentication': [
+                    'isTokenValid',
+                    'handleLogout',
+                    'showAuthErrorBanner',
+                    'hideAuthErrorBanner'
+                ],
+                'Filter Functions': [
+                    'populateFilterDropdowns',
+                    'populateDropdown',
+                    'getFieldOptions',
+                    'getUniqueValuesFromData',
+                    'applyFilters',
+                    'filterAndSortData',
+                    'getCurrentFilteredData'
+                ],
+                'Initialization': [
+                    'initializeTable',
+                    'initializeDOMElements',
+                    'setupTableEventListeners',
+                    'initializeHeaderIndices',
+                    'updateUserMgmtNavVisibility'
+                ],
+                'Utility Functions': [
+                    'updateSummaryCounters',
+                    'loadDashboardData',
+                    'updateChangePasswordBtnVisibility'
+                ]
+            };
+
+            const containerIds = {
+                'Table Rendering': 'tableTests',
+                'Modal Management': 'modalTests',
+                'CRUD Operations': 'crudTests',
+                'Data Loading': 'dataTests',
+                'Authentication': 'authTests',
+                'Filter Functions': 'filterTests',
+                'Initialization': 'initTests',
+                'Utility Functions': 'utilityTests'
+            };
+
+            let totalFunctions = 0;
+            let existingFunctions = 0;
+            let missingFunctions = 0;
+            let categoryResults = {};
+
+            // Test each category
+            Object.keys(functionCategories).forEach(category => {
+                const functions = functionCategories[category];
+                const containerId = containerIds[category];
+                const container = document.getElementById(containerId);
+                
+                let categoryPassed = 0;
+                let categoryTotal = functions.length;
+                
+                functions.forEach(funcName => {
+                    totalFunctions++;
+                    const exists = typeof window[funcName] === 'function';
+                    
+                    if (exists) {
+                        existingFunctions++;
+                        categoryPassed++;
+                    } else {
+                        missingFunctions++;
+                        console.error(`Missing function: ${funcName}`);
+                    }
+                    
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = `test-result ${exists ? 'pass' : 'fail'}`;
+                    resultDiv.innerHTML = `
+                        <span>${funcName}()</span>
+                        <span class="badge ${exists ? 'badge-success' : 'badge-danger'}">
+                            ${exists ? '✅ EXISTS' : '❌ MISSING'}
+                        </span>
+                    `;
+                    container.appendChild(resultDiv);
+                });
+                
+                categoryResults[category] = {
+                    passed: categoryPassed,
+                    total: categoryTotal,
+                    percentage: Math.round((categoryPassed / categoryTotal) * 100)
+                };
+                
+                // Add category summary
+                const categorySummary = document.createElement('div');
+                categorySummary.style.marginTop = '10px';
+                categorySummary.style.fontWeight = 'bold';
+                categorySummary.style.color = categoryPassed === categoryTotal ? '#28a745' : '#dc3545';
+                categorySummary.textContent = `${categoryPassed}/${categoryTotal} functions found (${categoryResults[category].percentage}%)`;
+                container.appendChild(categorySummary);
+            });
+
+            // Update overall summary
+            const percentage = Math.round((existingFunctions / totalFunctions) * 100);
+            const summaryContainer = document.getElementById('overallSummary');
+            
+            summaryContainer.innerHTML = `
+                <h3>📋 Test Results Summary</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: #2196f3;">${totalFunctions}</div>
+                        <div style="color: #666;">Total Functions</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: #28a745;">${existingFunctions}</div>
+                        <div style="color: #666;">Found</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: #dc3545;">${missingFunctions}</div>
+                        <div style="color: #666;">Missing</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+                        <div style="font-size: 24px; font-weight: bold; color: ${percentage === 100 ? '#28a745' : percentage >= 90 ? '#ffc107' : '#dc3545'};">${percentage}%</div>
+                        <div style="color: #666;">Complete</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px; padding: 15px; border-radius: 8px; ${percentage === 100 ? 'background: #d4edda; color: #155724;' : 'background: #f8d7da; color: #721c24;'}">
+                    <strong>
+                        ${percentage === 100 
+                            ? '🎉 EXCELLENT! All functions have been successfully restored!' 
+                            : percentage >= 90 
+                                ? '⚠️ Almost complete! Only a few functions still missing.' 
+                                : '🚫 Critical functions are still missing. More work needed.'}
+                    </strong>
+                </div>
+            `;
+
+            console.log(`✅ Function Restoration Verification Complete`);
+            console.log(`📊 Results: ${existingFunctions}/${totalFunctions} functions found (${percentage}%)`);
+            console.log(`❌ Missing: ${missingFunctions} functions`);
+            
+            if (percentage === 100) {
+                console.log(`🎉 SUCCESS: All functions have been successfully restored!`);
+            } else {
+                console.log(`⚠️ WARNING: ${missingFunctions} functions are still missing`);
+            }
+        });
+    </script>
+</body>
+</html>

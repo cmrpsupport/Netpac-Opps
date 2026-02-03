@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com https://cdn.jsdelivr.net;">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>oppX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    <link rel="stylesheet" href="proposal-story.css">
+    
+    <!-- Load configuration and utilities -->
+    <script src="config.js"></script>
+    <script src="api-utils.js"></script>
+    
+    
+    <!-- EMERGENCY FILTER FIX - Maximum specificity override -->
+    <style>
+        /* FORCE light theme colors with maximum specificity */
+        html body:not(.dark) label.text-sm.font-medium,
+        html body:not(.dark) .text-sm.font-medium,
+        html body:not(.dark) [class*="text-sm"][class*="font-medium"],
+        html body:not(.dark) label {
+            color: #374151 !important;
+            background-color: transparent !important;
+        }
+        
+        html body:not(.dark) select {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+        }
+        
+        /* FORCE dark theme colors with maximum specificity - FIXED FOR HTML.DARK */
+        html.dark body label.text-sm.font-medium,
+        html.dark body .text-sm.font-medium,
+        html.dark body [class*="text-sm"][class*="font-medium"],
+        html.dark body label,
+        html.dark label.text-sm.font-medium,
+        html.dark .text-sm.font-medium,
+        html.dark [class*="text-sm"][class*="font-medium"],
+        html.dark label {
+            color: #f3f4f6 !important;
+            background-color: transparent !important;
+        }
+        
+        html.dark body select,
+        html.dark select,
+        html.dark select.filter-dropdown,
+        html.dark body select.filter-dropdown {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+            border-color: var(--border-control) !important;
+        }
+        
+        /* Dark mode dropdown options */
+        html.dark select option,
+        html.dark select.filter-dropdown option,
+        html.dark body select option,
+        html.dark body select.filter-dropdown option {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+        }
+        
+        /* Dark mode dropdown hover and focus states */
+        html.dark select:hover,
+        html.dark select.filter-dropdown:hover,
+        html.dark body select:hover,
+        html.dark body select.filter-dropdown:hover {
+            background-color: var(--bg-control-hover) !important;
+            border-color: var(--border-control) !important;
+        }
+        
+        html.dark select:focus,
+        html.dark select.filter-dropdown:focus,
+        html.dark body select:focus,
+        html.dark body select.filter-dropdown:focus {
+            background-color: var(--bg-control) !important;
+            border-color: var(--border-focus) !important;
+            box-shadow: 0 0 0 3px var(--shadow-focus) !important;
+            outline: none !important;
+        }
+        
+        /* Additional nuclear option for stubborn elements */
+        [data-theme="dark"] label,
+        [data-theme="dark"] .text-sm.font-medium,
+        html.dark label,
+        html.dark .text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        [data-theme="light"] label,
+        [data-theme="light"] .text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* Specific fix for comparison labels - FIXED FOR HTML.DARK */
+        html.dark body label.comparison-label.text-sm.font-medium,
+        html.dark body .comparison-label.text-sm.font-medium,
+        html.dark label.comparison-label.text-sm.font-medium,
+        html.dark .comparison-label.text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        html:not(.dark) body label.comparison-label.text-sm.font-medium,
+        html:not(.dark) body .comparison-label.text-sm.font-medium,
+        html:not(.dark) label.comparison-label.text-sm.font-medium,
+        html:not(.dark) .comparison-label.text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* NUCLEAR OPTION: Target each specific label by content and structure - FIXED FOR HTML.DARK */
+        html.dark body label.text-sm.font-medium,
+        html.dark body .flex.items-center.gap-2 label.text-sm.font-medium,
+        html.dark label.text-sm.font-medium,
+        html.dark .flex.items-center.gap-2 label.text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        html:not(.dark) body label.text-sm.font-medium,
+        html:not(.dark) body .flex.items-center.gap-2 label.text-sm.font-medium,
+        html:not(.dark) label.text-sm.font-medium,
+        html:not(.dark) .flex.items-center.gap-2 label.text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* Tailwind reset override - FIXED FOR HTML.DARK */
+        html.dark *, 
+        html.dark *::before, 
+        html.dark *::after {
+            border-color: inherit;
+        }
+        
+        html.dark label.text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        html.dark span.text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        /* Additional filter dropdown specific styling for dark mode */
+        html.dark #solutionsFilter,
+        html.dark #accountMgrFilter,
+        html.dark #picFilter {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+            border-color: var(--border-control) !important;
+            border-width: 1px !important;
+            border-style: solid !important;
+        }
+        
+        /* Light mode filter dropdowns */
+        html:not(.dark) #solutionsFilter,
+        html:not(.dark) #accountMgrFilter,
+        html:not(.dark) #picFilter {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+            border-width: 1px !important;
+            border-style: solid !important;
+        }
+        
+        /* Ensure filter dropdown containers have proper styling */
+        html.dark .flex.items-center.gap-2 {
+            color: inherit;
+        }
+        
+        /* Category card specific styling */
+        .category-card {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        html.dark .category-card:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .category-card .dashboard-value {
+            font-size: 1.125rem !important;
+            line-height: 1.2;
+        }
+        
+        /* Auto-refresh indicator */
+        .auto-update-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Real-time update notification */
+        .update-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #16a34a;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+        
+        .update-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* User Info and Online Users Styles */
+        .top-bar-user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+        
+        .user-info-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .user-info-display:hover {
+            background: var(--bg-hover);
+        }
+        
+        .user-avatar {
+            font-size: 1.5rem !important;
+            color: var(--text-secondary);
+        }
+        
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+        
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .online-users-container {
+            position: relative;
+        }
+        
+        .online-users-display {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .online-users-display:hover {
+            background: var(--bg-hover);
+        }
+        
+        .online-indicator {
+            font-size: 0.875rem !important;
+            color: #10b981; /* Green for online status */
+            animation: pulse 2s infinite;
+        }
+        
+        .online-count {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            min-width: 1rem;
+            text-align: center;
+        }
+        
+        .online-users-list {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: #ffffff !important; /* Solid white background for light mode */
+            border: 1px solid var(--border-primary);
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+        
+        html.dark .online-users-list {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: #2d2d2d !important; /* Solid dark background for dark mode */
+            border-color: rgba(55, 65, 81, 0.5);
+        }
+        
+        .online-users-display:hover .online-users-list,
+        .online-users-list:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .online-user-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-primary);
+            transition: background-color 0.15s ease;
+        }
+        
+        .online-user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .online-user-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        html.dark .online-user-item:hover {
+            background: rgba(55, 65, 81, 0.5);
+        }
+        
+        .online-user-item .material-icons {
+            font-size: 1.25rem !important;
+            color: #1f2937;
+        }
+        
+        html.dark .online-user-item .material-icons {
+            color: #d1d5db;
+        }
+        
+        .online-user-name {
+            font-size: 0.875rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+        
+        html.dark .online-user-name {
+            color: #f3f4f6;
+        }
+        
+        .online-user-page {
+            font-size: 0.875rem !important;
+            color: #4b5563 !important;
+            opacity: 0.7;
+        }
+        
+        html.dark .online-user-page {
+            color: #9ca3af !important;
+            opacity: 0.8;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .top-bar-user-section {
+                gap: 0.5rem;
+            }
+            
+            .user-details {
+                display: none;
+            }
+            
+            .user-info-display {
+                padding: 0.5rem;
+            }
+            
+            .online-users-list {
+                right: -1rem;
+                min-width: 180px;
+            }
+        }
+        
+        /* OPP Status Row Color Coding - Maximum Specificity with Better Readability */
+        
+        /* OP30 - Better Blue Shade */
+        #opportunitiesTable tbody tr.opp-status-colored.op30,
+        table#opportunitiesTable tbody tr.opp-status-colored.op30 {
+            background-color: #60a5fa !important; /* Lighter blue for better readability */
+            color: #1e3a8a !important; /* Dark blue text for contrast */
+        }
+        
+        #opportunitiesTable tbody tr.opp-status-colored.op30 td,
+        table#opportunitiesTable tbody tr.opp-status-colored.op30 td {
+            background-color: #60a5fa !important;
+            color: #1e3a8a !important;
+            border-color: #3b82f6 !important;
+        }
+        
+        /* OP60 - Better Yellow Shade */
+        #opportunitiesTable tbody tr.opp-status-colored.op60,
+        table#opportunitiesTable tbody tr.opp-status-colored.op60 {
+            background-color: #fde047 !important; /* Lighter yellow for better readability */
+            color: #713f12 !important; /* Dark brown text for contrast */
+        }
+        
+        #opportunitiesTable tbody tr.opp-status-colored.op60 td,
+        table#opportunitiesTable tbody tr.opp-status-colored.op60 td {
+            background-color: #fde047 !important;
+            color: #713f12 !important;
+            border-color: #eab308 !important;
+        }
+        
+        /* OP90 - Better Light Green Shade */
+        #opportunitiesTable tbody tr.opp-status-colored.op90,
+        table#opportunitiesTable tbody tr.opp-status-colored.op90 {
+            background-color: #a7f3d0 !important; /* Better light green for readability */
+            color: #064e3b !important; /* Dark green text for contrast */
+        }
+        
+        #opportunitiesTable tbody tr.opp-status-colored.op90 td,
+        table#opportunitiesTable tbody tr.opp-status-colored.op90 td {
+            background-color: #a7f3d0 !important;
+            color: #064e3b !important;
+            border-color: #6ee7b7 !important;
+        }
+        
+        /* OP100 - Better Green Shade */
+        #opportunitiesTable tbody tr.opp-status-colored.op100,
+        table#opportunitiesTable tbody tr.opp-status-colored.op100 {
+            background-color: #22c55e !important; /* Better green for readability */
+            color: white !important;
+        }
+        
+        #opportunitiesTable tbody tr.opp-status-colored.op100 td,
+        table#opportunitiesTable tbody tr.opp-status-colored.op100 td {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        
+        /* DECLINED Decision - Gray */
+        #opportunitiesTable tbody tr.opp-status-colored.declined,
+        table#opportunitiesTable tbody tr.opp-status-colored.declined {
+            background-color: #9ca3af !important; /* Gray for declined */
+            color: #111827 !important;
+        }
+        
+        #opportunitiesTable tbody tr.opp-status-colored.declined td,
+        table#opportunitiesTable tbody tr.opp-status-colored.declined td {
+            background-color: #9ca3af !important;
+            color: #111827 !important;
+            border-color: #6b7280 !important;
+        }
+        
+        /* LOST Opp Status - Softer Red - MAXIMUM SPECIFICITY */
+        #opportunitiesTable tbody tr.opp-status-colored.lost,
+        table#opportunitiesTable tbody tr.opp-status-colored.lost,
+        table tbody tr.lost,
+        tr.lost {
+            background-color: #fca5a5 !important; /* Softer red for lost - easier on eyes */
+            color: #991b1b !important; /* Dark red text for contrast */
+        }
+        
+        #opportunitiesTable tbody tr.opp-status-colored.lost td,
+        table#opportunitiesTable tbody tr.opp-status-colored.lost td,
+        table tbody tr.lost td,
+        tr.lost td {
+            background-color: #fca5a5 !important;
+            color: #991b1b !important;
+            border-color: #f87171 !important;
+        }
+        
+        /* Dark mode adjustments for OPP status colors - Maximum Specificity */
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op30,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op30 {
+            background-color: #3b82f6 !important; /* Darker blue in dark mode */
+            color: #dbeafe !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op30 td,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op30 td {
+            background-color: #3b82f6 !important;
+            color: #dbeafe !important;
+            border-color: #2563eb !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op60,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op60 {
+            background-color: #f59e0b !important; /* Darker yellow in dark mode */
+            color: #451a03 !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op60 td,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op60 td {
+            background-color: #f59e0b !important;
+            color: #451a03 !important;
+            border-color: #d97706 !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op90,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op90 {
+            background-color: #10b981 !important; /* Darker green in dark mode */
+            color: #ecfdf5 !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op90 td,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op90 td {
+            background-color: #10b981 !important;
+            color: #ecfdf5 !important;
+            border-color: #059669 !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op100,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op100 {
+            background-color: #059669 !important; /* Darker green in dark mode */
+            color: white !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.op100 td,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.op100 td {
+            background-color: #059669 !important;
+            color: white !important;
+            border-color: #047857 !important;
+        }
+        
+        /* Dark mode - DECLINED Decision */
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.declined,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.declined {
+            background-color: #6b7280 !important;
+            color: #f3f4f6 !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.declined td,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.declined td {
+            background-color: #6b7280 !important;
+            color: #f3f4f6 !important;
+            border-color: #4b5563 !important;
+        }
+        
+        /* Dark mode - LOST Opp Status - MAXIMUM SPECIFICITY */
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.lost,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.lost,
+        html.dark table tbody tr.lost,
+        html.dark tr.lost {
+            background-color: #ef4444 !important; /* Softer red in dark mode */
+            color: #fecaca !important;
+        }
+        
+        html.dark #opportunitiesTable tbody tr.opp-status-colored.lost td,
+        html.dark table#opportunitiesTable tbody tr.opp-status-colored.lost td,
+        html.dark table tbody tr.lost td,
+        html.dark tr.lost td {
+            background-color: #ef4444 !important;
+            color: #fecaca !important;
+            border-color: #dc2626 !important;
+        }
+        
+        /* Google Drive folder options styling */
+        .drive-folder-options {
+            border: 1px solid var(--border-primary);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+        }
+        
+        .drive-option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .drive-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .drive-option:hover {
+            background: var(--bg-hover);
+        }
+        
+        .drive-option input[type="radio"] {
+            margin: 0;
+        }
+        
+        .drive-option span {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+        
+        .existing-folder-options {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-secondary);
+        }
+        
+        .existing-folder-options input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-primary);
+            border-radius: 0.25rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* Drive folder search result styling */
+        .folder-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-right: 0.5rem;
+        }
+        
+        .op100-location {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+        
+        html.dark .op100-location {
+            background-color: #451a03;
+            color: #fbbf24;
+            border: 1px solid #92400e;
+        }
+        
+        .drive-location {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+        }
+        
+        html.dark .drive-location {
+            background-color: #374151;
+            color: #d1d5db;
+            border: 1px solid #6b7280;
+        }
+        
+        .result-created, .relevance-score {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-left: 0.25rem;
+        }
+        
+        .relevance-score {
+            font-weight: 500;
+            color: #059669;
+        }
+        
+        html.dark .relevance-score {
+            color: #10b981;
+        }
+        
+        /* Create modal Drive folder search styling */
+        .existing-folder-search {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .drive-search-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .drive-search-btn:hover {
+            background: #2563eb;
+        }
+        
+        html.dark .drive-search-btn {
+            background: #1d4ed8;
+        }
+        
+        html.dark .drive-search-btn:hover {
+            background: #1e40af;
+        }
+        
+        .drive-folder-or {
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .manual-link-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .create-modal-search-results {
+            margin-top: 1rem;
+            border: 1px solid var(--border-primary);
+            border-radius: 0.375rem;
+            background: var(--bg-primary);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .create-modal-search-results .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-secondary);
+            transition: background-color 0.2s ease;
+        }
+        
+        .create-modal-search-results .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .create-modal-search-results .search-result-item:hover {
+            background: var(--bg-hover);
+        }
+        
+        .create-modal-search-results .result-icon {
+            flex-shrink: 0;
+        }
+        
+        .create-modal-search-results .result-details {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        
+        .create-modal-search-results .result-name {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .create-modal-search-results .result-info {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        
+        .create-modal-search-results .result-actions {
+            flex-shrink: 0;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .create-modal-search-results .link-folder-btn {
+            padding: 0.375rem 0.75rem;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .create-modal-search-results .link-folder-btn:hover {
+            background: #047857;
+        }
+        
+        .create-modal-search-results .view-folder-btn {
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s ease;
+        }
+        
+        .create-modal-search-results .view-folder-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-hover);
+        }
+        
+        /* Rotating animation for loading spinner */
+        .rotating {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* CRITICAL FIX: Ensure all content areas have solid backgrounds */
+        .w-full.max-w-none.p-6.rounded-lg.shadow-md.border,
+        .main-content .w-full,
+        .main-content > div {
+            background-color: var(--bg-container) !important;
+            color: var(--text-title) !important;
+            border: 1px solid var(--border-container-subtle) !important;
+        }
+        
+        /* Style table containers */
+        .table-responsive-wrapper {
+            background-color: var(--bg-container) !important;
+            color: var(--text-title) !important;
+            border: none !important;
+        }
+        
+        /* Add outside border to main table container in index page */
+        .table-container {
+            background-color: var(--bg-container) !important;
+            color: var(--text-title) !important;
+            border: 1px solid var(--border-container) !important;
+            border-radius: 0.5rem;
+            overflow-x: auto !important; /* Enable horizontal scrolling */
+            overflow-y: auto !important; /* Enable vertical scrolling */
+        }
+        
+        /* Force table to be wide enough for horizontal scrolling */
+        #opportunitiesTable {
+            min-width: 1400px !important; /* Force minimum width to trigger scrolling */
+            width: auto !important;
+        }
+        
+        /* Override dashboard cards to use lighter shade in dark mode */
+        html.dark .dashboard-card {
+            background-color: #2d2d2d !important; /* Lighter than body container */
+            color: var(--text-title) !important;
+            border: 1px solid #404040 !important;
+        }
+        
+        /* Light mode dashboard cards */
+        html:not(.dark) .dashboard-card {
+            background-color: #ffffff !important;
+            color: var(--text-title) !important;
+            border: 1px solid #e5e7eb !important;
+        }
+        
+        /* Override table headers to use lighter shade in dark mode */
+        html.dark #opportunitiesTable th,
+        html.dark .table-container th,
+        html.dark .sticky-header th {
+            background-color: #2d2d2d !important; /* Lighter than body container */
+            color: var(--text-title) !important;
+            border-color: #404040 !important;
+        }
+        
+        /* Light mode table headers - use proper dark blue header color like win-loss dashboard */
+        html:not(.dark) #opportunitiesTable th,
+        html:not(.dark) .table-container th,
+        html:not(.dark) .sticky-header th {
+            background-color: var(--bg-header) !important;
+            color: var(--text-header) !important;
+            border-color: #e5e7eb !important;
+        }
+        
+        /* Fix for filter dropdowns to ensure proper backgrounds */
+        html:not(.dark) select,
+        html:not(.dark) .filter-dropdown,
+        html:not(.dark) input[type="text"],
+        html:not(.dark) input[type="search"] {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+        }
+        
+        /* Fix for dark mode filter dropdowns */
+        html.dark select,
+        html.dark .filter-dropdown,
+        html.dark input[type="text"],
+        html.dark input[type="search"] {
+            background-color: var(--bg-control) !important;
+            color: var(--text-control) !important;
+            border-color: var(--border-control) !important;
+        }
+        
+        /* Project name clickable links styling */
+        .project-name-link {
+            text-decoration: underline;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+        
+        .project-name-link:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        html.dark .project-name-link:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        /* Ensure clickable links work well with status colors */
+        .opp-status-colored.op100 .project-name-link {
+            color: white !important;
+        }
+        
+        .opp-status-colored.op100 .project-name-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .opp-status-colored.lost .project-name-link,
+        .opp-status-colored.declined .project-name-link {
+            color: #991b1b !important;
+        }
+        
+        html.dark .opp-status-colored.lost .project-name-link,
+        html.dark .opp-status-colored.declined .project-name-link {
+            color: #fecaca !important;
+        }
+        
+        /* Project name cell cursor indicates clickability */
+        .project-name-cell {
+            position: relative;
+        }
+        
+        .project-name-cell::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background-color: #3b82f6;
+            transition: height 0.2s ease;
+            border-radius: 0 2px 2px 0;
+        }
+        
+        .project-name-cell:hover::before {
+            height: 60%;
+        }
+        
+    </style>
+    
+    <script src="filter-label-fix.js"></script>
+    <script src="proposal-story.js"></script>
+    <script src="mention-system.js"></script>
+    <script src="notifications.js"></script>
+    <script src="app.js" defer></script>
+    <script src="js/powerpoint-export.js" defer></script>
+    
+    <!-- Shared Navigation Script -->
+    <script src="shared-navigation.js?v=1750741456"></script>
+    
+    <!-- CRITICAL SECURITY: Pre-authentication styles -->
+    <style>
+        /* Hide all content initially until authentication is verified */
+        .app-content {
+            display: none;
+        }
+        
+        /* Loading/Authentication screen */
+        .auth-loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-primary, #ffffff);
+            color: var(--text-primary, #1f2937);
+            font-family: system-ui, -apple-system, sans-serif;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .auth-loading-logo {
+            height: 3rem;
+            width: auto;
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+        
+        .auth-loading-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-loading-message {
+            font-size: 1rem;
+            opacity: 0.7;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-loading-spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .auth-login-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .auth-login-btn:hover {
+            background: #2563eb;
+        }
+        
+        /* Dark theme support for auth screen */
+        .dark .auth-loading-screen {
+            background: var(--bg-primary, #1f2937);
+            color: var(--text-primary, #f9fafb);
+        }
+    </style>
+</head>
+<body>
+    <div id="authLoadingScreen" class="auth-loading-screen">
+        <img id="authLoadingLogo" src="Logo/CMRP Logo Dark.svg" alt="CMRP Logo" class="auth-loading-logo">
+        <h1 class="auth-loading-title">CMRP Opportunities Management</h1>
+        <p class="auth-loading-message">Verifying authentication...</p>
+        <div class="auth-loading-spinner"></div>
+        <div id="authLoadingRedirect" style="display: none;">
+            <p style="color: #dc2626; margin-bottom: 1rem;">Authentication required</p>
+            <button id="authLoginRedirectBtn" class="auth-login-btn">
+                <span class="material-icons" style="font-size: 1rem;">login</span>
+                Go to Login
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Sidebar Toggle -->
+    <button id="mobileSidebarToggle" class="mobile-sidebar-toggle">
+        <span class="material-icons">menu</span>
+    </button>
+    
+    <!-- SECURITY: Main application content - Hidden by default -->
+    <div id="appContent" class="app-content">
+        <!-- Shared Top Bar Container -->
+        <div id="shared-topbar"></div>
+        
+        <!-- Layout Container -->
+        <div class="layout-container">
+            <!-- Shared Sidebar Container -->
+            <div id="shared-sidebar"></div>
+            
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <div class="w-full max-w-none p-6 rounded-lg shadow-md border" style="margin-top: 2rem;">
+                    <!-- Removed old header block: div.flex.justify-between.items-center.mb-6 -->
+
+                    <!-- Search input moved to be beside download button -->
+
+                    <!-- Delta Comparison Toggle -->
+                    <div class="mb-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <label class="comparison-label text-sm font-medium">Show changes from:</label>
+                            <div class="dashboard-toggle-container">
+                                <button id="weeklyToggle" class="dashboard-toggle-btn active">
+                                    Last Week
+                                </button>
+                                <button id="monthlyToggle" class="dashboard-toggle-btn">
+                                    Last Month
+                                </button>
+                                <button id="noCompareToggle" class="dashboard-toggle-btn">
+                                    No Comparison
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label for="oppStatusColorToggle" class="text-sm font-medium">OPP Status Colors:</label>
+                                <button id="oppStatusColorToggle" class="dashboard-toggle-btn" title="Toggle OPP Status color coding">
+                                    <span class="material-icons" style="font-size: 1rem;">palette</span>
+                                    Off
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                        <div id="totalOpportunitiesCard" class="dashboard-card cursor-pointer" title="Show monthly trend">
+                            <div class="dashboard-title">Total Opportunities</div>
+                            <div id="totalOpportunities" class="dashboard-value">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Total Submitted</div>
+                            <div id="totalSubmitted" class="dashboard-value">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">OP100 (Count / Amount)</div>
+                            <div id="op100Summary" class="dashboard-value">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">OP90 (Count / Amount)</div>
+                            <div id="op90Summary" class="dashboard-value">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Total Declined</div>
+                            <div id="totalDeclined" class="dashboard-value">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-title">Total Inactive</div>
+                            <div id="totalInactive" class="dashboard-value">--</div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="mb-4">
+                        <div class="flex flex-wrap gap-2 items-center mb-2" id="statusFilterButtons">
+                            <span class="text-sm font-medium mr-2">Filter by Status:</span>
+                            <button data-filter-type="status" data-filter-value="all" class="filter-button active">All</button>
+                            <button data-filter-type="status" data-filter-value="op100" class="filter-button">OP100</button>
+                            <button data-filter-type="status" data-filter-value="op90" class="filter-button">OP90</button>
+                            <button data-filter-type="status" data-filter-value="op60" class="filter-button">OP60</button>
+                            <button data-filter-type="status" data-filter-value="op30" class="filter-button">OP30</button>
+                            <button data-filter-type="status" data-filter-value="submitted" class="filter-button">Submitted</button>
+                            <button data-filter-type="status" data-filter-value="ongoing" class="filter-button">On-Going</button>
+                            <button data-filter-type="status" data-filter-value="not_yet_started" class="filter-button">Not Yet Started</button>
+                            <button data-filter-type="status" data-filter-value="no_decision" class="filter-button">No Decision Yet</button>
+                            <button data-filter-type="status" data-filter-value="lost" class="filter-button">Lost</button>
+                            <button data-filter-type="status" data-filter-value="declined" class="filter-button">Declined</button>
+                            <button data-filter-type="status" data-filter-value="inactive" class="filter-button">Inactive</button>
+                        </div>
+                         <div class="flex flex-wrap gap-4 items-center">
+                             <div class="flex items-center gap-2">
+                                 <label class="text-sm font-medium">Solutions:</label>
+                                 <select id="solutionsFilter" data-filter-type="solutions" class="filter-dropdown">
+                                     <option value="all">All</option>
+                                 </select>
+                             </div>
+                             <div class="flex items-center gap-2">
+                                 <label class="text-sm font-medium">Account Mgr:</label>
+                                 <select id="accountMgrFilter" data-filter-type="accountMgr" class="filter-dropdown">
+                                     <option value="all">All</option>
+                                     </select>
+                             </div>
+                             <div class="flex items-center gap-2">
+                                 <label class="text-sm font-medium">PIC:</label>
+                                 <select id="picFilter" data-filter-type="pic" class="filter-dropdown">
+                                     <option value="all">All</option>
+                                     </select>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- Advanced Multi-Level Sorting Panel -->
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between">
+                            <button id="advancedSortToggle" class="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                                <span class="material-icons text-sm">sort</span>
+                                <span>Advanced Sorting</span>
+                                <span id="sortToggleIcon" class="material-icons text-sm">expand_more</span>
+                            </button>
+                            <div id="currentSortDisplay" class="text-xs text-gray-500 dark:text-gray-400"></div>
+                        </div>
+                        
+                        <div id="advancedSortPanel" class="hidden mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-semibold">Multi-Level Sorting</h3>
+                                <div class="flex items-center gap-2">
+                                    <button id="clearAllSorts" class="text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-2 py-1 rounded transition-colors">
+                                        Clear All
+                                    </button>
+                                    <button id="addSortCriteria" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors">
+                                        + Add Sort
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="sortCriteriaList" class="space-y-2">
+                                <!-- Sort criteria will be added here dynamically -->
+                            </div>
+                            
+                            <div id="emptySortState" class="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
+                                <span class="material-icons text-2xl mb-2">sort</span>
+                                <p>No sort criteria set. Click "Add Sort" to start.</p>
+                                <p class="text-xs mt-1">You can also click column headers for single-column sorting.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4 items-center">
+                        <button id="createOpportunityButton" class="action-button px-3 py-2 rounded flex items-center justify-center" title="Add New Opportunity - Create a new opportunity record"><span class="material-icons">add</span></button>
+                        <button id="toggleColumnsButton" class="theme-button px-3 py-1 rounded flex items-center justify-center" title="Toggle Column Visibility - Show/hide table columns"><span class="material-icons">view_column</span></button>
+                        <div class="flex items-center gap-2">
+                            <button id="exportExcelButton" class="theme-button px-3 py-1 rounded flex items-center justify-center" title="Download Excel - Export visible data to Excel file"><span class="material-icons">download</span></button>
+                            <button id="exportPowerPointButton" class="theme-button px-3 py-1 rounded flex items-center justify-center" title="Export PowerPoint - Generate weekly presentation"><span class="material-icons">slideshow</span></button>
+                            <input id="searchInput" type="text" placeholder="Search all fields..." class="search-input w-64" />
+                        </div>
+                        <!-- Clear Filter button removed as requested -->
+                    </div>
+                    <div id="columnToggleContainer" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2 mb-4 p-4 border rounded">
+                         </div>
+
+
+                <div class="table-responsive-wrapper">
+                    <div class="table-container">
+                        <table id="opportunitiesTable" class="min-w-full divide-y">
+                            <thead class="sticky-header"></thead>
+                            <tbody class="">
+                                <tr><td colspan="100%" class="text-center p-4 loading-text">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="scroll-indicator">Scroll horizontally to see more columns →</div>
+                </div>
+                <div id="rowCount" class="mt-4 text-sm"></div>
+                
+                <div id="loadingText" class="loading-text text-center p-4" style="display: none;">Loading data...</div>
+            </div>
+
+            <!-- Proposal Story Timeline Modal -->
+            <div id="proposalStoryModalOverlay" class="modal-overlay hidden">
+                <div id="proposalStoryModal" class="modal" style="max-width: 900px; max-height: 90vh;">
+                    <div class="modal-header">
+                        <div class="flex items-center gap-3">
+                            <span class="material-icons text-blue-600">timeline</span>
+                            <div>
+                                <h2>Proposal Story</h2>
+                                <p id="proposalStorySubtitle" class="text-sm text-gray-600 dark:text-gray-400 mt-1">Complete timeline of events and updates</p>
+                            </div>
+                        </div>
+                        <button type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                    </div>
+                    
+                    <div class="modal-body" style="max-height: 70vh; overflow: hidden; padding: 0;">
+                        <!-- Add Story Entry Section -->
+                        <div id="addStorySection" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 mt-1">
+                                    <span class="material-icons text-gray-400 text-lg">person</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="mb-3">
+                                        <select id="storyEntryType" class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                            <option value="comment">💬 Comment</option>
+                                            <option value="client_feedback">📝 Client Feedback</option>
+                                            <option value="status_update">🔄 Status Update</option>
+                                            <option value="issue">⚠️ Issue</option>
+                                            <option value="resolution">✅ Resolution</option>
+                                        </select>
+                                    </div>
+                                    <div id="storyTitleSection" class="mb-3 hidden">
+                                        <input type="text" id="storyEntryTitle" placeholder="Entry title..." 
+                                               class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400">
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea id="storyEntryContent" rows="3" placeholder="Add your story entry..."
+                                                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none"></textarea>
+                                    </div>
+                                    <div class="flex justify-end items-center">
+                                        <button id="addStoryEntryBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors duration-200 flex items-center gap-2">
+                                            <span class="material-icons" style="font-size: 16px;">add</span>
+                                            Add Entry
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Timeline Container -->
+                        <div id="storyTimelineContainer" class="p-4" style="max-height: calc(70vh - 160px); overflow-y: auto;">
+                            <div id="storyTimelineLoading" class="text-center py-8 text-gray-500">
+                                <span class="material-icons animate-spin text-2xl mb-2">sync</span>
+                                <p>Loading proposal story...</p>
+                            </div>
+                            
+                            <!-- Timeline will be populated by JavaScript -->
+                            <div id="storyTimeline" class="hidden">
+                                <!-- Story cards will be inserted here -->
+                            </div>
+                            
+                            <div id="storyTimelineEmpty" class="text-center py-8 text-gray-500 hidden">
+                                <span class="material-icons text-4xl mb-2 text-gray-300">timeline</span>
+                                <p>No story entries yet</p>
+                                <p class="text-sm">Add the first entry above to start tracking this proposal's journey</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span class="material-icons" style="font-size: 16px;">info</span>
+                                <span id="storyStatsText">Loading...</span>
+                            </div>
+                            <button id="closeStoryModalButton" class="modal-close-btn" type="button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="editRowModalOverlay" class="modal-overlay hidden">
+                <div id="editRowModal" class="modal" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2>Edit Opportunity</h2>
+                        <button id="editRowModalCloseX" type="button" aria-label="Close" class="modal-close-x">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </div>
+                    <form id="editRowForm" class="modal-body"> </form>
+                    <div class="modal-actions modal-actions-with-sync">
+                        <div class="flex">
+                            <button id="syncFromDriveBtn" type="button" class="modal-sync-btn">
+                                <span class="material-icons text-sm mr-2">sync</span>
+                                Sync from Drive
+                            </button>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="closeEditRowModalButton" class="modal-close-btn" type="button">Cancel</button>
+                            <button id="saveEditRowButton" class="modal-save-btn" type="submit" form="editRowForm">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revision History Modal -->
+            <div id="revisionHistoryModalOverlay" class="modal-overlay hidden">
+                <div id="revisionHistoryModal" class="modal" style="max-width: 1000px;">
+                    <div class="modal-header">
+                        <h2>Revision History</h2>
+                        <button id="closeRevisionHistoryModalX" type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="revisionHistoryContent" class="table-container" style="max-height:60vh;overflow:auto;">
+                            <table class="min-w-full divide-y">
+                                <thead>
+                                    <tr>
+                                        <th class="px-3 py-2 bg-header text-center">Revision #</th>
+                                        <th class="px-3 py-2 bg-header text-left">Changed By</th>
+                                        <th class="px-3 py-2 bg-header text-left">Changed At</th>
+                                        <th class="px-3 py-2 bg-header text-left">Field</th>
+                                        <th class="px-3 py-2 bg-header text-left">Old Value</th>
+                                        <th class="px-3 py-2 bg-header text-left">New Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center p-4 loading-text">Loading revision history...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="closeRevisionHistoryButton" class="modal-close-btn" type="button">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for Opportunities Line Chart -->
+            <div id="oppsChartModalOverlay" class="modal-overlay hidden">
+                <div id="oppsChartModal" class="modal hidden" style="max-width: 900px;">
+                    <div class="modal-header">
+                        <h2>Total Opportunities (Monthly Trend)</h2>
+                        <button type="button" aria-label="Close" id="oppsChartModalClose" class="modal-close-x">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="oppsChartCanvasContainer" style="height:60vh;min-height:320px;max-height:70vh;display:flex;align-items:center;">
+                            <canvas id="oppsChartCanvas" style="width:100%;height:100%;"></canvas>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="oppsChartModalCloseBtn" class="modal-close-btn" type="button">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create New Opportunity Modal -->
+            <div id="createOpportunityModalOverlay" class="modal-overlay hidden">
+                <div id="createOpportunityModal" class="modal hidden" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2>Create New Opportunity</h2>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="openGoogleDriveImportButton" class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center gap-1" 
+                                    title="Link existing Google Drive folder with project data">
+                                <span class="material-icons text-sm">link</span>
+                                Link Google Drive Folder
+                            </button>
+                            <button id="createOpportunityModalCloseX" type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Project Code Loading Overlay -->
+                    <div id="projectCodeLoadingOverlay" class="project-code-loading-overlay hidden">
+                        <div class="loading-content">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">Generating project code...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Create New Tab Content -->
+                    <form id="createOpportunityForm" class="modal-body tab-content" data-tab="create-new">
+                        <!-- Basic Information Section -->
+                        <div class="form-section">
+                            <div class="form-section-title">Basic Information</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newProjectName">Project Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="newProjectName" name="project_name" required />
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newProjectCode">Project Code</label>
+                                    <input type="text" id="newProjectCode" name="project_code" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newClient">Client <span class="text-red-500">*</span></label>
+                                    <input type="text" id="newClient" name="client" required />
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newRev">Revision</label>
+                                    <input type="number" id="newRev" name="rev" min="0" step="1" value="0" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newSolutions">Solutions</label>
+                                    <select id="newSolutions" name="solutions">
+                                        <option value="">-- Select --</option>
+                                        <option value="Digitalization">Digitalization</option>
+                                        <option value="Automation">Automation</option>
+                                        <option value="Electrification">Electrification</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newSolParticulars">Solution Particulars</label>
+                                    <select id="newSolParticulars" name="sol_particulars">
+                                        <option value="">-- Select --</option>
+                                        <option value="ELECTRICAL">ELECTRICAL</option>
+                                        <option value="FDAS">FDAS</option>
+                                        <option value="CCTV">CCTV</option>
+                                        <option value="ACS">ACS</option>
+                                        <option value="SOLAR">SOLAR</option>
+                                        <option value="EE & AUX">EE & AUX</option>
+                                        <option value="PABGM">PABGM</option>
+                                        <option value="SCS">SCS</option>
+                                        <option value="PLC / SCADA">PLC / SCADA</option>
+                                        <option value="BMS">BMS</option>
+                                        <option value="IT">IT</option>
+                                        <option value="INSTRUMENTATION">INSTRUMENTATION</option>
+                                        <option value="MECHANICAL">MECHANICAL</option>
+                                        <option value="CIVIL">CIVIL</option>
+                                        <option value="AUXILIARY">AUXILIARY</option>
+                                        <option value="MEPFS">MEPFS</option>
+                                        <option value="OTHERS">OTHERS</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newIndustries">Industries</label>
+                                    <select id="newIndustries" name="industries">
+                                        <option value="">-- Select --</option>
+                                        <option value="Power">Power</option>
+                                        <option value="Manufacturing">Manufacturing</option>
+                                        <option value="Buildings">Buildings</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newIndParticulars">Industry Particulars</label>
+                                    <select id="newIndParticulars" name="ind_particulars">
+                                        <option value="">-- Select --</option>
+                                        <option value="F&B">F&B</option>
+                                        <option value="PHARMA">PHARMA</option>
+                                        <option value="CEMENT">CEMENT</option>
+                                        <option value="COLD STORAGE">COLD STORAGE</option>
+                                        <option value="CONSTRUCTION">CONSTRUCTION</option>
+                                        <option value="UTILITIES">UTILITIES</option>
+                                        <option value="SEMICON">SEMICON</option>
+                                        <option value="POWER PLANT">POWER PLANT</option>
+                                        <option value="OIL & GAS">OIL & GAS</option>
+                                        <option value="MANUFACTURING">MANUFACTURING</option>
+                                        <option value="OTHERS">OTHERS</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assignment Information Section -->
+                        <div class="form-section">
+                            <div class="form-section-title">Assignment Information</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newAccountMgr">Account Manager</label>
+                                    <select id="newAccountMgr" name="account_mgr">
+                                        <option value="">-- Select --</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newPIC">PIC (Person in Charge)</label>
+                                    <select id="newPIC" name="pic">
+                                        <option value="">-- Select --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newBOM">BOM (Bill of Materials)</label>
+                                    <select id="newBOM" name="bom">
+                                        <option value="">-- Select --</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newStatus">Status</label>
+                                    <select id="newStatus" name="status">
+                                        <option value="">-- Select --</option>
+                                        <option value="Not Yet Started">Not Yet Started</option>
+                                        <option value="On-Going">On-Going</option>
+                                        <option value="For Revision">For Revision</option>
+                                        <option value="For Approval">For Approval</option>
+                                        <option value="Submitted">Submitted</option>
+                                        <option value="No Decision Yet">No Decision Yet</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Information Section -->
+                        <div class="form-section">
+                            <div class="form-section-title">Financial Information</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newMargin">Margin (%)</label>
+                                    <input type="number" id="newMargin" name="margin" step="0.01" min="0" max="100" />
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newFinalAmount">Amount</label>
+                                    <input type="text" id="newFinalAmount" name="final_amt" placeholder="0" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newOppStatus">Opportunity Status</label>
+                                    <select id="newOppStatus" name="opp_status">
+                                        <option value="">-- Select --</option>
+                                        <option value="OP30">OP30</option>
+                                        <option value="OP60">OP60</option>
+                                        <option value="OP90">OP90</option>
+                                        <option value="OP100">OP100</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newSubmitted">Submitted</label>
+                                    <select id="newSubmitted" name="submitted">
+                                        <option value="">-- Select --</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Important Dates Section -->
+                        <div class="form-section">
+                            <div class="form-section-title">Important Dates</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newDateReceived">Date Received</label>
+                                    <input type="date" id="newDateReceived" name="date_received" />
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newClientDeadline">Client Deadline</label>
+                                    <input type="date" id="newClientDeadline" name="client_deadline" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newSubmittedDate">Submitted Date</label>
+                                    <input type="date" id="newSubmittedDate" name="submitted_date" />
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newDateAwarded">Award Date</label>
+                                    <input type="date" id="newDateAwarded" name="date_awarded_lost" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newForecastDate">Forecast Date</label>
+                                    <input type="date" id="newForecastDate" name="forecast_date" />
+                                </div>
+                                <div class="enhanced-field">
+                                    <!-- Empty field for layout balance -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Decision & Comments Section -->
+                        <div class="form-section">
+                            <div class="form-section-title">Decision & Comments</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newDecision">Decision</label>
+                                    <select id="newDecision" name="decision">
+                                        <option value="">-- Select --</option>
+                                        <option value="GO">GO</option>
+                                        <option value="DECLINE">DECLINE</option>
+                                        <option value="Pending">Pending</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <!-- Empty field for layout balance -->
+                                </div>
+                            </div>
+                            <div class="form-row single-column">
+                                <div class="enhanced-field">
+                                    <label for="newRemarksComments">Remarks</label>
+                                    <textarea id="newRemarksComments" name="remarks_comments" rows="4" placeholder="Add any additional comments or notes here..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lost Analysis Section -->
+                        <div class="form-section" style="display: none;">
+                            <div class="form-section-title">Lost Analysis (if applicable)</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newLostRca">Lost Root Cause Analysis</label>
+                                    <input type="text" id="newLostRca" name="lost_rca" />
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newLParticulars">Lost Particulars</label>
+                                    <input type="text" id="newLParticulars" name="l_particulars" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ACRUD Fields Section -->
+                        <div class="form-section">
+                            <div class="form-section-title">ACRUD Assessment</div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newA">A - Account Review</label>
+                                    <select id="newA" name="a">
+                                        <option value="">-- Select --</option>
+                                        <option value="10-Existing">10-Existing</option>
+                                        <option value="10-Strategic">10-Strategic</option>
+                                        <option value="8-With Account Champion">8-With Account Champion</option>
+                                        <option value="5-New Account, No champion">5-New Account, No champion</option>
+                                        <option value="2-Existing Account with No Orders">2-Existing Account with No Orders</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newC">C - Complexity</label>
+                                    <select id="newC" name="c">
+                                        <option value="">-- Select --</option>
+                                        <option value="10-Existing Solution">10-Existing Solution</option>
+                                        <option value="8-Need to Customize">8-Need to Customize</option>
+                                        <option value="5-Needs External Resource">5-Needs External Resource</option>
+                                        <option value="3-No Previous Experience">3-No Previous Experience</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newR">R - Requirement</label>
+                                    <select id="newR" name="r">
+                                        <option value="">-- Select --</option>
+                                        <option value="10-Core Business">10-Core Business</option>
+                                        <option value="10-Focus Business">10-Focus Business</option>
+                                        <option value="8-Strategic Business">8-Strategic Business</option>
+                                        <option value="7-Core + Peripheral">7-Core + Peripheral</option>
+                                        <option value="5-Peripheral Scope">5-Peripheral Scope</option>
+                                        <option value="2-NonCore / For Subcon">2-NonCore / For Subcon</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-field">
+                                    <label for="newU">U - Urgency</label>
+                                    <select id="newU" name="u">
+                                        <option value="">-- Select --</option>
+                                        <option value="10-Reasonable timeline">10-Reasonable timeline</option>
+                                        <option value="7-Urgent">7-Urgent</option>
+                                        <option value="2-Budgetary">2-Budgetary</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="enhanced-field">
+                                    <label for="newD">D - Data Availability</label>
+                                    <select id="newD" name="d">
+                                        <option value="">-- Select --</option>
+                                        <option value="10-Complete">10-Complete</option>
+                                        <option value="5-Limited">5-Limited</option>
+                                        <option value="2-No Data">2-No Data</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="modal-actions">
+                        <button id="closeCreateOpportunityModalButton" class="modal-close-btn" type="button">Cancel</button>
+                        <button id="saveCreateOpportunityButton" class="modal-save-btn" type="submit" form="createOpportunityForm">Create Opportunity</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Drive Import Modal -->
+            <div id="googleDriveImportModalOverlay" class="modal-overlay hidden">
+                <div id="googleDriveImportModal" class="modal hidden" style="max-width: 900px;">
+                    <div class="modal-header">
+                        <h2>Import from Google Drive</h2>
+                        <button id="googleDriveImportModalCloseX" type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <!-- Search Section -->
+                        <div class="mb-6">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="flex-1 relative">
+                                    <label for="importFolderSearchInput" class="block text-sm font-medium mb-2">
+                                        Search for Project Folders
+                                        <span id="preloadStatus" class="ml-2 text-xs text-gray-500"></span>
+                                    </label>
+                                    <input type="text" id="importFolderSearchInput" placeholder="Search by project name, client, or folder name..." 
+                                           class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                    
+                                    <!-- Instant suggestions dropdown -->
+                                    <div id="instantSuggestionsDropdown" class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
+                                        <!-- Suggestions will be populated here -->
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 pt-6">
+                                    <button type="button" id="importSearchFoldersButton" class="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
+                                        <span class="material-icons">search</span>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Manual Folder ID Input -->
+                            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Or enter folder directly:</h4>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" id="importManualFolderIdInput" placeholder="Paste Google Drive folder ID or URL..." 
+                                           class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm">
+                                    <button type="button" id="importFromManualFolderButton" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center gap-1">
+                                        <span class="material-icons text-sm">file_download</span>
+                                        Import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Results Section -->
+                        <div id="importFolderSearchResults" class="hidden">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Search Results</h3>
+                                <div id="importSearchResultsCount" class="text-sm text-gray-600 dark:text-gray-400"></div>
+                            </div>
+                            <div id="importFolderSearchResultsList" class="space-y-3 max-h-80 overflow-y-auto">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Import Progress Section -->
+                        <div id="importProgressSection" class="hidden mt-6">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                    <div>
+                                        <h4 class="font-medium text-blue-800 dark:text-blue-200">Importing Project Data</h4>
+                                        <p id="importProgressText" class="text-sm text-blue-700 dark:text-blue-300">Analyzing folder contents...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Import Preview Section -->
+                        <div id="importPreviewSection" class="hidden mt-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Preview Imported Data</h3>
+                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">Project Information</h4>
+                                        <div id="importPreviewProjectInfo" class="space-y-1 text-sm text-green-700 dark:text-green-300">
+                                            <!-- Project info will be populated here -->
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">Financial Information</h4>
+                                        <div id="importPreviewFinancialInfo" class="space-y-1 text-sm text-green-700 dark:text-green-300">
+                                            <!-- Financial info will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">Source</h4>
+                                    <div id="importPreviewSourceInfo" class="text-sm text-green-700 dark:text-green-300">
+                                        <!-- Source info will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="importEmptyState" class="text-center py-12">
+                            <div class="text-gray-400 dark:text-gray-500 mb-4">
+                                <span class="material-icons text-6xl">folder_open</span>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Search for Project Folders</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">Find existing Google Drive folders with project data to import</p>
+                            <ul class="text-sm text-gray-500 dark:text-gray-400 list-disc list-inside text-left max-w-md mx-auto space-y-1">
+                                <li>Automatically extracts project name, client, and financial data</li>
+                                <li>Links the Google Drive folder to your opportunity</li>
+                                <li>Parses latest Excel calcsheet for accurate information</li>
+                                <li>Creates opportunity with all data pre-filled</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button id="closeGoogleDriveImportModalButton" class="modal-close-btn" type="button">Cancel</button>
+                        <button id="confirmImportButton" class="modal-save-btn hidden" type="button">
+                            <span class="material-icons mr-1">add</span>
+                            Create Opportunity
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Excel Upload Modal -->
+            <div id="excelUploadModalOverlay" class="modal-overlay hidden">
+                <div id="excelUploadModal" class="modal hidden" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2>Upload Excel File - Bulk Update</h2>
+                        <button id="excelUploadModalCloseX" type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                Upload an Excel file to bulk update <strong>revision numbers</strong>, <strong>final amounts</strong>, and <strong>margins</strong>. 
+                                Works with <strong>CMRP calcsheets</strong> (auto-detects proposal code from filename) or custom Excel files with UID columns.
+                            </p>
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                                <h4 class="font-medium text-blue-800 dark:text-blue-200 mb-2">Required Excel Format:</h4>
+                                <ul class="text-sm text-blue-700 dark:text-blue-300 list-disc list-inside space-y-1">
+                                    <li><strong>UID/Opportunity ID:</strong> Must match existing opportunities</li>
+                                    <li><strong>Revision Number:</strong> Integer value (1, 2, 3, etc.)</li>
+                                    <li><strong>Amount:</strong> Numeric value (₱, $, commas allowed)</li>
+                                    <li><strong>Margin:</strong> Percentage or decimal (%, spaces allowed)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <form id="excelUploadForm" enctype="multipart/form-data">
+                            <div class="mb-4">
+                                <label for="excelFileInput" class="block text-sm font-medium mb-2">Select Excel File</label>
+                                <input type="file" 
+                                       id="excelFileInput" 
+                                       name="excelFile" 
+                                       accept=".xlsx,.xls" 
+                                       class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                       required>
+                            </div>
+                            
+                            <div id="filenameAnalysis" class="hidden mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                                <h5 class="font-medium text-green-800 dark:text-green-200 mb-2">📄 Filename Analysis</h5>
+                                <div id="filenameDetails" class="text-sm text-green-700 dark:text-green-300 space-y-1"></div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="excelPasswordInput" class="block text-sm font-medium mb-2">Password (if encrypted)</label>
+                                <input type="password" 
+                                       id="excelPasswordInput" 
+                                       name="password" 
+                                       value="0601CMRP!"
+                                       placeholder="Default CMRP password"
+                                       class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Default password for CMRP calcsheets is pre-filled. Clear if file is not encrypted.
+                                </p>
+                            </div>
+                            
+                            <div id="excelUploadProgress" class="hidden mb-4">
+                                <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div id="excelUploadProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <p id="excelUploadStatus" class="text-sm text-gray-600 dark:text-gray-300 mt-2">Processing...</p>
+                            </div>
+                            
+                            <div id="excelUploadResults" class="hidden">
+                                <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                    <h4 class="font-medium mb-2">Upload Results:</h4>
+                                    <div id="excelUploadSummary" class="space-y-2"></div>
+                                    <div id="excelUploadErrors" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="closeExcelUploadModalButton" class="modal-close-btn" type="button">Cancel</button>
+                        <button id="processExcelUploadButton" class="modal-save-btn" type="button">Upload & Process</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Modal for Google Drive Operations -->
+    <div id="loadingModalOverlay" class="modal-overlay hidden">
+        <div id="loadingModal" class="modal hidden" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Creating Opportunity</h3>
+            </div>
+            <div class="modal-body">
+                <div class="flex items-center justify-center space-x-3 p-6">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <div>
+                        <p class="text-lg font-medium">Creating Google Drive folder...</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">This may take a few seconds</p>
+                    </div>
+                </div>
+                <div id="loadingProgressText" class="text-center text-sm text-gray-500 dark:text-gray-400">
+                    Initializing...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    </div> <!-- End appContent wrapper -->
+    
+    <div id="authErrorBanner" style="display:none;color:#fff;background:#d32f2f;padding:1rem;text-align:center;font-weight:bold;"></div>
+    
+    <!-- Import Results Modal -->
+    <div id="importResultsModalOverlay" class="modal-overlay hidden">
+        <div id="importResultsModal" class="modal hidden" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 id="importResultsTitle">Link Google Drive Folder</h2>
+                <button id="importResultsModalCloseX" type="button" aria-label="Close" class="modal-close-x">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Search Input State -->
+                <div id="importSearchState" class="mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1 relative">
+                            <label for="quickImportSearchInput" class="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+                                Search for Project Folders
+                            </label>
+                            <input type="text" id="quickImportSearchInput" placeholder="Enter project name, client, or folder name..." 
+                                   class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button id="quickImportSearchButton" type="button" class="mt-6 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
+                                <span class="material-icons">search</span>
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="importLoadingState" class="text-center py-8 hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p id="importLoadingText" class="text-gray-600 dark:text-gray-400">Searching for project folders...</p>
+                </div>
+                
+                <!-- Results State -->
+                <div id="importResultsState" class="hidden">
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Available Folders</h3>
+                            <span id="importResultsCount" class="text-sm text-gray-600 dark:text-gray-400"></span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Click Import to link a folder and import its project data</p>
+                    </div>
+                    
+                    <div id="importResultsList" class="space-y-3 max-h-80 overflow-y-auto">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Preview State -->
+                <div id="importPreviewState" class="hidden">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Preview Imported Data</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Review the data that will be imported</p>
+                    </div>
+                    
+                    <div class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">Project Information</h4>
+                                <div id="modalImportPreviewProjectInfo" class="space-y-1 text-sm text-gray-900 dark:text-gray-100">
+                                    <!-- Project info will be populated here -->
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">Financial Information</h4>
+                                <div id="modalImportPreviewFinancialInfo" class="space-y-1 text-sm text-gray-900 dark:text-gray-100">
+                                    <!-- Financial info will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h4 class="font-medium text-green-800 dark:text-green-200 mb-2">Source</h4>
+                            <div id="modalImportPreviewSourceInfo" class="text-sm text-gray-900 dark:text-gray-100">
+                                <!-- Source info will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3">
+                        <button id="backToSearchButton" type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Back to Search
+                        </button>
+                        <button id="confirmImportButton" type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2">
+                            <span class="material-icons">edit</span>
+                            Use This Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- No Results State -->
+                <div id="importNoResultsState" class="hidden text-center py-8">
+                    <div class="text-gray-400 mb-4">
+                        <span class="material-icons" style="font-size: 48px;">folder_off</span>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Folders Found</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">Try a different search term or create a new project folder</p>
+                    <button id="tryAgainButton" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Try Different Search
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="importResultsCloseButton" type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 mr-2">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Sidebar JavaScript - REMOVED DUE TO CSP RESTRICTIONS -->
+    <!-- Sidebar functionality moved to app.js to avoid CSP issues -->
+</body>
+</html>

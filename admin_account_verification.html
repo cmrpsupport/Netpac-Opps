@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Account Verification</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .verification-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--bg-modal, #ffffff);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .status-box {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .status-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .status-error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .status-info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        .test-button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+        .test-button:hover {
+            background: #1557b0;
+        }
+        .user-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .users-table th,
+        .users-table td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .users-table th {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <h1>Admin Account Verification</h1>
+        <p>Testing admin account: <strong>reuel.rivera@cmrpautomation.com</strong></p>
+        
+        <div class="status-box status-info">
+            <strong>Test Status:</strong> <span id="testStatus">Ready to test</span>
+        </div>
+
+        <button class="test-button" onclick="testLogin()">1. Test Login</button>
+        <button class="test-button" onclick="testUserManagement()" disabled id="userMgmtBtn">2. Test User Management Access</button>
+        <button class="test-button" onclick="testThemeToggle()" disabled id="themeBtn">3. Test Theme Toggle</button>
+
+        <div id="loginResult"></div>
+        <div id="userMgmtResult"></div>
+        <div id="themeResult"></div>
+        <div id="usersList"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testLogin() {
+            const statusEl = document.getElementById('testStatus');
+            statusEl.textContent = 'Testing login...';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.token) {
+                    authToken = result.token;
+                    
+                    // Decode token to show user info
+                    const tokenParts = result.token.split('.');
+                    const payload = JSON.parse(atob(tokenParts[1]));
+                    
+                    document.getElementById('loginResult').innerHTML = `
+                        <div class="status-box status-success">
+                            <strong>✅ Login Successful!</strong>
+                            <div class="user-info">
+                                <p><strong>Email:</strong> ${payload.email}</p>
+                                <p><strong>Name:</strong> ${payload.name}</p>
+                                <p><strong>Roles:</strong> ${payload.roles ? payload.roles.join(', ') : 'None'}</p>
+                                <p><strong>Account Type:</strong> ${payload.accountType || 'Not specified'}</p>
+                                <p><strong>Token Expires:</strong> ${new Date(payload.exp * 1000).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    statusEl.textContent = 'Login successful - ready for next tests';
+                    document.getElementById('userMgmtBtn').disabled = false;
+                    document.getElementById('themeBtn').disabled = false;
+                } else {
+                    throw new Error(result.error || 'Login failed');
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = `
+                    <div class="status-box status-error">
+                        <strong>❌ Login Failed:</strong> ${error.message}
+                    </div>
+                `;
+                statusEl.textContent = 'Login failed';
+            }
+        }
+
+        async function testUserManagement() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const statusEl = document.getElementById('testStatus');
+            statusEl.textContent = 'Testing User Management access...';
+            
+            try {
+                const response = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const users = await response.json();
+                    
+                    document.getElementById('userMgmtResult').innerHTML = `
+                        <div class="status-box status-success">
+                            <strong>✅ User Management Access Successful!</strong>
+                            <p>Found ${users.length} users in the system.</p>
+                        </div>
+                    `;
+
+                    // Display users table
+                    let usersTable = `
+                        <h3>Users in System:</h3>
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Account Type</th>
+                                    <th>Roles</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    users.forEach(user => {
+                        usersTable += `
+                            <tr>
+                                <td>${user.name || 'N/A'}</td>
+                                <td>${user.email}</td>
+                                <td>${user.account_type || 'N/A'}</td>
+                                <td>${user.roles ? user.roles.join(', ') : 'N/A'}</td>
+                                <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    usersTable += '</tbody></table>';
+                    document.getElementById('usersList').innerHTML = usersTable;
+                    
+                    statusEl.textContent = 'User Management access confirmed';
+                } else {
+                    const error = await response.json();
+                    throw new Error(`${response.status}: ${error.error || 'Access denied'}`);
+                }
+            } catch (error) {
+                document.getElementById('userMgmtResult').innerHTML = `
+                    <div class="status-box status-error">
+                        <strong>❌ User Management Access Failed:</strong> ${error.message}
+                    </div>
+                `;
+                statusEl.textContent = 'User Management access failed';
+            }
+        }
+
+        function testThemeToggle() {
+            const statusEl = document.getElementById('testStatus');
+            statusEl.textContent = 'Testing theme toggle...';
+            
+            try {
+                // Test theme toggle functionality
+                const body = document.body;
+                const currentTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+                
+                // Toggle theme
+                body.classList.toggle('dark-theme');
+                
+                const newTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+                
+                document.getElementById('themeResult').innerHTML = `
+                    <div class="status-box status-success">
+                        <strong>✅ Theme Toggle Working!</strong>
+                        <p>Switched from ${currentTheme} theme to ${newTheme} theme.</p>
+                        <p><strong>Expected behavior:</strong></p>
+                        <ul>
+                            <li>Toggle icon should ALWAYS show sun (☀️) regardless of theme</li>
+                            <li>Header should use dark colors in both themes</li>
+                            <li>Logo should ALWAYS be light version in both themes</li>
+                            <li>Login button should be blue (#1a73e8) in both themes</li>
+                        </ul>
+                    </div>
+                `;
+                
+                statusEl.textContent = 'Theme toggle test completed';
+            } catch (error) {
+                document.getElementById('themeResult').innerHTML = `
+                    <div class="status-box status-error">
+                        <strong>❌ Theme Toggle Failed:</strong> ${error.message}
+                    </div>
+                `;
+                statusEl.textContent = 'Theme toggle test failed';
+            }
+        }
+
+        // Initialize dark theme as default
+        document.body.classList.add('dark-theme');
+    </script>
+</body>
+</html>

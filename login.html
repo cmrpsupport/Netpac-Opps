@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com;">
+    <title>CMRP oppX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    <script src="api-utils.js"></script>
+    <style>
+        /* Loading screen styles */
+        .loading-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary, #ffffff);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-screen.visible {
+            display: flex;
+        }
+
+        .loading-logo {
+            height: 3rem;
+            width: auto;
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .loading-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary, #1f2937);
+        }
+
+        .loading-message {
+            font-size: 1rem;
+            opacity: 0.7;
+            margin-bottom: 1rem;
+            color: var(--text-primary, #1f2937);
+        }
+
+        .loading-submessage {
+            font-size: 0.875rem;
+            opacity: 0.6;
+            margin-bottom: 2rem;
+            max-width: 400px;
+            line-height: 1.4;
+            color: var(--text-primary, #1f2937);
+        }
+
+        .loading-progress {
+            width: 200px;
+            height: 4px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .loading-progress-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #3b82f6;
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            animation: progress-animation 2s ease-in-out infinite;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes progress-animation {
+            0% {
+                left: -50%;
+                width: 50%;
+            }
+            100% {
+                left: 100%;
+                width: 50%;
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .dark .loading-screen {
+            background: var(--bg-primary, #1f2937);
+        }
+
+        .dark .loading-title,
+        .dark .loading-message,
+        .dark .loading-submessage {
+            color: var(--text-primary, #f9fafb);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center login-page">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <img id="loadingLogo" src="Logo/CMRP Logo Dark.svg" alt="CMRP Logo" class="loading-logo">
+        <h1 class="loading-title">CMRP Opportunities Management</h1>
+        <p class="loading-message">Connecting to services...</p>
+        <p class="loading-submessage">Please wait while we wake up our cloud services. This may take up to 30 seconds on first load due to free tier limitations.</p>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+        </div>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo Section -->
+            <div class="login-header">
+                <img id="loginLogo" src="Logo/CMRP Logo Dark.svg" alt="CMRP Logo" class="login-logo">
+                <h1 class="login-title">oppX</h1>
+                <p class="login-subtitle">Sign in to your account</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
+                <div id="loginError" class="error-message hidden">
+                    <span class="material-icons">error</span>
+                    <span id="loginErrorText">Invalid credentials</span>
+                </div>
+
+                <div id="loginSuccess" class="success-message hidden">
+                    <span class="material-icons">check_circle</span>
+                    <span>Login successful! Redirecting...</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginEmail" class="form-label">
+                        <span class="material-icons">email</span>
+                        Email Address
+                    </label>
+                    <input 
+                        type="email" 
+                        id="loginEmail" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="Enter your email address"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword" class="form-label">
+                        <span class="material-icons">lock</span>
+                        Password
+                    </label>
+                    <input 
+                        type="password" 
+                        id="loginPassword" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" id="loginSubmitBtn" class="login-submit-btn">
+                    <span class="material-icons">login</span>
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Theme Toggle -->
+            <div class="login-footer">
+                <button id="themeToggle" class="theme-toggle-btn" title="Toggle between light and dark theme">
+                    <span class="material-icons">wb_sunny</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Functionality Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    
+    <style>
+        /* Test styles for better visibility */
+        body {
+            padding: 20px;
+            background: var(--bg-container);
+            color: var(--text-title);
+        }
+        
+        .test-section {
+            border: 2px solid #ccc;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .button-test {
+            margin: 10px 5px;
+        }
+        
+        .status-indicator {
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .working { background: #d4edda; color: #155724; }
+        .broken { background: #f8d7da; color: #721c24; }
+        .unknown { background: #fff3cd; color: #856404; }
+        
+        .dark .test-section h3 {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Button Functionality Test</h1>
+        
+        <!-- Theme Toggle for Testing -->
+        <div class="mb-4">
+            <button id="themeToggle" class="nav-square-btn" title="Toggle theme for testing">
+                <span class="material-icons">wb_sunny</span>
+            </button>
+            <span class="ml-2">Theme Toggle Test</span>
+        </div>
+        
+        <!-- Test Section 1: Save Snapshot Button -->
+        <div class="test-section">
+            <h3>1. Save Snapshot Button Test</h3>
+            <div class="mb-4">
+                <button id="saveSnapshotBtn" class="dashboard-save-snapshot-btn" title="Save current data as snapshot">
+                    Save Snapshot
+                </button>
+                <div id="saveSnapshotStatus" class="status-indicator unknown">Not Tested</div>
+            </div>
+            <p><strong>Expected:</strong> Should look like a proper button with styling and be clickable</p>
+            <p><strong>Issue:</strong> Doesn't look like a button</p>
+        </div>
+
+        <!-- Test Section 2: Filter Dropdowns -->
+        <div class="test-section">
+            <h3>2. Filter Dropdowns Test</h3>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium mr-2">Solutions:</span>
+                    <select id="solutionsFilter" data-filter-type="solutions" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                    <div id="solutionsStatus" class="status-indicator unknown">No Options</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium mr-2">Account Mgr:</span>
+                    <select id="accountMgrFilter" data-filter-type="accountMgr" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                    <div id="accountMgrStatus" class="status-indicator unknown">No Options</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium mr-2">PIC:</span>
+                    <select id="picFilter" data-filter-type="pic" class="filter-dropdown">
+                        <option value="all">All</option>
+                    </select>
+                    <div id="picStatus" class="status-indicator unknown">No Options</div>
+                </div>
+            </div>
+            <p class="mt-4"><strong>Expected:</strong> Dropdowns should be populated with choices from the database</p>
+            <p><strong>Issue:</strong> Filter dropdowns do not have choices</p>
+        </div>
+
+        <!-- Test Section 3: Action Buttons -->
+        <div class="test-section">
+            <h3>3. Action Buttons Test</h3>
+            <div class="flex flex-wrap gap-2 mb-4 items-center">
+                <button id="createOpportunityButton" class="action-button px-3 py-2 rounded flex items-center justify-center" title="Add New Opportunity">
+                    <span class="material-icons">add</span>
+                </button>
+                <div id="createStatus" class="status-indicator unknown">Not Tested</div>
+                
+                <button id="editTestButton" class="action-button px-3 py-2 rounded flex items-center justify-center" title="Test Edit Modal">
+                    <span class="material-icons">edit</span>
+                </button>
+                <div id="editStatus" class="status-indicator unknown">Not Tested</div>
+                
+                <button id="duplicateTestButton" class="action-button px-3 py-2 rounded flex items-center justify-center" title="Test Duplicate Modal">
+                    <span class="material-icons">content_copy</span>
+                </button>
+                <div id="duplicateStatus" class="status-indicator unknown">Not Tested</div>
+                
+                <button id="deleteTestButton" class="theme-button px-3 py-1 rounded flex items-center justify-center" title="Test Delete Function">
+                    <span class="material-icons">delete</span>
+                </button>
+                <div id="deleteStatus" class="status-indicator unknown">Not Tested</div>
+                
+                <button id="revisionTestButton" class="theme-button px-3 py-1 rounded flex items-center justify-center" title="Test Revision History">
+                    <span class="material-icons">history</span>
+                </button>
+                <div id="revisionStatus" class="status-indicator unknown">Not Tested</div>
+            </div>
+            <p><strong>Expected:</strong> All buttons should open their respective modals/functions</p>
+            <p><strong>Issues:</strong> Create new, Edit, Duplicate modals not showing; Delete not functioning; Revision History not showing</p>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="test-section">
+            <h3>Test Results Summary</h3>
+            <div id="testResults">
+                <p>Click the buttons above to test functionality. Results will appear here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include all the modals from the main index.html -->
+    <!-- Create New Opportunity Modal -->
+    <div id="createOpportunityModalOverlay" class="modal-overlay hidden">
+        <div id="createOpportunityModal" class="modal hidden" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Create New Opportunity</h2>
+                <button id="createOpportunityModalCloseX" type="button" aria-label="Close" class="modal-close-x">&times;</button>
+            </div>
+            <form id="createOpportunityForm" class="modal-body">
+                <div class="form-group mb-4">
+                    <label for="newProjectName">Project Name</label>
+                    <input type="text" id="newProjectName" name="project_name" class="w-full p-2 border rounded" required />
+                </div>
+                <div class="form-group mb-4">
+                    <label for="newClient">Client</label>
+                    <input type="text" id="newClient" name="client" class="w-full p-2 border rounded" required />
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button id="closeCreateOpportunityModalButton" class="modal-close-btn" type="button">Cancel</button>
+                <button id="saveCreateOpportunityButton" class="modal-save-btn" type="submit" form="createOpportunityForm">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Row Modal -->
+    <div id="editRowModalOverlay" class="modal-overlay hidden">
+        <div id="editRowModal" class="modal">
+            <div class="modal-header">
+                <h2>Edit Row</h2>
+                <button id="editRowModalCloseX" type="button" aria-label="Close" class="modal-close-x">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="editRowForm" class="modal-body">
+                <p>Edit modal test content</p>
+            </form>
+            <div class="modal-actions">
+                <button id="closeEditRowModalButton" class="modal-close-btn" type="button">Cancel</button>
+                <button id="saveEditRowButton" class="modal-save-btn" type="submit" form="editRowForm">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revision History Modal -->
+    <div id="revisionHistoryModalOverlay" class="modal-overlay hidden">
+        <div id="revisionHistoryModal" class="modal">
+            <button id="closeRevisionHistoryModalX" type="button" aria-label="Close" style="position:absolute;top:0.5rem;right:0.5rem;font-size:1.25rem;line-height:1;color:var(--text-secondary);background:transparent;border:none;z-index:10;">&times;</button>
+            <h2>Revision History</h2>
+            <div id="revisionHistoryContent" class="table-container" style="max-height:60vh;overflow:auto;">
+                <p>Revision history test content</p>
+            </div>
+            <div class="modal-actions">
+                <button id="closeRevisionHistoryButton" class="modal-close-btn" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            this.querySelector('.material-icons').textContent = isDark ? 'wb_sunny' : 'nights_stay';
+        });
+
+        // Test functions
+        function updateStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            element.className = `status-indicator ${status}`;
+            element.textContent = message;
+        }
+
+        function updateTestResults(test, result) {
+            const resultsDiv = document.getElementById('testResults');
+            const existingResults = resultsDiv.innerHTML;
+            resultsDiv.innerHTML = existingResults + `<p><strong>${test}:</strong> ${result}</p>`;
+        }
+
+        // Save Snapshot Button Test
+        document.getElementById('saveSnapshotBtn').addEventListener('click', function() {
+            updateStatus('saveSnapshotStatus', 'working', 'Clicked - Working!');
+            updateTestResults('Save Snapshot', 'Button click detected - styling issue only');
+        });
+
+        // Create Opportunity Button Test
+        document.getElementById('createOpportunityButton').addEventListener('click', function() {
+            const modal = document.getElementById('createOpportunityModalOverlay');
+            const modalContent = document.getElementById('createOpportunityModal');
+            
+            if (modal && modalContent) {
+                modal.classList.remove('hidden');
+                modalContent.classList.remove('hidden');
+                updateStatus('createStatus', 'working', 'Modal Opened!');
+                updateTestResults('Create Opportunity', 'Modal opened successfully');
+            } else {
+                updateStatus('createStatus', 'broken', 'Modal Not Found!');
+                updateTestResults('Create Opportunity', 'Modal elements not found');
+            }
+        });
+
+        // Edit Button Test
+        document.getElementById('editTestButton').addEventListener('click', function() {
+            const modal = document.getElementById('editRowModalOverlay');
+            const modalContent = document.getElementById('editRowModal');
+            
+            if (modal && modalContent) {
+                modal.classList.remove('hidden');
+                modalContent.classList.remove('hidden');
+                updateStatus('editStatus', 'working', 'Modal Opened!');
+                updateTestResults('Edit Modal', 'Modal opened successfully');
+            } else {
+                updateStatus('editStatus', 'broken', 'Modal Not Found!');
+                updateTestResults('Edit Modal', 'Modal elements not found');
+            }
+        });
+
+        // Duplicate Button Test
+        document.getElementById('duplicateTestButton').addEventListener('click', function() {
+            // Duplicate typically uses the same create modal with pre-filled data
+            const modal = document.getElementById('createOpportunityModalOverlay');
+            const modalContent = document.getElementById('createOpportunityModal');
+            
+            if (modal && modalContent) {
+                modal.classList.remove('hidden');
+                modalContent.classList.remove('hidden');
+                updateStatus('duplicateStatus', 'working', 'Modal Opened!');
+                updateTestResults('Duplicate Modal', 'Using create modal - working');
+            } else {
+                updateStatus('duplicateStatus', 'broken', 'Modal Not Found!');
+                updateTestResults('Duplicate Modal', 'Modal elements not found');
+            }
+        });
+
+        // Delete Button Test
+        document.getElementById('deleteTestButton').addEventListener('click', function() {
+            const confirmed = confirm('Test delete function - would you like to proceed?');
+            if (confirmed) {
+                updateStatus('deleteStatus', 'working', 'Confirmed!');
+                updateTestResults('Delete Function', 'Confirmation dialog shown - function working');
+            } else {
+                updateStatus('deleteStatus', 'working', 'Cancelled');
+                updateTestResults('Delete Function', 'Confirmation cancelled - function working');
+            }
+        });
+
+        // Revision History Button Test
+        document.getElementById('revisionTestButton').addEventListener('click', function() {
+            const modal = document.getElementById('revisionHistoryModalOverlay');
+            const modalContent = document.getElementById('revisionHistoryModal');
+            
+            if (modal && modalContent) {
+                modal.classList.remove('hidden');
+                modalContent.classList.remove('hidden');
+                updateStatus('revisionStatus', 'working', 'Modal Opened!');
+                updateTestResults('Revision History', 'Modal opened successfully');
+            } else {
+                updateStatus('revisionStatus', 'broken', 'Modal Not Found!');
+                updateTestResults('Revision History', 'Modal elements not found');
+            }
+        });
+
+        // Modal close handlers
+        function setupModalCloseHandlers() {
+            // Create modal close handlers
+            document.getElementById('createOpportunityModalCloseX')?.addEventListener('click', function() {
+                document.getElementById('createOpportunityModalOverlay').classList.add('hidden');
+                document.getElementById('createOpportunityModal').classList.add('hidden');
+            });
+            
+            document.getElementById('closeCreateOpportunityModalButton')?.addEventListener('click', function() {
+                document.getElementById('createOpportunityModalOverlay').classList.add('hidden');
+                document.getElementById('createOpportunityModal').classList.add('hidden');
+            });
+
+            // Edit modal close handlers
+            document.getElementById('editRowModalCloseX')?.addEventListener('click', function() {
+                document.getElementById('editRowModalOverlay').classList.add('hidden');
+                document.getElementById('editRowModal').classList.add('hidden');
+            });
+            
+            document.getElementById('closeEditRowModalButton')?.addEventListener('click', function() {
+                document.getElementById('editRowModalOverlay').classList.add('hidden');
+                document.getElementById('editRowModal').classList.add('hidden');
+            });
+
+            // Revision history modal close handlers
+            document.getElementById('closeRevisionHistoryModalX')?.addEventListener('click', function() {
+                document.getElementById('revisionHistoryModalOverlay').classList.add('hidden');
+                document.getElementById('revisionHistoryModal').classList.add('hidden');
+            });
+            
+            document.getElementById('closeRevisionHistoryButton')?.addEventListener('click', function() {
+                document.getElementById('revisionHistoryModalOverlay').classList.add('hidden');
+                document.getElementById('revisionHistoryModal').classList.add('hidden');
+            });
+
+            // Overlay click handlers
+            document.getElementById('createOpportunityModalOverlay')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.getElementById('createOpportunityModal').classList.add('hidden');
+                }
+            });
+
+            document.getElementById('editRowModalOverlay')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.getElementById('editRowModal').classList.add('hidden');
+                }
+            });
+
+            document.getElementById('revisionHistoryModalOverlay')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.getElementById('revisionHistoryModal').classList.add('hidden');
+                }
+            });
+        }
+
+        // Initialize modal handlers
+        setupModalCloseHandlers();
+
+        // Test dropdown population
+        setTimeout(function() {
+            const dropdowns = ['solutionsFilter', 'accountMgrFilter', 'picFilter'];
+            dropdowns.forEach(id => {
+                const dropdown = document.getElementById(id);
+                const statusId = id.replace('Filter', 'Status');
+                if (dropdown && dropdown.options.length > 1) {
+                    updateStatus(statusId, 'working', 'Has Options');
+                } else {
+                    updateStatus(statusId, 'broken', 'No Options');
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

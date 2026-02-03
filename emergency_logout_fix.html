@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Logout Fix</title>
+    <script src="config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .fix-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .info { color: #3b82f6; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .fix-btn {
+            background: #22c55e;
+        }
+        .fix-btn:hover {
+            background: #16a34a;
+        }
+        .danger-btn {
+            background: #ef4444;
+        }
+        .danger-btn:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚨 Emergency Logout Fix</h1>
+    
+    <div class="fix-section">
+        <h2>Problem Detected</h2>
+        <div class="error">
+            ❌ The system is logging you out immediately after login. This is likely due to an error in the app initialization process.
+        </div>
+        <div class="info">
+            📋 This usually happens when:
+            <ul>
+                <li>The server is unreachable</li>
+                <li>The API endpoint is returning an error</li>
+                <li>There's a network connectivity issue</li>
+                <li>The authentication token is valid but the app fails to load data</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="fix-section">
+        <h2>Quick Diagnostics</h2>
+        <button onclick="runQuickDiagnostics()">Run Quick Diagnostics</button>
+        <div id="diagnosticsResult"></div>
+    </div>
+
+    <div class="fix-section">
+        <h2>Emergency Fixes</h2>
+        <button onclick="fixAuthFlow()" class="fix-btn">Fix 1: Disable Error-Based Logout</button>
+        <button onclick="testDirectAccess()" class="fix-btn">Fix 2: Test Direct Access</button>
+        <button onclick="clearAndRetry()" class="danger-btn">Fix 3: Clear Everything & Retry</button>
+        <div id="fixResult"></div>
+    </div>
+
+    <div class="fix-section">
+        <h2>Manual Access</h2>
+        <p>If the fixes don't work, you can try:</p>
+        <button onclick="goToLogin()">Go to Login Page</button>
+        <button onclick="accessWithBypass()">Try Access with Error Bypass</button>
+        <button onclick="openDebugConsole()">Open Debug Console</button>
+    </div>
+
+    <script>
+        function getApiUrl(endpoint) {
+            const baseUrl = window.APP_CONFIG?.API_BASE_URL || '';
+            return `${baseUrl}${endpoint}`;
+        }
+
+        async function runQuickDiagnostics() {
+            const result = document.getElementById('diagnosticsResult');
+            result.innerHTML = '<div class="info">🔄 Running diagnostics...</div>';
+            
+            let diagnostics = [];
+            
+            // Check 1: Token exists
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                diagnostics.push('❌ No auth token found');
+            } else {
+                diagnostics.push('✅ Auth token exists');
+                
+                // Check token validity
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const isExpired = payload.exp && payload.exp < Date.now() / 1000;
+                    if (isExpired) {
+                        diagnostics.push('❌ Auth token is EXPIRED');
+                    } else {
+                        diagnostics.push('✅ Auth token is valid');
+                    }
+                } catch (e) {
+                    diagnostics.push('❌ Auth token is malformed');
+                }
+            }
+
+            // Check 2: API connectivity
+            try {
+                const response = await fetch(getApiUrl('/api/health'), { 
+                    method: 'GET'
+                });
+                if (response.ok) {
+                    diagnostics.push('✅ API server is reachable');
+                } else {
+                    diagnostics.push(`❌ API server error: ${response.status}`);
+                }
+            } catch (error) {
+                diagnostics.push(`❌ API server unreachable: ${error.message}`);
+            }
+
+            // Check 3: Opportunities endpoint
+            if (token) {
+                try {
+                    const response = await fetch(getApiUrl('/api/opportunities'), {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        diagnostics.push('✅ Opportunities endpoint working');
+                    } else {
+                        diagnostics.push(`❌ Opportunities endpoint error: ${response.status}`);
+                    }
+                } catch (error) {
+                    diagnostics.push(`❌ Opportunities endpoint failed: ${error.message}`);
+                }
+            }
+
+            result.innerHTML = `<pre>${diagnostics.join('\n')}</pre>`;
+        }
+
+        function fixAuthFlow() {
+            const result = document.getElementById('fixResult');
+            result.innerHTML = '<div class="info">🔄 Applying authentication flow fix...</div>';
+            
+            // Store a flag to bypass error-based logout
+            localStorage.setItem('bypassErrorLogout', 'true');
+            
+            result.innerHTML = `
+                <div class="success">✅ Authentication flow fix applied!</div>
+                <div class="info">This will prevent the app from logging you out due to initialization errors.</div>
+                <button onclick="window.location.href='index.html'" class="fix-btn">Try Main App Now</button>
+            `;
+        }
+
+        function testDirectAccess() {
+            const result = document.getElementById('fixResult');
+            result.innerHTML = '<div class="info">🔄 Testing direct access...</div>';
+            
+            // Create a test access with minimal error handling
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                result.innerHTML = '<div class="error">❌ Cannot test direct access without token. Please login first.</div>';
+                return;
+            }
+
+            // Try to access with minimal initialization
+            result.innerHTML = `
+                <div class="success">✅ Ready for direct access test</div>
+                <button onclick="accessMinimal()" class="fix-btn">Access with Minimal Loading</button>
+            `;
+        }
+
+        async function accessMinimal() {
+            const result = document.getElementById('fixResult');
+            result.innerHTML = '<div class="info">🔄 Attempting minimal access...</div>';
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(getApiUrl('/api/opportunities'), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div class="success">✅ Data loaded successfully! Found ${data.length} opportunities</div>
+                        <div class="info">The server is working. The issue is in the app initialization.</div>
+                        <button onclick="window.location.href='index.html'" class="fix-btn">Try Main App</button>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="error">❌ Server returned error: ${response.status}</div>
+                        <div class="info">This explains why the app is logging you out.</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">❌ Network error: ${error.message}</div>
+                    <div class="info">This network issue is causing the logout problem.</div>
+                `;
+            }
+        }
+
+        function clearAndRetry() {
+            const result = document.getElementById('fixResult');
+            
+            // Clear everything
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('bypassErrorLogout');
+            localStorage.clear();
+            
+            result.innerHTML = `
+                <div class="warning">⚠️ All data cleared!</div>
+                <div class="info">You'll need to log in again.</div>
+                <button onclick="window.location.href='login.html'" class="fix-btn">Go to Login</button>
+            `;
+        }
+
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        function accessWithBypass() {
+            localStorage.setItem('emergencyBypass', 'true');
+            window.location.href = 'index.html';
+        }
+
+        function openDebugConsole() {
+            window.location.href = 'debug_immediate_logout.html';
+        }
+
+        // Auto-run diagnostics on load
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('[EMERGENCY FIX] Emergency logout fix page loaded');
+            runQuickDiagnostics();
+        });
+    </script>
+</body>
+</html> 

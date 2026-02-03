@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+    <title>Missing Functions Restoration Verification</title>
+    <script src="dist/output.css"></script>
+    <style>
+        .function-check {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .function-exists {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .function-missing {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .status-ok {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-error {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-full">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Missing Functions Restoration Verification</h1>
+            <p class="text-gray-600 mb-6">Checking if all previously missing functions have been restored in app.js</p>
+            
+            <div id="verificationResults" class="space-y-2">
+                <!-- Results will be populated by JavaScript -->
+            </div>
+            
+            <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                <h3 class="text-lg font-semibold text-blue-800 mb-2">Verification Summary</h3>
+                <div id="summary" class="text-blue-700">
+                    <!-- Summary will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // List of functions that were reported as missing
+            const requiredFunctions = [
+                'renderTable',
+                'displayOpportunities',
+                'showEditRowModal',
+                'closeOpportunityModal',
+                'setupModalEventListeners',
+                'updateOpportunityOnServer',
+                'createOpportunityOnServer',
+                'deleteOpportunityOnServer',
+                'initializeTable',
+                'isTokenValid',
+                'handleLogout',
+                'showAuthErrorBanner',
+                'hideAuthErrorBanner',
+                'populateFilterDropdowns',
+                'populateDropdown',
+                'getFieldOptions',
+                'getUniqueValuesFromData',
+                'loadOpportunities',
+                'reloadOpportunities',
+                'initializeEventListeners',
+                'updateChangePasswordBtnVisibility',
+                'applyFilters',
+                'handleStatusFilterClick',
+                'exportToExcel',
+                'handleFileImport',
+                'toggleTheme',
+                'initializeTheme',
+                'updateSummaryCards',
+                'createTableRow',
+                'populateEditModal',
+                'clearModalForm',
+                'saveOpportunity',
+                'collectModalFormData',
+                'deleteOpportunity',
+                'initializeDOMElements',
+                'initializeHeaderIndices',
+                'convertToCSV',
+                'parseCSV'
+            ];
+
+            const resultsContainer = document.getElementById('verificationResults');
+            const summaryContainer = document.getElementById('summary');
+            let existingFunctions = 0;
+            let missingFunctions = 0;
+
+            // Check each function
+            requiredFunctions.forEach(functionName => {
+                const exists = typeof window[functionName] === 'function';
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `function-check ${exists ? 'function-exists' : 'function-missing'}`;
+                
+                resultDiv.innerHTML = `
+                    <span>${functionName}()</span>
+                    <span class="status-badge ${exists ? 'status-ok' : 'status-error'}">
+                        ${exists ? 'EXISTS' : 'MISSING'}
+                    </span>
+                `;
+                
+                resultsContainer.appendChild(resultDiv);
+                
+                if (exists) {
+                    existingFunctions++;
+                } else {
+                    missingFunctions++;
+                }
+            });
+
+            // Update summary
+            const totalFunctions = requiredFunctions.length;
+            const percentage = Math.round((existingFunctions / totalFunctions) * 100);
+            
+            summaryContainer.innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold">${totalFunctions}</div>
+                        <div class="text-sm">Total Functions</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600">${existingFunctions}</div>
+                        <div class="text-sm">Found</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-red-600">${missingFunctions}</div>
+                        <div class="text-sm">Missing</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold ${percentage === 100 ? 'text-green-600' : 'text-yellow-600'}">${percentage}%</div>
+                        <div class="text-sm">Complete</div>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    ${percentage === 100 
+                        ? '<div class="text-green-600 font-semibold">✅ All required functions have been restored!</div>' 
+                        : '<div class="text-red-600 font-semibold">⚠️ Some functions are still missing and need to be implemented.</div>'
+                    }
+                </div>
+            `;
+
+            console.log(`Function Verification Complete: ${existingFunctions}/${totalFunctions} functions found (${percentage}%)`);
+        });
+    </script>
+</body>
+</html>

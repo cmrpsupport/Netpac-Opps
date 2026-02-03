@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opps Monitoring Import/Export</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="Logo/CMRP Logo Dark.svg">
+    <link rel="alternate icon" href="Logo/CMRP Logo Light.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+    <div class="simple-header flex items-center justify-between p-4 bg-white shadow">
+        <div class="flex items-center gap-3">
+            <a href="index.html" title="Go to Home" style="text-decoration: none; color: inherit;">
+                <img src="Logo/CMRP Logo Light.svg" alt="CMRP Logo" style="height:2.2rem;width:auto;cursor:pointer;" />
+            </a>
+            <span class="text-xl font-semibold">Opps Monitoring Import/Export</span>
+        </div>
+        <a href="user_management.html" class="nav-square-btn" title="Back to User Management - Return to user management page">
+            <span class="material-icons">arrow_back</span>
+        </a>
+    </div>
+    <div class="container mx-auto max-w-2xl mt-10 bg-white p-8 rounded shadow">
+        <h2 class="text-lg font-bold mb-4">Export Opportunities Monitoring Table</h2>
+        <button id="exportBtn" class="theme-button px-4 py-2 rounded bg-blue-600 text-white font-semibold mb-8 flex items-center gap-2">
+            <span class="material-icons">download</span> Export as CSV (Import Template)
+        </button>
+        <hr class="my-8">
+        <h2 class="text-lg font-bold mb-4">Import Opportunities Monitoring Table</h2>
+        <form id="importForm" enctype="multipart/form-data" class="flex flex-col gap-4">
+            <input type="file" name="csvFile" accept=".csv" required class="border p-2 rounded" />
+            <button type="submit" class="theme-button px-4 py-2 rounded bg-green-600 text-white font-semibold flex items-center gap-2">
+                <span class="material-icons">upload</span> Import CSV
+            </button>
+        </form>
+        <div id="importStatus" class="mt-4 text-sm"></div>
+    </div>
+    <script>
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        fetch('/api/opps-monitoring/export')
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to export');
+                return res.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'opps_monitoring_import_template.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => alert('Export failed: ' + err.message));
+    });
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById('importStatus');
+        statusDiv.textContent = 'Uploading...';
+        fetch('/api/opps-monitoring/import', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                statusDiv.textContent = 'Import successful!';
+                statusDiv.className = 'mt-4 text-green-600';
+            } else {
+                statusDiv.textContent = 'Import failed: ' + (result.error || 'Unknown error');
+                statusDiv.className = 'mt-4 text-red-600';
+            }
+        })
+        .catch(err => {
+            statusDiv.textContent = 'Import failed: ' + err.message;
+            statusDiv.className = 'mt-4 text-red-600';
+        });
+    });
+    </script>
+</body>
+</html>

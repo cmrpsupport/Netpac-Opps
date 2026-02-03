@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Filter Fix Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* EMERGENCY OVERRIDE - Maximum specificity for filter labels */
+        html body.dark .filter-container label,
+        html body.dark .text-sm.font-medium,
+        html body.dark [class*="text-sm"][class*="font-medium"] {
+            color: #f3f4f6 !important;
+            background-color: transparent !important;
+        }
+        
+        html body:not(.dark) .filter-container label,
+        html body:not(.dark) .text-sm.font-medium,
+        html body:not(.dark) [class*="text-sm"][class*="font-medium"] {
+            color: #374151 !important;
+            background-color: transparent !important;
+        }
+        
+        /* EMERGENCY OVERRIDE - Maximum specificity for select dropdowns */
+        html body.dark select,
+        html body.dark .filter-container select {
+            background-color: #374151 !important;
+            color: #f3f4f6 !important;
+            border-color: #6b7280 !important;
+        }
+        
+        html body:not(.dark) select,
+        html body:not(.dark) .filter-container select {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border-color: #d1d5db !important;
+        }
+        
+        /* Debug styles */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+        
+        .filter-container {
+            border: 2px solid red;
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="debug-info">
+        <div>Theme: <span id="currentTheme">Light</span></div>
+        <div>Body Classes: <span id="bodyClasses"></span></div>
+        <button onclick="toggleTheme()" class="bg-blue-500 text-white px-2 py-1 rounded mt-2">Toggle Theme</button>
+    </div>
+
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Emergency Filter Fix Test</h1>
+        
+        <!-- Test 1: Basic filter structure -->
+        <div class="filter-container">
+            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Test 1: Basic Filter Structure</h3>
+            <div class="flex space-x-4 mb-4">
+                <div>
+                    <label for="solutions1" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Solutions</label>
+                    <select id="solutions1" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Solutions</option>
+                        <option value="solution1">Solution 1</option>
+                        <option value="solution2">Solution 2</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="account1" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Mgr</label>
+                    <select id="account1" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Account Managers</option>
+                        <option value="mgr1">Manager 1</option>
+                        <option value="mgr2">Manager 2</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="pic1" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PIC</label>
+                    <select id="pic1" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All PICs</option>
+                        <option value="pic1">PIC 1</option>
+                        <option value="pic2">PIC 2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: Exact replica of your structure -->
+        <div class="filter-container">
+            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Test 2: Exact Replica Structure</h3>
+            <div class="flex space-x-4 mb-4">
+                <div>
+                    <label for="solutions2" class="text-sm font-medium">Solutions</label>
+                    <select id="solutions2">
+                        <option value="">All Solutions</option>
+                        <option value="solution1">Solution 1</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="account2" class="text-sm font-medium">Account Mgr</label>
+                    <select id="account2">
+                        <option value="">All Account Managers</option>
+                        <option value="mgr1">Manager 1</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="pic2" class="text-sm font-medium">PIC</label>
+                    <select id="pic2">
+                        <option value="">All PICs</option>
+                        <option value="pic1">PIC 1</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Different approaches -->
+        <div class="filter-container">
+            <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Test 3: Different CSS Approaches</h3>
+            <div class="flex space-x-4 mb-4">
+                <div>
+                    <label for="solutions3" style="color: inherit !important;" class="text-sm font-medium">Solutions (style override)</label>
+                    <select id="solutions3" style="background-color: inherit !important; color: inherit !important;">
+                        <option value="">All Solutions</option>
+                        <option value="solution1">Solution 1</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="account3" class="text-sm font-medium filter-label-override">Account Mgr (class override)</label>
+                    <select id="account3" class="filter-select-override">
+                        <option value="">All Account Managers</option>
+                        <option value="mgr1">Manager 1</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug section -->
+        <div class="mt-8 p-4 bg-gray-200 dark:bg-gray-800 rounded">
+            <h3 class="text-lg font-semibold mb-2">Live Style Debug</h3>
+            <button onclick="debugStyles()" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Debug Styles</button>
+            <div id="debugOutput" class="text-sm"></div>
+        </div>
+    </div>
+
+    <style>
+        /* Additional override classes for testing */
+        .filter-label-override {
+            color: var(--text-color) !important;
+        }
+        .filter-select-override {
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+        }
+        
+        :root {
+            --text-color: #374151;
+            --bg-color: #ffffff;
+        }
+        
+        .dark {
+            --text-color: #f3f4f6;
+            --bg-color: #374151;
+        }
+    </style>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            updateDebugInfo();
+        }
+
+        function updateDebugInfo() {
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('currentTheme').textContent = isDark ? 'Dark' : 'Light';
+            document.getElementById('bodyClasses').textContent = document.body.className;
+        }
+
+        function debugStyles() {
+            const output = document.getElementById('debugOutput');
+            const elements = [
+                'solutions1', 'solutions2', 'solutions3',
+                'account1', 'account2', 'account3',
+                'pic1', 'pic2'
+            ];
+            
+            let debugHTML = '<h4>Computed Styles:</h4>';
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const computedStyle = window.getComputedStyle(element);
+                    debugHTML += `<div class="mb-2">
+                        <strong>${id}:</strong><br>
+                        Color: ${computedStyle.color}<br>
+                        Background: ${computedStyle.backgroundColor}<br>
+                        Classes: ${element.className}<br>
+                    </div>`;
+                }
+            });
+            
+            // Also check labels
+            const labels = document.querySelectorAll('label');
+            labels.forEach((label, index) => {
+                const computedStyle = window.getComputedStyle(label);
+                debugHTML += `<div class="mb-2">
+                    <strong>Label ${index + 1} (${label.textContent}):</strong><br>
+                    Color: ${computedStyle.color}<br>
+                    Classes: ${label.className}<br>
+                </div>`;
+            });
+            
+            output.innerHTML = debugHTML;
+        }
+
+        // Initialize
+        updateDebugInfo();
+        
+        // Auto-debug on theme change
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    updateDebugInfo();
+                    setTimeout(debugStyles, 100); // Small delay to let styles apply
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    </script>
+</body>
+</html>

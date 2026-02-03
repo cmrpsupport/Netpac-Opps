@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Header Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ddd; background: #f9f9f9; }
+        pre { background: #fff; padding: 10px; border: 1px solid #ccc; overflow-x: auto; }
+        .test-button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .test-button:hover { background: #005a87; }
+    </style>
+</head>
+<body>
+    <h1>Quick Header & Column Visibility Test</h1>
+    
+    <button class="test-button" onclick="testHeaders()">Test Actual Headers from API</button>
+    <button class="test-button" onclick="testColumnLogic()">Test Column Visibility Logic</button>
+    <button class="test-button" onclick="clearStorage()">Clear Storage</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testHeaders() {
+            try {
+                const response = await fetch('/api/opportunities');
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    const results = document.getElementById('results');
+                    
+                    let html = '<div class="result">';
+                    html += '<h3>Actual Headers from API:</h3>';
+                    html += '<pre>' + JSON.stringify(headers, null, 2) + '</pre>';
+                    html += '<p><strong>Total columns:</strong> ' + headers.length + '</p>';
+                    html += '</div>';
+                    
+                    results.innerHTML = html;
+                    
+                    // Test column visibility logic with actual headers
+                    testColumnLogicWithHeaders(headers);
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="result">❌ No data returned from API</div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="result">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        function testColumnLogicWithHeaders(headers) {
+            const defaultHiddenColumns = [
+                'description', 'comments', 'uid', 'created_at', 'updated_at', 'encoded_date', 'a', 'c', 'r', 'u', 'd'
+            ];
+            
+            let visibilitySettings = {};
+            
+            headers.forEach(header => {
+                const shouldHide = defaultHiddenColumns.some(col => 
+                    header.toLowerCase().includes(col.toLowerCase())
+                );
+                visibilitySettings[header] = !shouldHide;
+            });
+            
+            const visibleColumns = Object.entries(visibilitySettings)
+                .filter(([col, visible]) => visible)
+                .map(([col, visible]) => col);
+            
+            const hiddenColumns = Object.entries(visibilitySettings)
+                .filter(([col, visible]) => !visible)
+                .map(([col, visible]) => col);
+            
+            let html = '<div class="result">';
+            html += '<h3>Column Visibility Logic Test Results:</h3>';
+            html += '<h4>Visible Columns (' + visibleColumns.length + '):</h4>';
+            html += '<pre>' + JSON.stringify(visibleColumns, null, 2) + '</pre>';
+            html += '<h4>Hidden Columns (' + hiddenColumns.length + '):</h4>';
+            html += '<pre>' + JSON.stringify(hiddenColumns, null, 2) + '</pre>';
+            
+            // Test localStorage storage
+            localStorage.setItem('columnVisibility', JSON.stringify(visibilitySettings));
+            html += '<p>✅ Visibility settings saved to localStorage</p>';
+            
+            html += '</div>';
+            
+            document.getElementById('results').innerHTML += html;
+        }
+
+        function testColumnLogic() {
+            // Test with expected database schema columns
+            const expectedColumns = [
+                'encoded_date', 'project_name', 'project_code', 'rev', 'client', 'solutions', 
+                'sol_particulars', 'industries', 'ind_particulars', 'date_received', 'client_deadline', 
+                'decision', 'account_mgr', 'pic', 'bom', 'status', 'submitted_date', 'margin', 
+                'final_amt', 'opp_status', 'date_awarded_lost', 'lost_rca', 'l_particulars', 
+                'a', 'c', 'r', 'u', 'd', 'remarks_comments', 'uid', 'forecast_date'
+            ];
+            
+            testColumnLogicWithHeaders(expectedColumns);
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('columnVisibility');
+            localStorage.removeItem('tableState');
+            localStorage.removeItem('filterState');
+            document.getElementById('results').innerHTML += '<div class="result">✅ Storage cleared</div>';
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            testHeaders();
+        };
+    </script>
+</body>
+</html>

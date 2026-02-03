@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Debug Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css?v=20250609-1">
+    <style>
+        /* Test ultra-high specificity for labels */
+        html body label.text-sm.font-medium,
+        html body:not(.dark) label.text-sm.font-medium {
+            color: #374151 !important;
+            font-weight: 600 !important;
+        }
+        
+        html body.dark label.text-sm.font-medium,
+        body.dark label.text-sm.font-medium,
+        .dark label.text-sm.font-medium {
+            color: #f3f4f6 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Test dropdown styling */
+        html body select.filter-dropdown,
+        html body:not(.dark) select.filter-dropdown {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border: 2px solid #e5e7eb !important;
+            padding: 8px !important;
+        }
+        
+        html body.dark select.filter-dropdown,
+        body.dark select.filter-dropdown,
+        .dark select.filter-dropdown {
+            background-color: #3c3c3c !important;
+            color: #f3f4f6 !important;
+            border: 2px solid #5a5a5a !important;
+            padding: 8px !important;
+        }
+        
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #000;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debugInfo">
+        <div>Body classes: <span id="bodyClasses"></span></div>
+        <div>Theme: <span id="currentTheme"></span></div>
+        <div>CSS loaded: <span id="cssLoaded">false</span></div>
+    </div>
+    
+    <div class="container mx-auto p-6">
+        <h1 class="text-xl font-bold mb-4">Theme Debug Test</h1>
+        
+        <div class="mb-4">
+            <button id="toggleTheme" class="bg-blue-500 text-white px-4 py-2 rounded">
+                Toggle Theme
+            </button>
+        </div>
+        
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold mb-2">Filter Labels Test</h2>
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Solutions:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="test">Test Option</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Account Mgr:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="test">Test Option</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">PIC:</label>
+                    <select class="filter-dropdown">
+                        <option value="all">All</option>
+                        <option value="test">Test Option</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold mb-2">Computed Styles Debug</h2>
+            <div id="styleDebug"></div>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function updateDebugInfo() {
+            const bodyClasses = document.body.className || 'none';
+            const isDark = document.body.classList.contains('dark');
+            
+            document.getElementById('bodyClasses').textContent = bodyClasses;
+            document.getElementById('currentTheme').textContent = isDark ? 'dark' : 'light';
+            
+            // Check computed styles
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const selects = document.querySelectorAll('select.filter-dropdown');
+            
+            let debugHTML = '<div><strong>Label Styles:</strong></div>';
+            labels.forEach((label, index) => {
+                const computedStyle = getComputedStyle(label);
+                debugHTML += `<div>Label ${index + 1}: color=${computedStyle.color}, weight=${computedStyle.fontWeight}</div>`;
+            });
+            
+            debugHTML += '<div><strong>Select Styles:</strong></div>';
+            selects.forEach((select, index) => {
+                const computedStyle = getComputedStyle(select);
+                debugHTML += `<div>Select ${index + 1}: bg=${computedStyle.backgroundColor}, color=${computedStyle.color}, border=${computedStyle.borderColor}</div>`;
+            });
+            
+            document.getElementById('styleDebug').innerHTML = debugHTML;
+        }
+        
+        document.getElementById('toggleTheme').addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            updateDebugInfo();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('cssLoaded').textContent = 'true';
+            updateDebugInfo();
+        });
+        
+        // Update debug info periodically
+        setInterval(updateDebugInfo, 1000);
+    </script>
+</body>
+</html>

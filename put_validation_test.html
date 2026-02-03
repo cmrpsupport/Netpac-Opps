@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUT Validation Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .test-section { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 10px 5px; cursor: pointer; }
+        .btn-test { background-color: #007bff; color: white; border: none; border-radius: 3px; }
+        .btn-test:hover { background-color: #0056b3; }
+        textarea { width: 100%; height: 200px; font-family: monospace; }
+        .form-group { margin: 10px 0; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 5px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 PUT Validation Fix Test</h1>
+        <p>This page tests the PUT endpoint validation fix for editing opportunities with empty string values.</p>
+
+        <!-- Login Section -->
+        <div class="test-section">
+            <h2>1. Login</h2>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="admin@example.com" placeholder="Enter email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" value="admin123" placeholder="Enter password">
+            </div>
+            <button class="btn-test" onclick="login()">Login</button>
+            <div id="login-result"></div>
+        </div>
+
+        <!-- Opportunity Selection -->
+        <div class="test-section">
+            <h2>2. Select Opportunity</h2>
+            <button class="btn-test" onclick="fetchOpportunities()">Fetch Opportunities</button>
+            <div id="opportunities-list"></div>
+        </div>
+
+        <!-- Edit Test -->
+        <div class="test-section">
+            <h2>3. Test PUT with Empty Values</h2>
+            <p>This test sends empty strings for project_name, client, and account_mgr - which previously caused 400 errors.</p>
+            <div class="form-group">
+                <label for="selected-uid">Selected Opportunity UID:</label>
+                <input type="text" id="selected-uid" placeholder="Select an opportunity above first">
+            </div>
+            <button class="btn-test" onclick="testPutWithEmptyValues()">Test PUT with Empty Values</button>
+            <button class="btn-test" onclick="testPutWithValidValues()">Test PUT with Valid Values</button>
+            <div id="put-test-result"></div>
+        </div>
+
+        <!-- Response Log -->
+        <div class="test-section">
+            <h2>Response Log</h2>
+            <textarea id="response-log" readonly placeholder="Test responses will appear here..."></textarea>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let opportunities = [];
+
+        function log(message) {
+            const logArea = document.getElementById('response-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logArea.value += `[${timestamp}] ${message}\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('response-log').value = '';
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('login-result');
+
+            try {
+                log('Attempting login...');
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    resultDiv.innerHTML = '<div class="success">✅ Login successful!</div>';
+                    log(`Login successful for ${email}`);
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.message || data.error}</div>`;
+                    log(`Login failed: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login error: ${error.message}</div>`;
+                log(`Login error: ${error.message}`);
+            }
+        }
+
+        async function fetchOpportunities() {
+            if (!authToken) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                log('Fetching opportunities...');
+                const response = await fetch('/api/opportunities', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    opportunities = data;
+                    displayOpportunities(data);
+                    log(`Fetched ${data.length} opportunities`);
+                } else {
+                    log(`Failed to fetch opportunities: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                log(`Error fetching opportunities: ${error.message}`);
+            }
+        }
+
+        function displayOpportunities(opps) {
+            const listDiv = document.getElementById('opportunities-list');
+            if (opps.length === 0) {
+                listDiv.innerHTML = '<p>No opportunities found</p>';
+                return;
+            }
+
+            let html = '<h3>Select an opportunity to test:</h3><ul>';
+            opps.slice(0, 5).forEach(opp => {
+                const name = opp.project_name || opp.opp_name || 'Unnamed';
+                html += `<li><button onclick="selectOpportunity('${opp.uid}')">${name} (${opp.uid.substring(0, 8)}...)</button></li>`;
+            });
+            html += '</ul>';
+            listDiv.innerHTML = html;
+        }
+
+        function selectOpportunity(uid) {
+            document.getElementById('selected-uid').value = uid;
+            log(`Selected opportunity: ${uid}`);
+        }
+
+        async function testPutWithEmptyValues() {
+            const uid = document.getElementById('selected-uid').value;
+            if (!uid || !authToken) {
+                alert('Please login and select an opportunity first');
+                return;
+            }
+
+            const testData = {
+                project_name: '',   // Empty string - this used to cause 400 error
+                client: '',         // Empty string - this used to cause 400 error
+                account_mgr: '',    // Empty string - this used to cause 400 error
+                opp_name: 'Test Update with Empty Fields',
+                changed_by: 'validation-fix-test'
+            };
+
+            await performPutTest(uid, testData, 'Empty Values Test');
+        }
+
+        async function testPutWithValidValues() {
+            const uid = document.getElementById('selected-uid').value;
+            if (!uid || !authToken) {
+                alert('Please login and select an opportunity first');
+                return;
+            }
+
+            const testData = {
+                project_name: 'Valid Project Name',
+                client: 'Valid Client Name', 
+                account_mgr: 'Valid Account Manager',
+                opp_name: 'Test Update with Valid Fields',
+                changed_by: 'validation-fix-test'
+            };
+
+            await performPutTest(uid, testData, 'Valid Values Test');
+        }
+
+        async function performPutTest(uid, data, testName) {
+            const resultDiv = document.getElementById('put-test-result');
+            
+            try {
+                log(`Starting ${testName}...`);
+                log(`PUT Data: ${JSON.stringify(data, null, 2)}`);
+                
+                const response = await fetch(`/api/opportunities/${uid}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const responseData = await response.json();
+                
+                log(`${testName} Response Status: ${response.status}`);
+                log(`${testName} Response Data: ${JSON.stringify(responseData, null, 2)}`);
+
+                if (response.status === 200) {
+                    resultDiv.innerHTML = `<div class="success">✅ ${testName} SUCCESS: Update accepted!</div>`;
+                    log(`✅ ${testName} completed successfully`);
+                } else if (response.status === 400) {
+                    resultDiv.innerHTML = `<div class="error">❌ ${testName} FAILED: 400 Bad Request - Validation fix may not be working</div>`;
+                    log(`❌ ${testName} failed with 400 error`);
+                    if (responseData.details) {
+                        log(`Validation errors: ${JSON.stringify(responseData.details)}`);
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">⚠️ ${testName}: Unexpected status ${response.status}</div>`;
+                    log(`⚠️ ${testName} returned unexpected status: ${response.status}`);
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ ${testName} Error: ${error.message}</div>`;
+                log(`❌ ${testName} error: ${error.message}`);
+            }
+        }
+
+        // Auto-clear logs on page load
+        window.addEventListener('load', () => {
+            log('PUT Validation Fix Test Page Loaded');
+            log('Ready to test the validation fix...');
+        });
+    </script>
+</body>
+</html>

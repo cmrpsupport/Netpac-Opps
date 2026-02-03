@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Label Fix Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Simple theme override for filter labels - EXACTLY like the fixed dashboards -->
+    <style>
+        /* Light theme */
+        body:not(.dark) .text-sm.font-medium {
+            color: #374151 !important;
+        }
+        
+        /* Dark theme */
+        body.dark .text-sm.font-medium {
+            color: #f3f4f6 !important;
+        }
+        
+        /* Debug styles */
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.05);
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        
+        .filter-test {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 4px;
+        }
+        
+        body.dark .filter-test {
+            background: rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <nav class="sidebar">
+        <!-- Sidebar content -->
+    </nav>
+    
+    <div class="main-content">
+        <div class="simple-header">
+            <div class="title-group">
+                <h1>🎯 Filter Label Fix - Final Verification</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="themeToggle" class="nav-square-btn" title="Toggle theme">
+                    <span class="material-icons">wb_sunny</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="main-container container mx-auto p-6 rounded-lg shadow-md">
+            <div class="test-section">
+                <h2>✅ Issue Status</h2>
+                <p><strong>FIXED:</strong> Simplified CSS approach matching the working executive dashboard</p>
+                <ul>
+                    <li>Removed complex CSS selectors and version parameters</li>
+                    <li>Fixed CSS loading order (Tailwind first, then styles.css)</li>
+                    <li>Used clean, simple theme overrides</li>
+                </ul>
+            </div>
+            
+            <div class="test-section">
+                <h2>🧪 Filter Label Tests</h2>
+                <p>These labels should be clearly visible in both themes:</p>
+                
+                <!-- Main Dashboard Style -->
+                <div class="filter-test">
+                    <h3 style="width: 100%; margin: 0 0 10px 0;">Main Dashboard Style:</h3>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Solutions:</label>
+                        <select id="solutionsFilter" data-filter-type="solutions" class="filter-dropdown">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Account Mgr:</label>
+                        <select id="accountMgrFilter" data-filter-type="accountMgr" class="filter-dropdown">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">PIC:</label>
+                        <select id="picFilter" data-filter-type="pic" class="filter-dropdown">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Win-Loss Dashboard Style -->
+                <div class="filter-test">
+                    <h3 style="width: 100%; margin: 0 0 10px 0;">Win-Loss Dashboard Style:</h3>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Solution:</label>
+                        <select id="solutionFilter" class="filter-dropdown">
+                            <option value="all">All Solutions</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Account Mgr:</label>
+                        <select id="accountMgrFilter2" class="filter-dropdown">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Client:</label>
+                        <select id="clientFilter" class="filter-dropdown">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Executive Dashboard Style -->
+                <div class="filter-test">
+                    <h3 style="width: 100%; margin: 0 0 10px 0;">Executive Dashboard Style (Reference):</h3>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Solution:</label>
+                        <select id="execSolutionFilter" class="filter-dropdown">
+                            <option value="">All Solutions</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium">Account Manager:</label>
+                        <select id="execAccountMgrFilter" class="filter-dropdown">
+                            <option value="">All Account Managers</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h2>🔍 Debug Information</h2>
+                <button onclick="analyzeLabels()" class="theme-button px-4 py-2 rounded mb-4">
+                    Analyze Label Styles
+                </button>
+                <pre id="debugOutput" class="bg-gray-100 p-4 rounded text-sm overflow-auto" style="max-height: 400px;"></pre>
+            </div>
+            
+            <div class="test-section">
+                <h2>✅ Expected Results</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3>🌞 Light Theme</h3>
+                        <ul>
+                            <li>Filter labels: Dark gray (#374151)</li>
+                            <li>Clearly visible against light background</li>
+                            <li>Good contrast for readability</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>🌙 Dark Theme</h3>
+                        <ul>
+                            <li>Filter labels: Light gray (#f3f4f6)</li>
+                            <li>Clearly visible against dark background</li>
+                            <li>Good contrast for readability</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const themeIcon = themeToggle.querySelector('.material-icons');
+
+        let isDark = localStorage.getItem('theme') === 'dark';
+        updateTheme();
+
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            updateTheme();
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        function updateTheme() {
+            if (isDark) {
+                body.classList.add('dark');
+                themeIcon.textContent = 'dark_mode';
+            } else {
+                body.classList.remove('dark');
+                themeIcon.textContent = 'wb_sunny';
+            }
+        }
+
+        function analyzeLabels() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const output = document.getElementById('debugOutput');
+            
+            let result = `🔍 Filter Label Analysis\n`;
+            result += `=====================================\n\n`;
+            result += `Current theme: ${isDark ? 'DARK' : 'LIGHT'}\n`;
+            result += `Body classes: "${body.className}"\n`;
+            result += `Found ${labels.length} filter labels\n\n`;
+            
+            labels.forEach((label, index) => {
+                const computed = window.getComputedStyle(label);
+                const rect = label.getBoundingClientRect();
+                
+                result += `Label ${index + 1}: "${label.textContent.trim()}"\n`;
+                result += `  Classes: ${label.className}\n`;
+                result += `  Computed color: ${computed.color}\n`;
+                result += `  Font size: ${computed.fontSize}\n`;
+                result += `  Font weight: ${computed.fontWeight}\n`;
+                result += `  Visibility: ${computed.visibility}\n`;
+                result += `  Display: ${computed.display}\n`;
+                result += `  Position: ${rect.width > 0 ? 'visible' : 'hidden'}\n`;
+                result += `\n`;
+            });
+            
+            // Check CSS custom properties
+            const rootStyle = getComputedStyle(document.documentElement);
+            result += `CSS Custom Properties:\n`;
+            result += `  --text-label: ${rootStyle.getPropertyValue('--text-label')}\n`;
+            result += `  --text-primary: ${rootStyle.getPropertyValue('--text-primary')}\n`;
+            result += `\n`;
+            
+            // Check for conflicting styles
+            result += `Potential Issues:\n`;
+            const hasConflicts = Array.from(labels).some(label => {
+                const color = getComputedStyle(label).color;
+                if (isDark) {
+                    return !color.includes('243, 244, 246') && !color.includes('rgb(243, 244, 246)');
+                } else {
+                    return !color.includes('55, 65, 81') && !color.includes('rgb(55, 65, 81)');
+                }
+            });
+            
+            if (hasConflicts) {
+                result += `  ❌ Some labels may not have correct theme colors\n`;
+            } else {
+                result += `  ✅ All labels appear to have correct theme colors\n`;
+            }
+            
+            output.textContent = result;
+        }
+        
+        // Auto-analyze on page load and theme change
+        setTimeout(analyzeLabels, 1000);
+        themeToggle.addEventListener('click', () => setTimeout(analyzeLabels, 100));
+    </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Emergency Wake-up</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { color: #721c24; background: #f8d7da; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .urgent { background: #dc3545; color: white; padding: 15px; border-radius: 4px; margin: 15px 0; text-align: center; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .large-btn { padding: 15px 30px; font-size: 16px; font-weight: bold; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        .timeout-warning { background: #ffc107; color: #000; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        .step { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .step h4 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 Production Emergency Wake-up</h1>
+        
+        <div class="urgent">
+            <strong>SITUATION:</strong> Production server is not responding - likely cold start or database connection issue
+        </div>
+
+        <div class="timeout-warning">
+            <strong>⏰ Render Free Tier Cold Start:</strong> Can take 1-3 minutes for first response. Be patient!
+        </div>
+
+        <div class="step">
+            <h4>🔄 Step 1: Force Wake Up Production Server</h4>
+            <p>Click this button and wait up to 3 minutes. Render free tier takes time to wake up.</p>
+            <button class="large-btn" onclick="forceWakeUp()" id="wakeBtn">🚀 FORCE WAKE UP (Wait 3 minutes)</button>
+            <div id="wakeResults"></div>
+        </div>
+
+        <div class="step">
+            <h4>⚡ Step 2: Quick Login Test</h4>
+            <p>After the server wakes up, test login immediately.</p>
+            <button class="large-btn" onclick="quickLoginTest()" id="loginBtn" disabled>🔐 TEST LOGIN NOW</button>
+            <div id="loginResults"></div>
+        </div>
+
+        <div class="step">
+            <h4>🌐 Step 3: Alternative Actions</h4>
+            <button onclick="checkDifferentURL()">🔍 Try Different URL</button>
+            <button onclick="manualWakeInstructions()">📋 Manual Wake Instructions</button>
+            <button onclick="checkRenderDashboard()">🖥️ Check Render Dashboard</button>
+            <div id="alternativeResults"></div>
+        </div>
+
+        <div id="statusLog"></div>
+    </div>
+
+    <script>
+        const PRODUCTION_URL = 'https://cmrp-opps-backend.onrender.com';
+        const TIMEOUT_DURATION = 120000; // 2 minutes timeout
+
+        function log(message, type = 'info') {
+            const statusLog = document.getElementById('statusLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            statusLog.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            statusLog.scrollTop = statusLog.scrollHeight;
+        }
+
+        function updateResults(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            element.innerHTML += `<div class="${className}">${message}</div>`;
+        }
+
+        async function makeRequestWithTimeout(url, options = {}, timeoutMs = TIMEOUT_DURATION) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+
+        async function forceWakeUp() {
+            const wakeBtn = document.getElementById('wakeBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            wakeBtn.disabled = true;
+            wakeBtn.textContent = '⏳ Waking up server... (This may take 2-3 minutes)';
+            
+            document.getElementById('wakeResults').innerHTML = '';
+            
+            log('🚀 Starting force wake-up sequence...', 'info');
+            log('⏰ This will take up to 3 minutes for Render cold start', 'warning');
+
+            // Try multiple endpoints with extended timeout
+            const endpoints = ['/api/health', '/', '/api/opportunities'];
+            let success = false;
+
+            for (let i = 0; i < endpoints.length && !success; i++) {
+                const endpoint = endpoints[i];
+                const url = PRODUCTION_URL + endpoint;
+                
+                try {
+                    log(`📡 Attempting ${endpoint} (attempt ${i + 1}/3)...`, 'info');
+                    updateResults('wakeResults', `Trying ${endpoint}...`, 'info');
+                    
+                    const startTime = Date.now();
+                    const response = await makeRequestWithTimeout(url, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    }, 180000); // 3 minute timeout
+                    
+                    const endTime = Date.now();
+                    const responseTime = Math.round((endTime - startTime) / 1000);
+                    
+                    if (response.ok || response.status === 401 || response.status === 403) {
+                        success = true;
+                        log(`✅ Server responded! (${responseTime}s)`, 'success');
+                        updateResults('wakeResults', `✅ Server is awake! Response time: ${responseTime}s`, 'success');
+                        
+                        wakeBtn.textContent = '✅ Server is awake!';
+                        wakeBtn.style.background = '#28a745';
+                        loginBtn.disabled = false;
+                        
+                        // Automatically try login after successful wake-up
+                        setTimeout(() => {
+                            log('🔄 Auto-testing login...', 'info');
+                            quickLoginTest();
+                        }, 2000);
+                        
+                        break;
+                    } else if (response.status === 500) {
+                        log(`⚠️ Server awake but database issues (${responseTime}s)`, 'warning');
+                        updateResults('wakeResults', `⚠️ Server awake, checking database...`, 'warning');
+                        success = true;
+                        loginBtn.disabled = false;
+                        break;
+                    } else {
+                        log(`🔍 Unexpected response: ${response.status} (${responseTime}s)`, 'info');
+                        updateResults('wakeResults', `Response: ${response.status} after ${responseTime}s`, 'info');
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        log(`⏰ Timeout on ${endpoint} (>3 minutes)`, 'error');
+                        updateResults('wakeResults', `❌ ${endpoint}: Timeout after 3 minutes`, 'error');
+                    } else {
+                        log(`❌ ${endpoint}: ${error.message}`, 'error');
+                        updateResults('wakeResults', `❌ ${endpoint}: ${error.message}`, 'error');
+                    }
+                }
+                
+                // Wait between attempts
+                if (i < endpoints.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
+            }
+
+            if (!success) {
+                wakeBtn.textContent = '❌ Failed to wake up';
+                wakeBtn.style.background = '#dc3545';
+                log('❌ All wake-up attempts failed', 'error');
+                updateResults('wakeResults', `❌ Server did not respond after multiple attempts`, 'error');
+                updateResults('wakeResults', `💡 Try checking Render dashboard or contact support`, 'warning');
+            }
+        }
+
+        async function quickLoginTest() {
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = '⏳ Testing login...';
+            
+            document.getElementById('loginResults').innerHTML = '';
+            log('🔐 Testing production login...', 'info');
+
+            try {
+                const response = await makeRequestWithTimeout(PRODUCTION_URL + '/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'reuel.rivera@cmrpautomation.com',
+                        password: 'cmrp0601'
+                    })
+                }, 60000); // 1 minute timeout
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    log('✅ LOGIN SUCCESSFUL! Production is working!', 'success');
+                    updateResults('loginResults', '✅ LOGIN SUCCESSFUL! You can now use the production app', 'success');
+                    updateResults('loginResults', '🎉 The database and server are fully operational', 'success');
+                    loginBtn.textContent = '✅ Login works!';
+                    loginBtn.style.background = '#28a745';
+                } else if (response.status === 401) {
+                    log('⚠️ Login failed - wrong credentials but server is working', 'warning');
+                    updateResults('loginResults', '⚠️ Server is working but login failed - check credentials', 'warning');
+                    loginBtn.textContent = '⚠️ Check credentials';
+                    loginBtn.style.background = '#ffc107';
+                } else if (response.status === 500) {
+                    log('❌ Database connection issues', 'error');
+                    updateResults('loginResults', '❌ Server is up but database connection failed', 'error');
+                    updateResults('loginResults', '💡 Neon database may need more time to wake up', 'info');
+                    loginBtn.textContent = '❌ Database issues';
+                    loginBtn.style.background = '#dc3545';
+                } else {
+                    log(`🔍 Unexpected login response: ${response.status}`, 'info');
+                    updateResults('loginResults', `Unexpected response: ${response.status}`, 'info');
+                }
+            } catch (error) {
+                log(`❌ Login test failed: ${error.message}`, 'error');
+                updateResults('loginResults', `❌ Login test failed: ${error.message}`, 'error');
+            }
+
+            setTimeout(() => {
+                loginBtn.disabled = false;
+                if (loginBtn.textContent.includes('⏳')) {
+                    loginBtn.textContent = '🔐 TEST LOGIN NOW';
+                }
+            }, 3000);
+        }
+
+        function checkDifferentURL() {
+            updateResults('alternativeResults', '🔍 Trying alternative URLs...', 'info');
+            
+            const alternatives = [
+                'https://cmrp-opps-backend.onrender.com',
+                'https://cmrp-opps-management.onrender.com',
+                'https://cmrp-backend.onrender.com'
+            ];
+
+            alternatives.forEach(async (url, index) => {
+                try {
+                    const response = await makeRequestWithTimeout(url + '/api/health', {}, 30000);
+                    if (response.ok || response.status === 401) {
+                        updateResults('alternativeResults', `✅ Found working URL: ${url}`, 'success');
+                    } else {
+                        updateResults('alternativeResults', `❌ ${url}: Status ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    updateResults('alternativeResults', `❌ ${url}: ${error.message}`, 'error');
+                }
+            });
+        }
+
+        function manualWakeInstructions() {
+            updateResults('alternativeResults', `
+                <strong>📋 Manual Wake-up Steps:</strong><br>
+                1. Go to <a href="https://dashboard.render.com" target="_blank">Render Dashboard</a><br>
+                2. Find your "cmrp-opps-backend" service<br>
+                3. Click on it to open the service details<br>
+                4. Look for "Logs" tab and check recent activity<br>
+                5. If service is sleeping, any incoming request will wake it up<br>
+                6. Wait 2-3 minutes for cold start to complete<br>
+                <br>
+                <strong>🔗 For Neon Database:</strong><br>
+                1. Go to <a href="https://console.neon.tech" target="_blank">Neon Console</a><br>
+                2. Select your project<br>
+                3. Go to SQL Editor<br>
+                4. Run any simple query like: SELECT 1;<br>
+                5. This will wake up the database immediately
+            `, 'info');
+        }
+
+        function checkRenderDashboard() {
+            updateResults('alternativeResults', `
+                <strong>🖥️ Check Render Dashboard:</strong><br>
+                1. Visit: <a href="https://dashboard.render.com/web/srv-ctr9k5l6l47c73epoi60" target="_blank">Your Render Service</a><br>
+                2. Check the "Events" tab for recent deployments<br>
+                3. Check the "Logs" tab for any error messages<br>
+                4. Verify the service status (should show "Live")<br>
+                5. If status shows "Build failed" or "Deploy failed", you may need to redeploy
+            `, 'warning');
+        }
+
+        // Auto-start after page loads
+        window.addEventListener('load', () => {
+            log('🚨 Emergency wake-up tool loaded', 'info');
+            log('💡 Click "FORCE WAKE UP" and be patient - cold starts take time!', 'warning');
+        });
+    </script>
+</body>
+</html>

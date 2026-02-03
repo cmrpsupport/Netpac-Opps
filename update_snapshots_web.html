@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Snapshots - Quick Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .pre-check {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Snapshot Data Fix</h1>
+        
+        <div class="info">
+            <strong>What this will do:</strong><br>
+            • Update weekly snapshot: OP100 from ₱91.6M to ₱59.2M (38 count)<br>
+            • Update monthly snapshot: OP100 from unknown to ₱56.1M (34 count)<br>
+            • Fix the -26.6M comparison issue in executive dashboard
+        </div>
+
+        <div id="status-area"></div>
+
+        <button id="updateBtn" onclick="updateSnapshots()">
+            🚀 Update Snapshots Now
+        </button>
+
+        <div class="pre-check">
+            <strong>Before clicking:</strong> Make sure you're logged in as an admin in another tab
+        </div>
+    </div>
+
+    <script>
+        async function updateSnapshots() {
+            const statusArea = document.getElementById('status-area');
+            const updateBtn = document.getElementById('updateBtn');
+            
+            updateBtn.disabled = true;
+            updateBtn.textContent = '⏳ Updating...';
+            
+            try {
+                statusArea.innerHTML = '<div class="info">🔄 Starting snapshot updates...</div>';
+                
+                // Update weekly snapshot
+                statusArea.innerHTML += '<div class="info">📅 Updating weekly snapshot...</div>';
+                
+                const weeklyUpdate = await fetch('/api/snapshots', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        snapshot_type: 'weekly',
+                        total_opportunities: 428,
+                        submitted_count: 270,
+                        submitted_amount: 988982107.40,
+                        op100_count: 38,
+                        op100_amount: 59237774.52,
+                        op90_count: 27,
+                        op90_amount: 48294418.13,
+                        op60_count: 41,
+                        op60_amount: 166184874.70,
+                        op30_count: 120,
+                        op30_amount: 661162427.75,
+                        lost_count: 31,
+                        lost_amount: 59020750.46,
+                        inactive_count: 8,
+                        ongoing_count: 19,
+                        pending_count: 29,
+                        declined_count: 109,
+                        revised_count: 104
+                    })
+                });
+
+                if (!weeklyUpdate.ok) {
+                    throw new Error(`Weekly update failed: ${weeklyUpdate.status}`);
+                }
+
+                statusArea.innerHTML += '<div class="success">✅ Weekly snapshot updated successfully</div>';
+
+                // Update monthly snapshot
+                statusArea.innerHTML += '<div class="info">📅 Updating monthly snapshot...</div>';
+                
+                const monthlyUpdate = await fetch('/api/snapshots', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        snapshot_type: 'monthly',
+                        total_opportunities: 409,
+                        submitted_count: 271,
+                        submitted_amount: 939235994.10,
+                        op100_count: 34,
+                        op100_amount: 56135271.31,
+                        op90_count: 29,
+                        op90_amount: 43222843.87,
+                        op60_count: 41,
+                        op60_amount: 188367129.90,
+                        op30_count: 108,
+                        op30_amount: 620682214.65,
+                        lost_count: 31,
+                        lost_amount: 52993964.75,
+                        inactive_count: 7,
+                        ongoing_count: 22,
+                        pending_count: 27,
+                        declined_count: 102,
+                        revised_count: 99
+                    })
+                });
+
+                if (!monthlyUpdate.ok) {
+                    throw new Error(`Monthly update failed: ${monthlyUpdate.status}`);
+                }
+
+                statusArea.innerHTML += '<div class="success">✅ Monthly snapshot updated successfully</div>';
+                statusArea.innerHTML += '<div class="success">🎉 All snapshots updated! Refresh your executive dashboard to see the corrected OP100 deltas.</div>';
+                
+                updateBtn.textContent = '✅ Updates Complete';
+                
+            } catch (error) {
+                console.error('Update failed:', error);
+                statusArea.innerHTML += `<div class="error">❌ Update failed: ${error.message}</div>`;
+                statusArea.innerHTML += '<div class="info">💡 Try refreshing the page and make sure you\'re logged in as an admin</div>';
+                
+                updateBtn.disabled = false;
+                updateBtn.textContent = '🚀 Update Snapshots Now';
+            }
+        }
+
+        // Check if user is logged in
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('status-area').innerHTML = 
+                    '<div class="error">❌ No authentication token found. Please log in first.</div>';
+            }
+        };
+    </script>
+</body>
+</html> 

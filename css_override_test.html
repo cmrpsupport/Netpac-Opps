@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Override Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Test ultra high specificity override */
+        html body label.text-sm.font-medium.mr-1 {
+            color: red !important;
+            background: yellow !important;
+            padding: 4px !important;
+        }
+        .dark html body label.text-sm.font-medium.mr-1 {
+            color: lime !important;
+            background: purple !important;
+        }
+        /* Test if these show up */
+        .test-label {
+            border: 2px solid blue !important;
+            padding: 8px !important;
+            margin: 4px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-6">
+        <h1>CSS Override Test</h1>
+        
+        <!-- Test the theme toggle -->
+        <button onclick="document.body.classList.toggle('dark')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
+            Toggle Dark Mode
+        </button>
+        
+        <!-- Test labels with original classes -->
+        <div class="mb-4">
+            <h2>Original Labels (should be styled by our CSS)</h2>
+            <label for="test1" class="text-sm font-medium mr-1">Solutions:</label>
+            <select id="test1" class="ml-2 p-1 border">
+                <option>All</option>
+                <option>Test</option>
+            </select>
+            <br><br>
+            <label for="test2" class="text-sm font-medium mr-1">Account Mgr:</label>
+            <select id="test2" class="ml-2 p-1 border">
+                <option>All</option>
+                <option>Test</option>
+            </select>
+        </div>
+        
+        <!-- Test labels with additional class -->
+        <div class="mb-4">
+            <h2>Labels with Test Class</h2>
+            <label for="test3" class="text-sm font-medium mr-1 test-label">Solutions:</label>
+            <select id="test3" class="ml-2 p-1 border">
+                <option>All</option>
+                <option>Test</option>
+            </select>
+        </div>
+        
+        <!-- Test with inline styles -->
+        <div class="mb-4">
+            <h2>Labels with Inline Styles</h2>
+            <label for="test4" class="text-sm font-medium mr-1" style="color: orange !important; font-weight: bold !important;">Solutions:</label>
+            <select id="test4" class="ml-2 p-1 border">
+                <option>All</option>
+                <option>Test</option>
+            </select>
+        </div>
+        
+        <div class="mt-8">
+            <h2>Instructions:</h2>
+            <ol class="list-decimal ml-6">
+                <li>Check if the first set of labels show red/yellow (light) or lime/purple (dark)</li>
+                <li>Check if the second set has blue borders</li>
+                <li>Check if the third set shows orange text</li>
+                <li>Toggle dark mode and see if colors change</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // Log computed styles
+        window.addEventListener('load', () => {
+            const labels = document.querySelectorAll('label.text-sm.font-medium.mr-1');
+            console.log('Found labels:', labels.length);
+            labels.forEach((label, i) => {
+                const style = window.getComputedStyle(label);
+                console.log(`Label ${i + 1}: color = ${style.color}, background = ${style.backgroundColor}`);
+            });
+        });
+    </script>
+</body>
+</html>

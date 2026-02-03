@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Dashboard Snapshots</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .metric-group {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+        }
+        .metric-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .metric-value {
+            color: #007bff;
+            font-weight: bold;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .info {
+            background: #17a2b8;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .current-data {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Update Dashboard Snapshots</h1>
+        
+        <div class="info">
+            <strong>Purpose:</strong> This tool updates the weekly and monthly dashboard snapshots with the new metrics from the screenshot:
+            <ul>
+                <li>Total Opportunities: <strong>428</strong></li>
+                <li>Submitted: <strong>270</strong></li>
+                <li>OP100: <strong>38</strong></li>
+            </ul>
+        </div>
+
+        <div class="metric-group">
+            <h3>📈 New Snapshot Data</h3>
+            <div class="metric-row">
+                <span class="metric-label">Total Opportunities:</span>
+                <span class="metric-value">428</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Submitted Count:</span>
+                <span class="metric-value">270</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">OP100 Count:</span>
+                <span class="metric-value">38</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Submitted Amount:</span>
+                <span class="metric-value">₱150,000,000</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">OP100 Amount:</span>
+                <span class="metric-value">₱25,000,000</span>
+            </div>
+        </div>
+
+        <div class="current-data">
+            <h3>💾 Current Stored Snapshots</h3>
+            <div id="currentSnapshots">Loading...</div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="updateWeeklySnapshot()">📅 Update Weekly Snapshot</button>
+            <button onclick="updateMonthlySnapshot()">📆 Update Monthly Snapshot</button>
+            <button onclick="updateBothSnapshots()">🔄 Update Both Snapshots</button>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="viewCurrentSnapshots()">👁️ View Current Snapshots</button>
+            <button onclick="clearSnapshots()">🗑️ Clear All Snapshots</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // New snapshot data based on the screenshot
+        const newSnapshotData = {
+            totalOpportunities: 428,
+            submittedCount: 270,
+            submittedAmount: 150000000, // ₱150M estimated
+            op100Count: 38,
+            op100Amount: 25000000, // ₱25M estimated  
+            op90Count: 45, // Estimated
+            op90Amount: 20000000, // ₱20M estimated
+            op60Count: 120, // Estimated
+            op60Amount: 80000000, // ₱80M estimated
+            op30Count: 150, // Estimated
+            op30Amount: 70000000, // ₱70M estimated
+            lostCount: 25, // Estimated
+            lostAmount: 5000000, // ₱5M estimated
+            inactiveCount: 15, // Estimated
+            ongoingCount: 300, // Estimated
+            pendingCount: 50, // Estimated
+            declinedCount: 20, // Estimated
+            revisedCount: 10, // Estimated
+            savedDate: new Date().toISOString()
+        };
+
+        function updateWeeklySnapshot() {
+            try {
+                localStorage.setItem('executiveDashboardLastWeek', JSON.stringify(newSnapshotData));
+                showResult('✅ Weekly snapshot updated successfully!', 'success');
+                viewCurrentSnapshots();
+            } catch (error) {
+                showResult('❌ Error updating weekly snapshot: ' + error.message, 'error');
+            }
+        }
+
+        function updateMonthlySnapshot() {
+            try {
+                localStorage.setItem('executiveDashboardLastMonth', JSON.stringify(newSnapshotData));
+                showResult('✅ Monthly snapshot updated successfully!', 'success');
+                viewCurrentSnapshots();
+            } catch (error) {
+                showResult('❌ Error updating monthly snapshot: ' + error.message, 'error');
+            }
+        }
+
+        function updateBothSnapshots() {
+            try {
+                localStorage.setItem('executiveDashboardLastWeek', JSON.stringify(newSnapshotData));
+                localStorage.setItem('executiveDashboardLastMonth', JSON.stringify(newSnapshotData));
+                showResult('✅ Both weekly and monthly snapshots updated successfully!', 'success');
+                viewCurrentSnapshots();
+            } catch (error) {
+                showResult('❌ Error updating snapshots: ' + error.message, 'error');
+            }
+        }
+
+        function viewCurrentSnapshots() {
+            const weeklyData = localStorage.getItem('executiveDashboardLastWeek');
+            const monthlyData = localStorage.getItem('executiveDashboardLastMonth');
+            
+            let html = '<h4>📅 Weekly Snapshot:</h4>';
+            if (weeklyData) {
+                try {
+                    const weekly = JSON.parse(weeklyData);
+                    html += `
+                        <div style="margin-left: 20px;">
+                            <div>Total Opportunities: <strong>${weekly.totalOpportunities}</strong></div>
+                            <div>Submitted Count: <strong>${weekly.submittedCount}</strong></div>
+                            <div>OP100 Count: <strong>${weekly.op100Count}</strong></div>
+                            <div>Saved Date: <strong>${new Date(weekly.savedDate).toLocaleString()}</strong></div>
+                        </div>
+                    `;
+                } catch (e) {
+                    html += '<div style="color: red;">Error parsing weekly data</div>';
+                }
+            } else {
+                html += '<div style="color: #666;">No weekly snapshot found</div>';
+            }
+
+            html += '<h4>📆 Monthly Snapshot:</h4>';
+            if (monthlyData) {
+                try {
+                    const monthly = JSON.parse(monthlyData);
+                    html += `
+                        <div style="margin-left: 20px;">
+                            <div>Total Opportunities: <strong>${monthly.totalOpportunities}</strong></div>
+                            <div>Submitted Count: <strong>${monthly.submittedCount}</strong></div>
+                            <div>OP100 Count: <strong>${monthly.op100Count}</strong></div>
+                            <div>Saved Date: <strong>${new Date(monthly.savedDate).toLocaleString()}</strong></div>
+                        </div>
+                    `;
+                } catch (e) {
+                    html += '<div style="color: red;">Error parsing monthly data</div>';
+                }
+            } else {
+                html += '<div style="color: #666;">No monthly snapshot found</div>';
+            }
+
+            document.getElementById('currentSnapshots').innerHTML = html;
+        }
+
+        function clearSnapshots() {
+            if (confirm('Are you sure you want to clear all snapshots? This cannot be undone.')) {
+                localStorage.removeItem('executiveDashboardLastWeek');
+                localStorage.removeItem('executiveDashboardLastMonth');
+                showResult('🗑️ All snapshots cleared successfully!', 'success');
+                viewCurrentSnapshots();
+            }
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = type === 'success' ? 'success' : 'error';
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load current snapshots on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            viewCurrentSnapshots();
+        });
+    </script>
+</body>
+</html>

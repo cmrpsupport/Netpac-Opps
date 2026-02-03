@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Filter Fix Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* NUCLEAR OPTION - Style everything with absolute priority */
+        * {
+            transition: color 0.2s ease !important;
+        }
+        
+        /* ULTIMATE FORCE OVERRIDE */
+        .filter-label-force {
+            color: #374151 !important;
+        }
+        
+        .dark .filter-label-force {
+            color: #f3f4f6 !important;
+        }
+        
+        .filter-select-force {
+            background-color: #ffffff !important;
+            color: #374151 !important;
+            border: 1px solid #d1d5db !important;
+        }
+        
+        .dark .filter-select-force {
+            background-color: #374151 !important;
+            color: #f3f4f6 !important;
+            border: 1px solid #6b7280 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+    <div class="container mx-auto p-8">
+        <div class="mb-4">
+            <button onclick="toggleTheme()" class="bg-blue-500 text-white px-4 py-2 rounded">Toggle Theme</button>
+            <button onclick="forceStylesJavaScript()" class="bg-red-500 text-white px-4 py-2 rounded ml-2">Force Styles (JS)</button>
+            <button onclick="forceStylesClasses()" class="bg-green-500 text-white px-4 py-2 rounded ml-2">Force Classes</button>
+        </div>
+        
+        <!-- Test filter structure exactly like your dashboards -->
+        <div class="flex flex-wrap gap-4 items-center mb-6">
+            <div class="flex items-center gap-2">
+                <label id="solutionsLabel" class="text-sm font-medium">Solutions:</label>
+                <select id="solutionsSelect" class="filter-dropdown">
+                    <option value="">All Solutions</option>
+                    <option value="automation">Automation</option>
+                    <option value="digitalization">Digitalization</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label id="accountMgrLabel" class="text-sm font-medium">Account Mgr:</label>
+                <select id="accountMgrSelect" class="filter-dropdown">
+                    <option value="">All Account Managers</option>
+                    <option value="john">John Smith</option>
+                    <option value="jane">Jane Doe</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label id="picLabel" class="text-sm font-medium">PIC:</label>
+                <select id="picSelect" class="filter-dropdown">
+                    <option value="">All PICs</option>
+                    <option value="alice">Alice Brown</option>
+                    <option value="bob">Bob Wilson</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="mt-8 p-4 bg-white dark:bg-gray-800 rounded">
+            <h3>Current Status:</h3>
+            <div id="status"></div>
+            <button onclick="analyzeStyles()" class="bg-purple-500 text-white px-4 py-2 rounded mt-2">Analyze Styles</button>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            updateStatus();
+        }
+        
+        function updateStatus() {
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('status').innerHTML = `
+                <p>Current theme: <strong>${isDark ? 'Dark' : 'Light'}</strong></p>
+                <p>Body classes: <code>${document.body.className}</code></p>
+            `;
+        }
+        
+        function forceStylesJavaScript() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const selects = document.querySelectorAll('select.filter-dropdown');
+            const isDark = document.body.classList.contains('dark');
+            
+            labels.forEach(label => {
+                const color = isDark ? '#f3f4f6' : '#374151';
+                label.style.setProperty('color', color, 'important');
+                console.log(`Set ${label.textContent} to ${color}`);
+            });
+            
+            selects.forEach(select => {
+                if (isDark) {
+                    select.style.setProperty('background-color', '#374151', 'important');
+                    select.style.setProperty('color', '#f3f4f6', 'important');
+                    select.style.setProperty('border-color', '#6b7280', 'important');
+                } else {
+                    select.style.setProperty('background-color', '#ffffff', 'important');
+                    select.style.setProperty('color', '#374151', 'important');
+                    select.style.setProperty('border-color', '#d1d5db', 'important');
+                }
+            });
+            
+            alert('JavaScript styles applied!');
+        }
+        
+        function forceStylesClasses() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const selects = document.querySelectorAll('select.filter-dropdown');
+            
+            labels.forEach(label => {
+                label.classList.add('filter-label-force');
+            });
+            
+            selects.forEach(select => {
+                select.classList.add('filter-select-force');
+            });
+            
+            alert('Force classes applied!');
+        }
+        
+        function analyzeStyles() {
+            const labels = document.querySelectorAll('label.text-sm.font-medium');
+            const selects = document.querySelectorAll('select.filter-dropdown');
+            
+            let analysis = 'LABEL ANALYSIS:\\n';
+            labels.forEach((label, i) => {
+                const computed = window.getComputedStyle(label);
+                analysis += `Label ${i + 1} ("${label.textContent}"): color=${computed.color}\\n`;
+            });
+            
+            analysis += '\\nSELECT ANALYSIS:\\n';
+            selects.forEach((select, i) => {
+                const computed = window.getComputedStyle(select);
+                analysis += `Select ${i + 1}: bg=${computed.backgroundColor}, color=${computed.color}\\n`;
+            });
+            
+            alert(analysis);
+        }
+        
+        // Initialize
+        updateStatus();
+        
+        // Monitor theme changes
+        const observer = new MutationObserver(() => {
+            updateStatus();
+        });
+        
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    </script>
+</body>
+</html>

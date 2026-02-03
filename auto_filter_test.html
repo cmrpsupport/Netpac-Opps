@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Filter Test</title>
+</head>
+<body>
+    <h1>Auto-Filter Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        // Mock authentication token for testing
+        const mockToken = btoa(JSON.stringify({
+            "header": {},
+            "payload": {
+                "name": "John Smith",  // This should match against Account Manager or PIC
+                "username": "jsmith",
+                "accountType": "User"
+            },
+            "signature": "mock-signature"
+        }));
+        
+        // Set mock token for testing
+        localStorage.setItem('authToken', 'mock-header.' + mockToken + '.mock-signature');
+        
+        // Load the auto-filtering functions from forecastr_dashboard.js
+        fetch('forecastr_dashboard.js')
+            .then(response => response.text())
+            .then(scriptContent => {
+                // Extract just the auto-filtering functions
+                const autoFilterStart = scriptContent.indexOf('// --- Auto-filtering functions ---');
+                const nextDOMContentLoadedIndex = scriptContent.indexOf('document.addEventListener(\'DOMContentLoaded\', updateUserMgmtNavVisibility);');
+                
+                if (autoFilterStart !== -1 && nextDOMContentLoadedIndex !== -1) {
+                    const autoFilterCode = scriptContent.substring(autoFilterStart, nextDOMContentLoadedIndex);
+                    eval(autoFilterCode);
+                    
+                    // Test data
+                    const testData = [
+                        { account_mgr: 'John Smith', pic: 'Jane Doe', project_name: 'Project A' },
+                        { account_mgr: 'Bob Johnson', pic: 'John Smith', project_name: 'Project B' },
+                        { account_mgr: 'Alice Brown', pic: 'Charlie Wilson', project_name: 'Project C' }
+                    ];
+                    
+                    console.log('Testing auto-filtering with data:', testData);
+                    
+                    // Test the functions
+                    const userName = getCurrentUserName();
+                    console.log('Current user name:', userName);
+                    
+                    if (userName) {
+                        const accountManagers = [...new Set(testData.map(item => item.account_mgr).filter(Boolean))];
+                        const pics = [...new Set(testData.map(item => item.pic).filter(Boolean))];
+                        
+                        console.log('Available Account Managers:', accountManagers);
+                        console.log('Available PICs:', pics);
+                        
+                        const amMatch = mapUserNameToFilterValue(userName, accountManagers);
+                        const picMatch = mapUserNameToFilterValue(userName, pics);
+                        
+                        console.log('Account Manager match:', amMatch);
+                        console.log('PIC match:', picMatch);
+                        
+                        // Test the main function
+                        applyAutoFiltersForUser(testData);
+                        
+                        document.getElementById('result').innerHTML = `
+                            <h2>Test Results:</h2>
+                            <p><strong>User Name:</strong> ${userName}</p>
+                            <p><strong>Account Manager Match:</strong> ${amMatch || 'None'}</p>
+                            <p><strong>PIC Match:</strong> ${picMatch || 'None'}</p>
+                            <p><strong>Test Status:</strong> ${(amMatch || picMatch) ? '✅ Auto-filtering would work' : '❌ No matches found'}</p>
+                        `;
+                    } else {
+                        document.getElementById('result').innerHTML = '<p>❌ Could not extract user name from token</p>';
+                    }
+                } else {
+                    document.getElementById('result').innerHTML = '<p>❌ Could not find auto-filtering functions in script</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading script:', error);
+                document.getElementById('result').innerHTML = '<p>❌ Error loading script</p>';
+            });
+    </script>
+</body>
+</html>

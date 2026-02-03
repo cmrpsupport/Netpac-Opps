@@ -1,0 +1,1234 @@
+/* Filter label fixes for dark mode */
+html.dark .filter-label,
+.dark .filter-label,
+html.dark label.filter-label,
+.dark label.filter-label,
+html.dark body .filter-label,
+.dark body .filter-label {
+    color: #f3f4f6 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* Light mode */
+.filter-label,
+label.filter-label,
+body .filter-label {
+    color: #374151 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* Border thickness fixes */
+#notStartedColumn .kanban-column-header,
+#ongoingColumn .kanban-column-header,
+#forApprovalColumn .kanban-column-header,
+#submittedColumn .kanban-column-header {
+    border-top-width: 2px !important;
+}
+
+.today-column {
+    border-width: 1px !important;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.2) !important;
+}
+
+.schedule-task.proposal-task {
+    border-left-width: 2px !important;
+}
+
+.schedule-task.general-task {
+    border-left-width: 2px !important;
+}
+
+.drag-over {
+    border-width: 1px !important;
+}
+
+.weekend-day {
+    border-left-width: 2px !important;
+}
+
+/* Proposal Workbench Theme Consistency Fixes */
+
+/* BODY BACKGROUND - Match main app's blue background */
+body {
+    background-color: var(--bg-body) !important; /* #00529B in light mode */
+}
+
+/* HEADER - Match main app's navy blue header exactly */
+header.bg-white.dark\:bg-gray-800,
+header {
+    background-color: var(--bg-header) !important; /* #0C2135 */
+    color: var(--text-header) !important;
+    border-bottom: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    height: 56px !important; /* Reduced from 64px */
+    padding: 0 !important;
+}
+
+/* Header Container - Match homepage header container */
+header .main-container {
+    width: 100% !important; /* Utilize full width on larger screens */
+    margin: 0 auto !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 1rem !important;
+}
+
+/* Header Logo Size - Match homepage logo size */
+header img#cmrpLogo {
+    height: 40px !important; /* Match homepage logo height */
+    margin-right: 1rem !important;
+}
+
+/* Header Text Color - Always white text on dark header */
+header h1.text-xl,
+header h1.text-xl.font-semibold.text-gray-900.dark\:text-white {
+    color: white !important;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+}
+
+/* Header Navigation Links - Match homepage nav links */
+header a, header button#logoutButton {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.2s ease !important;
+}
+
+header a:hover, header button#logoutButton:hover {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Theme Toggle Button - Match homepage theme toggle */
+#themeToggle {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0.5rem !important;
+    border-radius: 0.375rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#themeToggle:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+/* MAIN CONTAINER - Match homepage container dimensions exactly */
+main.main-container {
+    width: 100% !important; /* Utilize full width on larger screens */
+    margin: 1rem auto !important; /* Reduced from 2rem */
+    background-color: var(--bg-container) !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    padding: 1rem !important; /* Reduced from 1.5rem */
+}
+
+/* PAGE TITLE - Match homepage title style */
+h2.text-2xl.font-bold.text-gray-900.dark\:text-white {
+    color: var(--text-title) !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 0.75rem !important; /* Reduced margin */
+    font-weight: 700 !important;
+}
+
+/* KANBAN BOARD - Match homepage container style */
+.kanban-board {
+    margin-top: 1rem !important;
+}
+
+/* Kanban Column Headers - Thinner with solid colors (no gradients) */
+.kanban-column-header {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    border-bottom: 1px solid var(--border-container) !important;
+    background-color: var(--bg-header) !important;
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+/* Kanban Column Bodies - Match homepage container style */
+.kanban-column {
+    background-color: var(--bg-container) !important;
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.375rem !important;
+    min-height: 600px !important; /* Increased for more card space */
+    height: auto !important;
+}
+
+/* Kanban Column Body Text - Match homepage text colors */
+.kanban-column-body {
+    color: var(--text-row) !important;
+    padding: 0.75rem !important; /* Slightly reduced padding */
+    min-height: 550px !important; /* Ensure minimum working height */
+    max-height: none !important; /* Remove height restrictions */
+}
+
+/* PROPOSAL CARDS - Match homepage card style */
+.proposal-card {
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    margin-bottom: 0.5rem !important; /* Reduced spacing between cards */
+    padding: 0.75rem !important; /* Optimized padding */
+}
+
+/* SCHEDULE SECTION - Match homepage container style */
+.mt-8 {
+    margin-top: 1.5rem !important;
+    background-color: var(--bg-container) !important;
+    border-radius: 0.5rem !important;
+    padding: 1rem !important; /* Reduced padding */
+    min-height: 600px !important; /* Ensure substantial working space */
+    border: 1px solid var(--border-container) !important;
+}
+
+/* Schedule Board Headers - Thinner with solid colors */
+#scheduleHeaderRow .day-header {
+    background-color: var(--bg-header) !important;
+    color: white !important;
+    padding: 0.375rem !important; /* Consistent padding */
+    border-bottom: 1px solid var(--border-container) !important;
+    font-size: 0.75rem !important; /* Slightly smaller text */
+    font-weight: 500 !important;
+    min-height: 50px !important; /* Consistent height */
+    max-height: 50px !important; /* Prevent expansion */
+}
+
+/* Schedule Board Day Columns - Match proposal board styling */
+#scheduleBodyRow .day-column {
+    background-color: var(--bg-container) !important; /* Match kanban columns */
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.375rem !important; /* Match kanban column border radius */
+    min-height: 450px !important; /* Much taller day columns */
+    height: auto !important;
+    overflow-y: auto !important; /* Allow scrolling within day columns if needed */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* Match kanban column shadow */
+}
+
+/* Schedule day cells - ensure they match proposal board styling */
+.day-column {
+    background-color: var(--bg-container) !important; /* Match kanban columns */
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.375rem !important; /* Match kanban columns */
+    min-height: 450px !important; /* Much taller day columns */
+    height: auto !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important; /* Subtle shadow like kanban */
+    padding: 0.75rem !important; /* Match kanban column body padding */
+}
+
+/* Schedule Task Cards - Thinner borders */
+.schedule-task {
+    border-width: 1px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    margin-bottom: 0.25rem !important; /* Reduced spacing */
+    padding: 0.5rem !important; /* Optimized padding */
+}
+
+/* Today Indicator - Blue instead of purple */
+.today-indicator {
+    background-color: #1a73e8 !important; /* Google blue */
+    color: white !important;
+    font-size: 0.7rem !important;
+    padding: 0.1rem 0.3rem !important;
+    border-radius: 0.25rem !important;
+}
+
+/* FILTERS - Match homepage styling */
+/* Filter Labels - Match homepage styling */
+.filter-label,
+label.filter-label,
+label.text-sm.font-medium.text-gray-700.dark\:text-gray-300 {
+    color: var(--text-label) !important;
+    font-size: 0.875rem !important;
+}
+
+/* Filter Dropdowns - Match homepage styling */
+.filter-dropdown,
+select.filter-dropdown,
+select.mt-1.block.w-full.pl-3.pr-10.py-2.text-base.border-gray-300 {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+    border-radius: 0.375rem !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.875rem !important;
+}
+
+/* BUTTONS - Match homepage button styling */
+/* Add Task Button */
+button.inline-flex.items-center.px-4.py-2.border.border-transparent.text-sm.font-medium.rounded-md.shadow-sm.text-white.bg-indigo-600.hover\:bg-indigo-700,
+#addTaskBtn {
+    background-color: var(--bg-filter-button) !important; /* #1a73e8 Google blue */
+    color: var(--text-filter-button) !important;
+    border-color: var(--border-filter-button) !important;
+    border-radius: 0.375rem !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Navigation Buttons */
+#prev-week-btn, #next-week-btn, #current-week-btn {
+    color: var(--text-link) !important; /* #1a73e8 */
+}
+
+/* DARK MODE SPECIFIC FIXES */
+html.dark body {
+    background-color: var(--bg-body) !important; /* #1e1e1e in dark mode */
+}
+
+html.dark .kanban-column {
+    background-color: var(--bg-container) !important; /* #2d2d2d */
+    border-color: var(--border-container) !important; /* #404040 */
+}
+
+html.dark .schedule-task {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-container) !important;
+}
+
+html.dark #scheduleBodyRow .day-column {
+    background-color: var(--bg-container) !important;
+}
+
+html.dark .proposal-card {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-container) !important;
+}
+
+html.dark .mt-8 {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-container) !important;
+}
+
+/* LIGHT MODE SPECIFIC FIXES */
+html:not(.dark) .kanban-column {
+    background-color: white !important;
+}
+
+html:not(.dark) .schedule-task {
+    background-color: white !important;
+}
+
+html:not(.dark) #scheduleBodyRow .day-column {
+    background-color: white !important;
+}
+
+html:not(.dark) .proposal-card {
+    background-color: white !important;
+}
+
+html:not(.dark) main.main-container {
+    background-color: white !important;
+}
+
+html:not(.dark) .mt-8 {
+    background-color: white !important;
+}
+
+/* Fix card background in light mode */
+html:not(.dark) .kanban-column-body .proposal-card {
+    background-color: white !important;
+}
+
+/* Fix card background in dark mode */
+html.dark .kanban-column-body .proposal-card {
+    background-color: var(--bg-container) !important;
+}
+
+/* LAYOUT FIXES */
+/* Ensure proper spacing between sections */
+.mb-6 {
+    margin-bottom: 1rem !important; /* Reduced from 1.5rem */
+}
+
+.mb-8 {
+    margin-bottom: 1.5rem !important; /* Reduced from 2rem */
+}
+
+/* Ensure proper padding in containers */
+.p-3 {
+    padding: 0.75rem !important;
+}
+
+/* Fix modal styling */
+#proposalEditModal .mx-auto.mt-24.p-5.border.w-1\/2.shadow-lg.rounded-md.bg-white.dark\:bg-gray-800,
+#taskModalOverlay .modal-content {
+    background-color: var(--bg-modal) !important;
+    border-color: var(--border-modal) !important;
+}
+
+/* Fix modal buttons */
+#saveProposalChanges,
+#taskForm button[type="submit"] {
+    background-color: var(--bg-modal-save) !important;
+    color: var(--text-modal-save) !important;
+}
+
+#cancelProposalEdit,
+#cancelTaskBtn {
+    background-color: #f1f3f4 !important;
+    color: #202124 !important;
+}
+
+/* Fix modal inputs */
+#proposalEditModal input,
+#proposalEditModal textarea,
+#taskForm input,
+#taskForm textarea,
+#taskForm select {
+    background-color: var(--bg-control) !important;
+    color: var(--text-control) !important;
+    border-color: var(--border-control) !important;
+}
+
+/* Fix modal labels */
+#proposalEditModal label,
+#taskForm label {
+    color: var(--text-label) !important;
+}
+
+/* Fix schedule container */
+.schedule-container {
+    border-radius: 0.375rem !important;
+    background-color: var(--bg-container) !important;
+    min-height: 500px !important; /* Increased working area */
+}
+
+/* Make the schedule board grid look like the homepage */
+.schedule-board {
+    border-collapse: separate !important;
+    border-spacing: 0.125rem !important;
+    gap: 0.125rem !important; /* Even tighter gap */
+    grid-template-rows: 50px 1fr !important; /* Updated header row height to 50px */
+    min-height: 480px !important; /* Ensure minimum schedule height */
+}
+
+/* FONT COLOR FIXES FOR THEME SWITCHING */
+
+/* Fix proposal card title colors */
+html.dark .proposal-card .font-medium {
+    color: var(--text-title) !important; /* white in dark mode */
+}
+
+html:not(.dark) .proposal-card .font-medium {
+    color: var(--text-title) !important; /* dark gray in light mode */
+}
+
+/* Fix proposal card client/company name colors */
+html.dark .proposal-card .text-sm:not(.font-medium) {
+    color: var(--text-label) !important; /* light gray in dark mode */
+}
+
+html:not(.dark) .proposal-card .text-sm:not(.font-medium) {
+    color: var(--text-label) !important; /* medium gray in light mode */
+}
+
+/* Fix proposal card amount/revision colors */
+html.dark .proposal-card .text-right {
+    color: var(--text-row) !important; /* light gray in dark mode */
+}
+
+html:not(.dark) .proposal-card .text-right {
+    color: var(--text-row) !important; /* dark gray in light mode */
+}
+
+/* Fix proposal card comment text colors */
+html.dark .proposal-card .italic {
+    color: var(--text-secondary) !important; /* medium gray in dark mode */
+    opacity: 0.8 !important;
+}
+
+html:not(.dark) .proposal-card .italic {
+    color: var(--text-secondary) !important; /* medium gray in light mode */
+    opacity: 0.8 !important;
+}
+
+/* Fix schedule day name and date colors */
+html.dark .day-header .day-name,
+html.dark .day-header .day-date {
+    color: white !important;
+}
+
+html:not(.dark) .day-header .day-name,
+html:not(.dark) .day-header .day-date {
+    color: white !important;
+}
+
+/* Fix schedule task title colors */
+html.dark .schedule-task .task-title {
+    color: var(--text-title) !important;
+    font-weight: 500 !important;
+}
+
+html:not(.dark) .schedule-task .task-title {
+    color: var(--text-title) !important;
+    font-weight: 500 !important;
+}
+
+/* Fix schedule task description colors */
+html.dark .schedule-task .task-description {
+    color: var(--text-secondary) !important;
+    font-size: 0.875rem !important;
+}
+
+html:not(.dark) .schedule-task .task-description {
+    color: var(--text-secondary) !important;
+    font-size: 0.875rem !important;
+}
+
+/* Fix weekly schedule title */
+html.dark h2.text-2xl {
+    color: var(--text-title) !important;
+}
+
+html:not(.dark) h2.text-2xl {
+    color: var(--text-title) !important;
+}
+
+/* Fix "Include weekends" label color */
+html.dark label[for="weekend-toggle"] {
+    color: var(--text-label) !important;
+}
+
+html:not(.dark) label[for="weekend-toggle"] {
+    color: var(--text-label) !important;
+}
+
+/* Fix "Hide old" label color */
+html.dark label[for="hideOldSubmitted"] {
+    color: var(--text-label) !important;
+}
+
+html:not(.dark) label[for="hideOldSubmitted"] {
+    color: var(--text-label) !important;
+}
+
+/* Fix "Scroll horizontally" instruction text */
+html.dark .text-xs.text-gray-500.dark\:text-gray-400.italic {
+    color: var(--text-secondary) !important;
+}
+
+html:not(.dark) .text-xs.text-gray-500.dark\:text-gray-400.italic {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix kanban column count badge colors */
+html.dark .kanban-column-header span.bg-gray-200.dark\:bg-gray-700 {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+html:not(.dark) .kanban-column-header span.bg-gray-200.dark\:bg-gray-700 {
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+}
+
+/* Fix current week display text */
+html.dark #current-week-display {
+    color: var(--text-body) !important;
+}
+
+html:not(.dark) #current-week-display {
+    color: var(--text-body) !important;
+}
+
+/* Fix Today button color */
+#current-week-btn {
+    color: var(--text-link) !important;
+    font-weight: 500 !important;
+}
+
+/* Fix checkbox colors */
+html.dark input[type="checkbox"] {
+    border-color: var(--border-control) !important;
+    background-color: var(--bg-control) !important;
+}
+
+html:not(.dark) input[type="checkbox"] {
+    border-color: var(--border-control) !important;
+    background-color: white !important;
+}
+
+/* Fix navigation button colors in simple-header */
+.simple-header .nav-square-btn {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.simple-header .nav-square-btn:hover {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.simple-header .nav-square-btn.active {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Fix subtitle in header */
+.simple-header .subtitle {
+    color: white !important;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    margin-left: 0.5rem !important;
+}
+
+/* ADDITIONAL FIXES FOR SPECIFIC ISSUES */
+
+/* Fix filter labels in dark mode - using the most specific selector possible */
+html.dark label[for="clientFilter"],
+html.dark label[for="accountManagerFilter"] {
+    color: #e0e0e0 !important; /* Explicit light color for dark mode */
+}
+
+/* Fix calendar text in light mode */
+html:not(.dark) #current-week-display {
+    color: #374151 !important; /* Explicit dark color for light mode */
+}
+
+/* Fix day names and dates in schedule headers for light mode */
+html:not(.dark) .day-name,
+html:not(.dark) .day-date {
+    color: white !important; /* Always white because they're on dark backgrounds */
+}
+
+/* Ultra-specific selector for filter labels in dark mode */
+html.dark .flex.items-center.gap-2 label.filter-label,
+html.dark .flex.items-center.gap-2 label.text-sm.font-medium.text-gray-700.dark\:text-gray-300 {
+    color: #e0e0e0 !important;
+}
+
+/* Ultra-specific selector for week display text in light mode */
+html:not(.dark) span#current-week-display.text-sm.font-medium.text-gray-700.dark\:text-gray-300 {
+    color: #374151 !important;
+}
+
+/* Additional fix for calendar day text */
+.day-header {
+    color: white !important;
+}
+
+.day-header * {
+    color: white !important;
+}
+
+/* Nuclear option for filter labels */
+html.dark .mb-6 .flex.items-center.space-x-4 .flex.items-center.gap-2 label {
+    color: #e0e0e0 !important;
+}
+
+/* Fix for "Proposal Status Board" heading in light mode */
+html:not(.dark) h2.text-2xl.font-bold.text-gray-900.dark\:text-white,
+html:not(.dark) h2.text-2xl.font-bold {
+    color: #202124 !important; /* Dark text in light mode */
+}
+
+/* Fix for "Proposal Status Board" heading in dark mode */
+html.dark h2.text-2xl.font-bold.text-gray-900.dark\:text-white,
+html.dark h2.text-2xl.font-bold {
+    color: #ffffff !important; /* White text in dark mode */
+}
+
+/* Fix for calendar days in both modes - ensure they're visible */
+.day-header .day-name,
+.day-header .day-date {
+    color: white !important; /* Always white on dark header */
+    font-weight: 500 !important;
+}
+
+/* Fix for calendar days in light mode - using most specific selectors */
+html:not(.dark) #scheduleHeaderRow .day-header .day-name,
+html:not(.dark) #scheduleHeaderRow .day-header .day-date {
+    color: white !important;
+}
+
+/* Fix for calendar days in dark mode - using most specific selectors */
+html.dark #scheduleHeaderRow .day-header .day-name,
+html.dark #scheduleHeaderRow .day-header .day-date {
+    color: white !important;
+}
+
+/* Extra specific fix for column headers in light mode */
+html:not(.dark) .kanban-column-header {
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+/* Extra specific fix for column headers in dark mode */
+html.dark .kanban-column-header {
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+/* DIRECT FIXES FOR SPECIFIC ELEMENTS */
+
+/* Direct fix for "Proposal Status Board" heading in light mode - using exact class from screenshot */
+html:not(.dark) h2.text-xl.font-bold.mb-4.text-gray-900.dark\:text-white,
+html:not(.dark) h2.text-2xl.font-bold.mb-4.text-gray-900.dark\:text-white,
+html:not(.dark) h2.text-xl.font-bold.text-gray-900.dark\:text-white,
+html:not(.dark) h2.text-2xl.font-bold.text-gray-900.dark\:text-white,
+html:not(.dark) h2.text-xl.font-bold,
+html:not(.dark) h2.text-2xl.font-bold {
+    color: #202124 !important; /* Dark text in light mode */
+}
+
+/* Direct fix for the exact element seen in the screenshot */
+html:not(.dark) h2.text-xl.font-bold.mb-4.text-gray-900.dark\:text-white {
+    color: #202124 !important;
+}
+
+/* Direct fix using ID-based selector if available */
+#kanbanBoard h2,
+.mb-8 h2 {
+    color: var(--text-title) !important;
+}
+
+/* Nuclear option - target all h2 elements in light mode */
+html:not(.dark) h2 {
+    color: #202124 !important;
+}
+
+/* Direct fix for the filter labels */
+html:not(.dark) label.filter-label,
+html:not(.dark) label.text-sm.font-medium.text-gray-700.dark\:text-gray-300,
+html:not(.dark) .filter-label {
+    color: #374151 !important; /* Explicit dark color for light mode */
+}
+
+/* Direct fix for calendar week display */
+html:not(.dark) #current-week-display,
+html:not(.dark) span#current-week-display,
+html:not(.dark) span.text-sm.font-medium.text-gray-700.dark\:text-gray-300 {
+    color: #374151 !important; /* Explicit dark color for light mode */
+}
+
+/* Direct fix for all text elements in the schedule header */
+html:not(.dark) .day-header,
+html:not(.dark) .day-header *,
+html:not(.dark) #scheduleHeaderRow *,
+html:not(.dark) .day-name,
+html:not(.dark) .day-date {
+    color: white !important; /* Always white on dark header */
+}
+
+/* Ensure all text in kanban column headers is white */
+.kanban-column-header,
+.kanban-column-header *,
+#kanbanBoard .kanban-column-header,
+#kanbanBoard .kanban-column-header * {
+    color: white !important;
+}
+
+/* SUPER SPECIFIC FIXES FOR SCHEDULE DAY NAMES AND DATES */
+
+/* Fix for day-name class - direct match from screenshot */
+.day-name,
+div.day-name,
+div[class="day-name"],
+div[class*="day-name"],
+.schedule-header .day-name,
+#scheduleHeaderRow .day-name,
+.schedule-header-relative .day-name,
+html:not(.dark) .day-name,
+html:not(.dark) div.day-name,
+html.dark .day-name,
+html.dark div.day-name {
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+/* Fix for day-date class - direct match from screenshot */
+.day-date,
+div.day-date,
+div[class="day-date"],
+div[class*="day-date"],
+.text-xs.font-normal,
+.schedule-header .day-date,
+#scheduleHeaderRow .day-date,
+.schedule-header-relative .day-date,
+html:not(.dark) .day-date,
+html:not(.dark) div.day-date,
+html.dark .day-date,
+html.dark div.day-date {
+    color: white !important;
+    font-weight: normal !important;
+}
+
+/* Direct match for the exact classes in screenshot */
+div[class="day-name"],
+div.day-name {
+    color: white !important;
+}
+
+div[class="day-date text-xs font-normal"],
+div.day-date.text-xs.font-normal {
+    color: white !important;
+}
+
+/* Target the specific elements in the schedule header row */
+#day-header-0 .day-name,
+#day-header-1 .day-name,
+#day-header-2 .day-name,
+#day-header-3 .day-name,
+#day-header-4 .day-name,
+#day-header-5 .day-name,
+#day-header-6 .day-name {
+    color: white !important;
+}
+
+#day-header-0 .day-date,
+#day-header-1 .day-date,
+#day-header-2 .day-date,
+#day-header-3 .day-date,
+#day-header-4 .day-date,
+#day-header-5 .day-date,
+#day-header-6 .day-date {
+    color: white !important;
+}
+
+/* Target by the exact structure from screenshot */
+.schedule-header.relative.p-2.rounded-t-lg.text-center.font-semibold.text-sm.weekend-day .day-name,
+.schedule-header.relative.p-2.rounded-t-lg.text-center.font-semibold.text-sm .day-name {
+    color: white !important;
+}
+
+.schedule-header.relative.p-2.rounded-t-lg.text-center.font-semibold.text-sm.weekend-day .day-date,
+.schedule-header.relative.p-2.rounded-t-lg.text-center.font-semibold.text-sm .day-date {
+    color: white !important;
+}
+
+/* Target by ID from screenshot */
+#day-header-0,
+#day-header-1,
+#day-header-2,
+#day-header-3,
+#day-header-4,
+#day-header-5,
+#day-header-6 {
+    color: white !important;
+}
+
+#day-header-0 *,
+#day-header-1 *,
+#day-header-2 *,
+#day-header-3 *,
+#day-header-4 *,
+#day-header-5 *,
+#day-header-6 * {
+    color: white !important;
+}
+
+/* Current week display fix */
+#current-week-display,
+.text-sm.font-medium.mr-2 {
+    color: #374151 !important; /* Dark gray in light mode */
+}
+
+html.dark #current-week-display,
+html.dark .text-sm.font-medium.mr-2 {
+    color: #e0e0e0 !important; /* Light gray in dark mode */
+}
+
+/* Weekly Schedule heading fix */
+h2.mb-4,
+.mt-8 h2 {
+    color: var(--text-title) !important;
+}
+
+/* The most nuclear option - force all text in schedule headers to be white */
+.schedule-header,
+.schedule-header *,
+[id^="day-header-"],
+[id^="day-header-"] * {
+    color: white !important;
+}
+
+/* WEEKEND TOGGLE FIX - Hide weekend days when weekends are disabled */
+.schedule-board.hide-weekends .weekend-day {
+    display: none !important;
+}
+
+/* Ensure proper grid layout when weekends are hidden */
+.schedule-board.hide-weekends {
+    grid-template-columns: repeat(5, 1fr) !important;
+}
+
+/* Alternative approach - specifically hide Sunday (day-header-0/day-cell-0) and Saturday (day-header-6/day-cell-6) */
+.schedule-board.hide-weekends #day-header-0,
+.schedule-board.hide-weekends #day-cell-0,
+.schedule-board.hide-weekends #day-header-6,
+.schedule-board.hide-weekends #day-cell-6 {
+    display: none !important;
+}
+
+/* NUCLEAR OPTION - Multiple highly specific selectors for weekend hiding */
+#schedule.hide-weekends .weekend-day,
+#schedule.hide-weekends #day-header-0,
+#schedule.hide-weekends #day-header-6,
+#schedule.hide-weekends #day-cell-0,
+#schedule.hide-weekends #day-cell-6,
+.hide-weekends .weekend-day,
+.hide-weekends #day-header-0,
+.hide-weekends #day-header-6,
+.hide-weekends #day-cell-0,
+.hide-weekends #day-cell-6 {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Ensure weekend day columns (both header and body) are hidden */
+#schedule.hide-weekends [id^="day-header-0"],
+#schedule.hide-weekends [id^="day-header-6"],
+#schedule.hide-weekends [id^="day-cell-0"],
+#schedule.hide-weekends [id^="day-cell-6"] {
+    display: none !important;
+}
+
+/* Target by class combinations */
+.schedule-board.grid.grid-cols-7.gap-1.hide-weekends .weekend-day,
+.schedule-board.grid.grid-cols-7.gap-1.hide-weekends #day-header-0,
+.schedule-board.grid.grid-cols-7.gap-1.hide-weekends #day-header-6,
+.schedule-board.grid.grid-cols-7.gap-1.hide-weekends #day-cell-0,
+.schedule-board.grid.grid-cols-7.gap-1.hide-weekends #day-cell-6 {
+    display: none !important;
+}
+
+/* SCHEDULE TASK CARD TEXT VISIBILITY FIXES */
+
+/* Fix schedule task cards - base styling */
+.schedule-task {
+    background-color: var(--bg-container) !important;
+    border: 1px solid var(--border-container) !important;
+    color: var(--text-body) !important;
+}
+
+/* Fix schedule task title text (font-bold span) */
+.schedule-task .font-bold,
+.schedule-task span.font-bold {
+    color: var(--text-title) !important;
+    font-weight: 600 !important;
+}
+
+/* Fix schedule task comment text */
+.schedule-task .task-comment,
+.schedule-task p.task-comment {
+    color: var(--text-label) !important;
+    opacity: 0.8 !important;
+}
+
+/* Fix schedule task action buttons */
+.schedule-task .task-action-btn {
+    color: var(--text-label) !important;
+    opacity: 0.7 !important;
+    transition: all 0.2s ease !important;
+}
+
+.schedule-task .task-action-btn:hover {
+    color: var(--text-title) !important;
+    opacity: 1 !important;
+}
+
+/* Theme-specific overrides for better text visibility */
+html:not(.dark) .schedule-task {
+    background-color: #ffffff !important;
+    border-color: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+html:not(.dark) .schedule-task .font-bold,
+html:not(.dark) .schedule-task span.font-bold {
+    color: #202124 !important;
+}
+
+html:not(.dark) .schedule-task .task-comment,
+html:not(.dark) .schedule-task p.task-comment {
+    color: #6b7280 !important;
+}
+
+html:not(.dark) .schedule-task .task-action-btn {
+    color: #6b7280 !important;
+}
+
+html:not(.dark) .schedule-task .task-action-btn:hover {
+    color: #374151 !important;
+}
+
+/* Dark theme specific overrides */
+html.dark .schedule-task {
+    background-color: #2d2d2d !important;
+    border-color: #404040 !important;
+    color: #e0e0e0 !important;
+}
+
+html.dark .schedule-task .font-bold,
+html.dark .schedule-task span.font-bold {
+    color: #ffffff !important;
+}
+
+html.dark .schedule-task .task-comment,
+html.dark .schedule-task p.task-comment {
+    color: #c0c0c0 !important;
+}
+
+html.dark .schedule-task .task-action-btn {
+    color: #c0c0c0 !important;
+}
+
+html.dark .schedule-task .task-action-btn:hover {
+    color: #ffffff !important;
+}
+
+/* Force text visibility with high specificity selectors */
+.schedule-task * {
+    color: inherit !important;
+}
+
+.schedule-task .font-bold {
+    font-weight: 600 !important;
+}
+
+/* Ensure proper opacity for dimmed tasks */
+.schedule-task.opacity-50 {
+    opacity: 0.5 !important;
+}
+
+/* SPACE OPTIMIZATION - MORE REAL ESTATE FOR WORK SECTIONS */
+
+/* Reduce main container padding to create more space */
+main.main-container {
+    padding: 1rem !important; /* Reduced from 1.5rem */
+    margin: 1rem auto !important; /* Reduced from 2rem */
+}
+
+/* Optimize header spacing */
+.mb-6 {
+    margin-bottom: 1rem !important; /* Reduced from 1.5rem */
+}
+
+/* Reduce spacing between kanban board and weekly schedule */
+.mb-8 {
+    margin-bottom: 1.5rem !important; /* Reduced from 2rem */
+}
+
+/* Increase kanban column heights significantly */
+.kanban-column {
+    min-height: 600px !important; /* Increased for more card space */
+    height: auto !important;
+}
+
+/* Optimize kanban column body spacing */
+.kanban-column-body {
+    padding: 0.75rem !important; /* Slightly reduced padding */
+    min-height: 550px !important; /* Ensure minimum working height */
+    max-height: none !important; /* Remove height restrictions */
+}
+
+/* Increase weekly schedule section height significantly */
+.mt-8 {
+    padding: 1rem !important; /* Reduced padding */
+    min-height: 600px !important; /* Ensure substantial working space */
+}
+
+/* Optimize schedule container for more space */
+.schedule-container {
+    min-height: 500px !important; /* Increased working area */
+}
+
+/* Increase individual day column heights in schedule */
+.day-column {
+    min-height: 450px !important; /* Much taller day columns */
+    height: auto !important;
+}
+
+/* Optimize schedule board grid spacing */
+.schedule-board {
+    gap: 0.125rem !important; /* Even tighter gap */
+    grid-template-rows: 50px 1fr !important; /* Updated header row height to 50px */
+    min-height: 480px !important; /* Ensure minimum schedule height */
+}
+
+/* Reduce filter section spacing */
+.flex.justify-between.items-center.mb-4 {
+    margin-bottom: 0.75rem !important;
+}
+
+/* Optimize page title spacing */
+h2.text-2xl.font-bold.text-gray-900.dark\:text-white {
+    margin-bottom: 0.75rem !important; /* Reduced margin */
+}
+
+/* Reduce header height to save vertical space */
+header {
+    height: 56px !important; /* Reduced from 64px */
+}
+
+/* Optimize proposal cards for better density */
+.proposal-card {
+    margin-bottom: 0.5rem !important; /* Reduced spacing between cards */
+    padding: 0.75rem !important; /* Optimized padding */
+}
+
+/* Improve task card density in schedule */
+.schedule-task {
+    margin-bottom: 0.25rem !important; /* Reduced spacing */
+    padding: 0.5rem !important; /* Optimized padding */
+}
+
+/* Make day headers more compact but with enough space to prevent overlapping */
+.day-header {
+    padding: 0.375rem !important; /* Slightly increased from 0.25rem */
+    min-height: 50px !important; /* Increased from 40px to 50px */
+    font-size: 0.75rem !important; /* Keep smaller text */
+}
+
+/* Reduce day header text spacing with better line spacing */
+.day-header .day-name {
+    font-size: 0.75rem !important; /* Smaller day name */
+    font-weight: 600 !important;
+    line-height: 1.1 !important; /* Slightly more breathing room */
+    margin-bottom: 0.25rem !important; /* More spacing between name and date */
+}
+
+.day-header .day-date {
+    font-size: 0.65rem !important; /* Smaller date */
+    font-weight: 400 !important;
+    line-height: 1.1 !important; /* Slightly more breathing room */
+    margin: 0 !important; /* Remove any margins */
+}
+
+/* Optimize vertical spacing in forms and modals */
+.form-group {
+    margin-bottom: 1rem !important; /* Reduced from default */
+}
+
+/* Remove excessive margins from container sections */
+.main-container .mb-6:first-child {
+    margin-top: 0 !important;
+}
+
+/* Ensure schedule day cells utilize full available height */
+#scheduleBodyRow .day-column {
+    height: 450px !important; /* Fixed height for consistency */
+    overflow-y: auto !important; /* Allow scrolling within day columns if needed */
+}
+
+/* URGENT FIX - Override hardcoded JavaScript classes for day columns */
+
+/* Target the specific classes added by JavaScript */
+.schedule-cell.bg-gray-50.dark\:bg-gray-800\/50,
+.schedule-cell.bg-gray-50,
+.day-column.bg-white.dark\:bg-gray-700,
+.day-column.bg-white,
+#day-cell-0, #day-cell-1, #day-cell-2, #day-cell-3, #day-cell-4, #day-cell-5, #day-cell-6,
+#day-column-0, #day-column-1, #day-column-2, #day-column-3, #day-column-4, #day-column-5, #day-column-6 {
+    background-color: var(--bg-container) !important;
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Light theme specific overrides for JavaScript-generated classes */
+html:not(.dark) .schedule-cell.bg-gray-50.dark\:bg-gray-800\/50,
+html:not(.dark) .schedule-cell.bg-gray-50,
+html:not(.dark) .day-column.bg-white.dark\:bg-gray-700,
+html:not(.dark) .day-column.bg-white,
+html:not(.dark) #day-cell-0, html:not(.dark) #day-cell-1, html:not(.dark) #day-cell-2, 
+html:not(.dark) #day-cell-3, html:not(.dark) #day-cell-4, html:not(.dark) #day-cell-5, html:not(.dark) #day-cell-6,
+html:not(.dark) #day-column-0, html:not(.dark) #day-column-1, html:not(.dark) #day-column-2, 
+html:not(.dark) #day-column-3, html:not(.dark) #day-column-4, html:not(.dark) #day-column-5, html:not(.dark) #day-column-6 {
+    background-color: #ffffff !important; /* White background like kanban columns */
+    border-color: #e5e7eb !important; /* Light gray border */
+}
+
+/* Dark theme specific overrides for JavaScript-generated classes */
+html.dark .schedule-cell.bg-gray-50.dark\:bg-gray-800\/50,
+html.dark .schedule-cell.bg-gray-50,
+html.dark .day-column.bg-white.dark\:bg-gray-700,
+html.dark .day-column.bg-white,
+html.dark #day-cell-0, html.dark #day-cell-1, html.dark #day-cell-2, 
+html.dark #day-cell-3, html.dark #day-cell-4, html.dark #day-cell-5, html.dark #day-cell-6,
+html.dark #day-column-0, html.dark #day-column-1, html.dark #day-column-2, 
+html.dark #day-column-3, html.dark #day-column-4, html.dark #day-column-5, html.dark #day-column-6 {
+    background-color: #2d2d2d !important; /* Match dark theme kanban columns */
+    border-color: #404040 !important; /* Match dark theme borders */
+}
+
+/* Remove any gray backgrounds from schedule elements */
+.schedule-container,
+.schedule-board {
+    background: transparent !important; /* Remove any background */
+}
+
+/* Ensure weekend day styling matches regular days */
+.weekend-day {
+    background-color: var(--bg-container) !important;
+    border: 1px solid var(--border-container) !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Show bottom button on column hover */
+.day-column:hover .add-day-item-bottom-btn {
+    opacity: 0.9 !important;
+}
+
+/* Proposal Selection Modal Fixes */
+#proposalSelectionModal {
+    z-index: 9999 !important; /* Ensure it's above everything including header */
+}
+
+#proposalSelectionModal .relative {
+    margin-top: 4rem !important; /* Ensure it clears the header */
+    margin-bottom: 2rem !important;
+    max-height: calc(100vh - 6rem) !important; /* Account for header height */
+}
+
+/* Search field improvements */
+#proposalSearchInput {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
+#proposalSearchInput::placeholder {
+    color: #9ca3af !important;
+    font-style: normal !important;
+}
+
+/* Dropdown improvements */
+#proposalStatusFilter,
+#proposalPicFilter {
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+    height: auto !important;
+}
+
+/* Proposal list styling */
+#proposalList {
+    scrollbar-width: thin !important;
+    scrollbar-color: #d1d5db transparent !important;
+}
+
+#proposalList::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+#proposalList::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#proposalList::-webkit-scrollbar-thumb {
+    background-color: #d1d5db !important;
+    border-radius: 3px !important;
+}
+
+#proposalList::-webkit-scrollbar-thumb:hover {
+    background-color: #9ca3af !important;
+} 
