@@ -153,7 +153,7 @@ CREATE TABLE dashboard_snapshots (
   revised_count INTEGER,
   saved_date TEXT DEFAULT CURRENT_TIMESTAMP,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  snapshot_date TEXT NOT NULL,
+  snapshot_date TEXT NOT NULL DEFAULT (date('now')),
   created_by TEXT,
   is_manual INTEGER DEFAULT 0,
   description TEXT
@@ -319,7 +319,7 @@ CREATE TABLE quotation_comments (
   comment_text TEXT NOT NULL,
   author_id TEXT,
   author_name TEXT,
-  mentioned_users TEXT DEFAULT '{}'::uuid[],
+  mentioned_users TEXT DEFAULT '[]',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
@@ -437,11 +437,19 @@ CREATE TABLE user_notifications (
   read_at TEXT
 );
 CREATE TABLE user_roles (
-  user_id TEXT PRIMARY KEY,
-  role_id INTEGER PRIMARY KEY
+  user_id TEXT NOT NULL,
+  role_id INTEGER NOT NULL,
+  PRIMARY KEY (user_id, role_id)
+);
+CREATE TABLE tenants (
+  id TEXT PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'default',
   email TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT,
@@ -450,7 +458,8 @@ CREATE TABLE users (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
   roles TEXT DEFAULT '[]',
   account_type TEXT DEFAULT 'User',
-  last_login_at TEXT
+  last_login_at TEXT,
+  UNIQUE (tenant_id, email)
 );
 CREATE TABLE weekly_snapshot (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -707,7 +707,7 @@ function applyTheme(theme) {
 
     // Per style guide, header is always dark, so always use light logo
     if (logo) {
-        logo.src = 'Logo/CMRP Logo Light.svg';
+        logo.src = 'assets/netpacific-logo.jpg';
     }
     
     // Always show sun icon per user request - check if themeToggle exists

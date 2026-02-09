@@ -1320,7 +1320,7 @@ function applyTheme(theme) {
     // Update logo for theme - always use light logo (header is always dark)
     const logo = document.getElementById('cmrpLogo');
     if (logo) {
-        logo.src = 'Logo/CMRP Logo Light.svg';
+        logo.src = 'assets/netpacific-logo.jpg';
     }
     
     console.log('🎨 [WIN-LOSS-DEBUG] ===== THEME APPLICATION COMPLETED =====');

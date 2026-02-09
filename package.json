@@ -8,6 +8,7 @@
     "@tailwindcss/vite": "^4.1.4",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
@@ -43,7 +44,8 @@
     "build-css": "tailwindcss -i src/input.css -o assets/tailwind.css --minify",
     "read-excel": "node readExcel.js",
     "snapshot-server": "node snapshot_server.js",
-    "dev-snapshot": "nodemon snapshot_server.js"
+    "dev-snapshot": "nodemon snapshot_server.js",
+    "db:init": "node scripts/init-local-sqlite.js"
   },
   "keywords": [],
   "author": "",

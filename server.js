@@ -123,12 +123,23 @@ app.use((req, res, next) => {
 
 // --- Mock Data for Development ---
 // Only use mock data if explicitly enabled or if no database connection is available
-const USE_MOCK_DATA = process.env.USE_MOCK_DATA === 'true' || (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'production');
+const useLocalSqlite = process.env.USE_SQLITE_LOCAL === '1' || process.env.USE_SQLITE_LOCAL === 'true' || process.env.SQLITE_DB_PATH;
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA === 'true' || (!process.env.DATABASE_URL && !useLocalSqlite && process.env.NODE_ENV !== 'production');
 console.log(`🧪 Mock data: ${USE_MOCK_DATA ? 'Enabled' : 'Disabled'}`);
 
 // Mock login handler for development
 app.post('/api/login', express.json(), async (req, res) => {
     try {
+        const tenantCode = (req.body?.tenantCode || req.body?.tenant_code || 'default').toString().trim().toLowerCase() || 'default';
+        // Resolve tenant id from tenant code (fallback to 'default')
+        let tenantId = 'default';
+        try {
+            const tenantRes = await db.query('SELECT id FROM tenants WHERE code = ?', [tenantCode]);
+            if (tenantRes.rows?.length) tenantId = tenantRes.rows[0].id;
+        } catch (e) {
+            // tenants table may not exist in older deployments; keep default
+        }
+
         if (USE_MOCK_DATA) {
             // In development, skip password validation but still query database for user data
             const { email, password } = req.body;
@@ -137,8 +148,8 @@ app.post('/api/login', express.json(), async (req, res) => {
 
             // Query the database to get real user data
             const result = await db.query(
-                'SELECT * FROM users WHERE email = ?',
-                [email.toLowerCase()]
+                'SELECT * FROM users WHERE email = ? AND tenant_id = ?',
+                [email.toLowerCase(), tenantId]
             );
 
             const user = result.rows[0];
@@ -158,6 +169,8 @@ app.post('/api/login', express.json(), async (req, res) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
+                tenantId: user.tenant_id || tenantId,
+                tenantCode,
                 roles: (typeof user.roles === "string" ? JSON.parse(user.roles) : user.roles) || [],
                 accountType: user.account_type
             }, JWT_SECRET, { expiresIn: '24h' });
@@ -176,8 +189,8 @@ app.post('/api/login', express.json(), async (req, res) => {
 
             // Query the database
             const result = await db.query(
-                'SELECT * FROM users WHERE email = ?',
-                [email.toLowerCase()]
+                'SELECT * FROM users WHERE email = ? AND tenant_id = ?',
+                [email.toLowerCase(), tenantId]
             );
 
             const user = result.rows[0];
@@ -204,6 +217,8 @@ app.post('/api/login', express.json(), async (req, res) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
+                tenantId: user.tenant_id || tenantId,
+                tenantCode,
                 roles: (typeof user.roles === "string" ? JSON.parse(user.roles) : user.roles) || [],
                 accountType: user.account_type
             }, JWT_SECRET, { expiresIn: '24h' });
@@ -1533,13 +1548,14 @@ app.post('/api/update-password', authenticateToken, authLimiter, [
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id; // User ID from JWT
     const userEmail = req.user.email;
+    const tenantId = req.user.tenantId || req.user.tenant_id || 'default';
 
     if (!userId) {
         return res.status(400).json({ message: 'User ID not found in token.' });
     }
 
     try {
-        const userResult = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+        const userResult = await db.query('SELECT * FROM users WHERE id = ? AND tenant_id = ?', [userId, tenantId]);
         if (userResult.rows.length === 0) {
             return res.status(404).json({ message: 'User not found.' });
         }
@@ -1551,7 +1567,7 @@ app.post('/api/update-password', authenticateToken, authLimiter, [
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [hashedNewPassword, userId]);
+        await db.query('UPDATE users SET password_hash = ? WHERE id = ? AND tenant_id = ?', [hashedNewPassword, userId, tenantId]);
 
         // Log password change
         const now = new Date().toISOString();
@@ -1572,8 +1588,88 @@ app.post('/api/update-password', authenticateToken, authLimiter, [
 });
 
 
-// POST Register endpoint
+// POST Signup endpoint (public self-registration with default role)
+const DEFAULT_SIGNUP_ROLE = 'technical';
+app.post('/api/signup', authLimiter, [
+    body('tenantCode').optional().trim().isLength({ min: 2, max: 40 }).withMessage('Organization code must be 2-40 characters'),
+    body('tenantName').optional().trim().isLength({ min: 2, max: 80 }).withMessage('Organization name must be 2-80 characters'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 8, max: 100 }).withMessage('Password must be 8-100 characters'),
+    body('name').optional().trim().isLength({ max: 100 }).withMessage('Name must be at most 100 characters')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: errors.array()[0].msg || 'Invalid input', details: errors.array() });
+    }
+
+    const { email, password, name, tenantCode, tenantName } = req.body;
+    const emailLower = (email || '').toLowerCase();
+    const orgCode = (tenantCode || 'default').toString().trim().toLowerCase() || 'default';
+    const orgName = (tenantName || '').toString().trim();
+
+    try {
+        // Ensure tenant exists (create it on first signup if non-default)
+        let tenantId = 'default';
+        try {
+            const tenantRes = await db.query('SELECT id, name FROM tenants WHERE code = ?', [orgCode]);
+            if (tenantRes.rows?.length) {
+                tenantId = tenantRes.rows[0].id;
+            } else if (orgCode !== 'default') {
+                tenantId = uuidv4();
+                await db.query('INSERT INTO tenants (id, code, name) VALUES (?, ?, ?)', [tenantId, orgCode, orgName || orgCode.toUpperCase()]);
+            }
+        } catch (e) {
+            // If tenants table doesn't exist, fall back to default
+            tenantId = 'default';
+        }
+
+        const existingUser = await db.query('SELECT id FROM users WHERE email = ? AND tenant_id = ?', [emailLower, tenantId]);
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({ error: 'Email already registered' });
+        }
+
+        const password_hash = await bcrypt.hash(password, 10);
+        const id = uuidv4();
+        const rolesJson = JSON.stringify([DEFAULT_SIGNUP_ROLE]);
+
+        await db.query(
+            'INSERT INTO users (id, tenant_id, email, password_hash, name, is_verified, roles, account_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, tenantId, emailLower, password_hash, (name || '').trim() || null, 1, rolesJson, 'User']
+        );
+
+        // Link default role in user_roles if roles table has it
+        const roleRow = await db.query('SELECT id FROM roles WHERE name = ?', [DEFAULT_SIGNUP_ROLE]);
+        if (roleRow.rows.length > 0) {
+            await db.query('INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)', [id, roleRow.rows[0].id]);
+        }
+
+        const now = new Date().toISOString();
+        console.log(`[${now}] New signup: ${emailLower} (ID: ${id})`);
+
+        const token = jwt.sign({
+            id,
+            email: emailLower,
+            name: (name || '').trim() || null,
+            tenantId,
+            tenantCode: orgCode,
+            roles: [DEFAULT_SIGNUP_ROLE],
+            accountType: 'User'
+        }, JWT_SECRET, { expiresIn: '24h' });
+
+        res.status(201).json({
+            message: 'Account created successfully',
+            token,
+            user: { id, email: emailLower, name: (name || '').trim() || null, tenantId, tenantCode: orgCode, roles: [DEFAULT_SIGNUP_ROLE], accountType: 'User' }
+        });
+    } catch (error) {
+        console.error('Error during signup:', error);
+        res.status(500).json({ error: 'Unable to create account. Please try again.' });
+    }
+});
+
+// POST Register endpoint (admin/API: requires roles)
 app.post('/api/register', authLimiter, [
+    body('tenantCode').optional().trim().isLength({ min: 2, max: 40 }).withMessage('Organization code must be 2-40 characters'),
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 8, max: 100 }).withMessage('Password must be 8-100 characters'),
     body('name').optional().isLength({ min: 2, max: 100 }).withMessage('Name must be 2-100 characters if provided'),
@@ -1585,42 +1681,43 @@ app.post('/api/register', authLimiter, [
         return res.status(400).json({ error: 'Invalid input', details: errors.array() });
     }
 
-    const { email, password, name, roles } = req.body;
+    const { email, password, name, roles, tenantCode } = req.body;
+    const emailLower = (email || '').toLowerCase();
+    const orgCode = (tenantCode || 'default').toString().trim().toLowerCase() || 'default';
 
     try {
-        // Check if email already exists
-        const existingUser = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+        let tenantId = 'default';
+        try {
+            const tenantRes = await db.query('SELECT id FROM tenants WHERE code = ?', [orgCode]);
+            if (tenantRes.rows?.length) tenantId = tenantRes.rows[0].id;
+        } catch (e) {
+            tenantId = 'default';
+        }
+
+        const existingUser = await db.query('SELECT id FROM users WHERE email = ? AND tenant_id = ?', [emailLower, tenantId]);
         if (existingUser.rows.length > 0) {
             return res.status(409).json({ error: 'Email already registered' });
         }
 
-        // Hash password
         const password_hash = await bcrypt.hash(password, 10);
         const id = uuidv4();
+        const rolesArr = Array.isArray(roles) ? roles : [roles];
+        const rolesJson = JSON.stringify(rolesArr);
 
-        // Insert new user
         await db.query(
-            'INSERT INTO users (id, email, password_hash, name, is_verified, roles, account_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, email, password_hash, name || null, true, Array.isArray(roles) ? roles : [roles], 'User']
+            'INSERT INTO users (id, tenant_id, email, password_hash, name, is_verified, roles, account_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, tenantId, emailLower, password_hash, name || null, true, rolesJson, 'User']
         );
 
-        // Log successful registration
         const now = new Date().toISOString();
-        const logMsg = `[${now}] New user registered: ${email} (ID: ${id})`;
+        const logMsg = `[${now}] New user registered: ${emailLower} (ID: ${id})`;
         console.log(logMsg);
         fs.appendFileSync(path.join(__dirname, 'audit.log'), logMsg + '\n');
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'User registered successfully',
-            user: {
-                id: id,
-                email: email,
-                name: name || null,
-                roles: Array.isArray(roles) ? roles : [roles],
-                accountType: 'User'
-            }
+            user: { id, email: emailLower, name: name || null, roles: rolesArr, accountType: 'User' }
         });
-
     } catch (error) {
         console.error('Error during registration:', error);
         res.status(500).json({ error: 'Internal server error' });

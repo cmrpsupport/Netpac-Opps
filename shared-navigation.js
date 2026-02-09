@@ -314,7 +314,7 @@ class SharedNavigation {
         const logo = document.getElementById('cmrpLogo');
         if (logo) {
             // Always use light logo since topbar is dark in both themes
-            logo.src = 'Logo/CMRP Logo Light.svg';
+            logo.src = 'assets/netpacific-logo.jpg';
         }
     }
     
