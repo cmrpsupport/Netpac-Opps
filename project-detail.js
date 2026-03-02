@@ -152,9 +152,9 @@ class ProjectDetailPage {
 
 
     async loadDriveFiles() {
-        console.log(`[ProjectDetail] Loading Google Drive files for project ${this.projectUid}`);
-        
         const container = document.getElementById('driveFilesContainer');
+        if (!container) return; // Google Drive section removed
+        console.log(`[ProjectDetail] Loading Google Drive files for project ${this.projectUid}`);
         container.innerHTML = `
             <div class="text-center py-4">
                 <div class="loading-spinner mx-auto mb-2"></div>
@@ -189,7 +189,7 @@ class ProjectDetailPage {
 
     renderDriveFiles(data) {
         const container = document.getElementById('driveFilesContainer');
-
+        if (!container) return; // Google Drive section removed
         if (!data.success || !data.hasFolder) {
             container.innerHTML = `
                 <div class="text-center text-gray-500 dark:text-gray-400 py-8">

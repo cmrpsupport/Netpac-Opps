@@ -29,6 +29,7 @@ class SharedNavigation {
             'proposal_workbench.html': 'proposal_workbench',
             'win-loss_dashboard.html': 'win-loss_dashboard',
             'user_management.html': 'user_management',
+            'account-manager-list.html': 'account_manager_list',
             'csv_formatter.html': 'csv_formatter',
             'opps_monitoring_import_export.html': 'opps_monitoring_import_export',
             'project-detail.html': 'index' // Project detail pages should highlight opportunities
@@ -146,9 +147,6 @@ class SharedNavigation {
         
         // Initialize notification system after topbar is loaded
         this.initializeNotificationSystem();
-        
-        // Initialize calendar interface after topbar is loaded
-        this.initializeCalendarInterface();
         
         // Note: User info initialization is now handled in the DOMContentLoaded listener
         
@@ -591,6 +589,7 @@ class SharedNavigation {
             '/executive_dashboard.html': 'Executive',
             '/proposal_workbench.html': 'Proposals',
             '/user_management.html': 'Users',
+            '/account-manager-list.html': 'Account Mgrs List',
             '/csv_formatter.html': 'CSV Formatter',
             '/opps_monitoring_import_export.html': 'Import/Export'
         };
@@ -632,6 +631,8 @@ class SharedNavigation {
         
         // Update User Management visibility
         this.updateUserMgmtNavVisibility();
+        // Update Account Managers List visibility (same as Users - Admin only)
+        this.updateAccountManagersListNavVisibility();
         
         // Update Proposal Workbench visibility
         this.updateProposalWorkbenchNavVisibility();
@@ -661,6 +662,24 @@ class SharedNavigation {
             userMgmtBtn.style.display = (accountType === 'Admin' || name === 'RJR') ? '' : 'none';
         } catch {
             userMgmtBtn.style.display = 'none';
+        }
+    }
+
+    updateAccountManagersListNavVisibility() {
+        const btn = document.getElementById('accountManagersListNavBtn');
+        if (!btn) return;
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            btn.style.display = 'none';
+            return;
+        }
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const accountType = payload.accountType || payload.account_type || null;
+            const name = payload.name || '';
+            btn.style.display = (accountType === 'Admin' || name === 'RJR') ? '' : 'none';
+        } catch {
+            btn.style.display = 'none';
         }
     }
 
@@ -825,394 +844,6 @@ class SharedNavigation {
         
     }
 
-    // === GOOGLE CALENDAR INTEGRATION ===
-    
-    initializeCalendarInterface() {
-        console.log('[SHARED-NAV] Initializing calendar interface...');
-        
-        const calendarBtn = document.getElementById('calendarConnectionBtn');
-        const calendarDropdown = document.getElementById('calendarDropdown');
-        
-        if (!calendarBtn || !calendarDropdown) {
-            console.warn('[SHARED-NAV] Calendar interface elements not found');
-            return;
-        }
-
-        // Set up click handler for calendar button
-        calendarBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggleCalendarDropdown();
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!calendarBtn.contains(e.target) && !calendarDropdown.contains(e.target)) {
-                this.hideCalendarDropdown();
-            }
-        });
-
-        // Load initial calendar status
-        this.loadCalendarStatus();
-    }
-
-    toggleCalendarDropdown() {
-        const dropdown = document.getElementById('calendarDropdown');
-        if (dropdown) {
-            const isHidden = dropdown.classList.contains('hidden');
-            if (isHidden) {
-                this.showCalendarDropdown();
-            } else {
-                this.hideCalendarDropdown();
-            }
-        }
-    }
-
-    showCalendarDropdown() {
-        const dropdown = document.getElementById('calendarDropdown');
-        if (dropdown) {
-            dropdown.classList.remove('hidden');
-            this.loadCalendarStatus(); // Refresh status when opening
-        }
-    }
-
-    hideCalendarDropdown() {
-        const dropdown = document.getElementById('calendarDropdown');
-        if (dropdown) {
-            dropdown.classList.add('hidden');
-        }
-    }
-
-    async loadCalendarStatus() {
-        console.log('[SHARED-NAV] Loading calendar status...');
-        
-        const content = document.getElementById('calendarDropdownContent');
-        const statusText = document.getElementById('calendarStatusText');
-        const calendarIcon = document.getElementById('calendarIcon');
-        const calendarBtn = document.getElementById('calendarConnectionBtn');
-        
-        if (!content) {
-            console.error('[SHARED-NAV] Calendar dropdown content not found');
-            return;
-        }
-
-        // Show loading state
-        content.innerHTML = `
-            <div class="calendar-status-loading">
-                <span class="material-icons">hourglass_empty</span>
-                <p>Loading calendar status...</p>
-            </div>
-        `;
-
-        try {
-            const headers = this.getAuthHeaders();
-            if (!headers) {
-                throw new Error('No authentication token');
-            }
-
-            const response = await fetch(getApiUrl('/api/calendar/status'), {
-                method: 'GET',
-                headers: headers
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to load calendar status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('[SHARED-NAV] Calendar status loaded:', data);
-
-            if (data.setupRequired) {
-                this.renderCalendarSetupRequired();
-                if (statusText) statusText.textContent = 'Setup Required';
-                if (calendarIcon) calendarIcon.textContent = 'settings';
-                if (calendarBtn) {
-                    calendarBtn.classList.remove('connected', 'disconnected');
-                    calendarBtn.classList.add('setup-required');
-                }
-            } else if (data.connected) {
-                this.renderConnectedCalendarStatus(data);
-                if (statusText) statusText.textContent = 'Connected';
-                if (calendarIcon) calendarIcon.textContent = 'event_available';
-                if (calendarBtn) {
-                    calendarBtn.classList.remove('disconnected', 'setup-required');
-                    calendarBtn.classList.add('connected');
-                }
-            } else {
-                this.renderDisconnectedCalendarStatus();
-                if (statusText) statusText.textContent = 'Calendar';
-                if (calendarIcon) calendarIcon.textContent = 'event';
-                if (calendarBtn) {
-                    calendarBtn.classList.remove('connected', 'setup-required');
-                    calendarBtn.classList.add('disconnected');
-                }
-            }
-
-        } catch (error) {
-            console.error('[SHARED-NAV] Failed to load calendar status:', error);
-            this.renderCalendarError(error.message);
-            if (statusText) statusText.textContent = 'Error';
-            if (calendarIcon) calendarIcon.textContent = 'event_busy';
-        }
-    }
-
-    renderConnectedCalendarStatus(data) {
-        const content = document.getElementById('calendarDropdownContent');
-        if (!content) return;
-
-        const lastSyncText = data.lastSync 
-            ? `Last sync: ${new Date(data.lastSync).toLocaleString()}`
-            : 'Never synced';
-
-        content.innerHTML = `
-            <div class="calendar-status-connected">
-                <div class="calendar-connected-info">
-                    <span class="material-icons">check_circle</span>
-                    <div class="calendar-connected-details">
-                        <div class="calendar-connected-email">${data.googleEmail || 'Connected'}</div>
-                        <div class="calendar-last-sync">${lastSyncText}</div>
-                    </div>
-                </div>
-                <button class="calendar-action-button calendar-sync-btn" data-action="sync">
-                    <span class="material-icons">sync</span>
-                    Sync Now
-                </button>
-                <button class="calendar-action-button calendar-disconnect-btn" data-action="disconnect">
-                    <span class="material-icons">link_off</span>
-                    Disconnect
-                </button>
-            </div>
-        `;
-
-        // Add event listeners for the buttons
-        const syncBtn = content.querySelector('.calendar-sync-btn');
-        const disconnectBtn = content.querySelector('.calendar-disconnect-btn');
-        
-        if (syncBtn) {
-            syncBtn.addEventListener('click', () => this.syncCalendar());
-        }
-        
-        if (disconnectBtn) {
-            disconnectBtn.addEventListener('click', () => this.disconnectCalendar());
-        }
-    }
-
-    renderCalendarSetupRequired() {
-        const content = document.getElementById('calendarDropdownContent');
-        if (!content) return;
-
-        content.innerHTML = `
-            <div class="calendar-status-error">
-                <span class="material-icons">settings</span>
-                <p><strong>Setup Required</strong></p>
-                <p>Google Calendar OAuth credentials not configured.</p>
-                <p style="font-size: 0.75rem; margin-top: 0.5rem;">
-                    Please set up Google OAuth credentials in your environment variables.
-                    See GOOGLE_CALENDAR_SETUP.md for instructions.
-                </p>
-            </div>
-        `;
-    }
-
-    renderDisconnectedCalendarStatus() {
-        const content = document.getElementById('calendarDropdownContent');
-        if (!content) return;
-
-        content.innerHTML = `
-            <div class="calendar-status-disconnected">
-                <span class="material-icons">event_note</span>
-                <p>Connect your Google Calendar to sync events with your weekly schedule.</p>
-                <button class="calendar-action-button calendar-connect-btn" data-action="connect">
-                    <span class="material-icons">link</span>
-                    Connect Google Calendar
-                </button>
-            </div>
-        `;
-
-        // Add event listener for the connect button
-        const connectBtn = content.querySelector('.calendar-connect-btn');
-        if (connectBtn) {
-            connectBtn.addEventListener('click', () => this.connectCalendar());
-        }
-    }
-
-    renderCalendarError(errorMessage) {
-        const content = document.getElementById('calendarDropdownContent');
-        if (!content) return;
-
-        content.innerHTML = `
-            <div class="calendar-status-error">
-                <span class="material-icons">error</span>
-                <p>Error loading calendar status</p>
-                <p style="font-size: 0.75rem; margin-top: 0.5rem;">${errorMessage}</p>
-                <button class="calendar-action-button calendar-connect-btn" data-action="retry">
-                    <span class="material-icons">refresh</span>
-                    Retry
-                </button>
-            </div>
-        `;
-
-        // Add event listener for the retry button
-        const retryBtn = content.querySelector('[data-action="retry"]');
-        if (retryBtn) {
-            retryBtn.addEventListener('click', () => this.loadCalendarStatus());
-        }
-    }
-
-    async connectCalendar() {
-        console.log('[SHARED-NAV] Starting calendar connection...');
-        
-        try {
-            const headers = this.getAuthHeaders();
-            if (!headers) {
-                throw new Error('No authentication token');
-            }
-
-            // Get OAuth URL from server
-            const response = await fetch('/auth/google/calendar', {
-                method: 'GET',
-                headers: headers
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to start OAuth flow: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('[SHARED-NAV] Got OAuth URL:', data.authUrl);
-
-            // Redirect to Google OAuth
-            window.location.href = data.authUrl;
-
-        } catch (error) {
-            console.error('[SHARED-NAV] Failed to connect calendar:', error);
-            alert('Failed to connect calendar: ' + error.message);
-        }
-    }
-
-    async syncCalendar() {
-        console.log('[SHARED-NAV] Starting manual calendar sync...');
-        
-        const syncBtn = document.querySelector('.calendar-sync-btn');
-        if (syncBtn) {
-            syncBtn.disabled = true;
-            syncBtn.innerHTML = `
-                <span class="material-icons">sync</span>
-                Syncing...
-            `;
-        }
-
-        try {
-            const headers = this.getAuthHeaders();
-            if (!headers) {
-                throw new Error('No authentication token');
-            }
-
-            const response = await fetch(getApiUrl('/api/calendar/sync'), {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({})
-            });
-
-            if (!response.ok) {
-                throw new Error(`Sync failed: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('[SHARED-NAV] Calendar sync completed:', data);
-
-            // Show success feedback
-            alert(`Calendar sync completed! Processed ${data.results?.processed || 0} events.`);
-            
-            // Refresh calendar status
-            this.loadCalendarStatus();
-
-        } catch (error) {
-            console.error('[SHARED-NAV] Calendar sync failed:', error);
-            alert('Calendar sync failed: ' + error.message);
-        } finally {
-            // Reset sync button
-            if (syncBtn) {
-                syncBtn.disabled = false;
-                syncBtn.innerHTML = `
-                    <span class="material-icons">sync</span>
-                    Sync Now
-                `;
-            }
-        }
-    }
-
-    async disconnectCalendar() {
-        console.log('[SHARED-NAV] Disconnecting calendar...');
-        
-        const confirmed = confirm('Are you sure you want to disconnect your Google Calendar? This will remove all synced events.');
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            const headers = this.getAuthHeaders();
-            if (!headers) {
-                throw new Error('No authentication token');
-            }
-
-            const response = await fetch(getApiUrl('/api/calendar/connection'), {
-                method: 'DELETE',
-                headers: headers
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to disconnect: ${response.status}`);
-            }
-
-            console.log('[SHARED-NAV] Calendar disconnected successfully');
-            alert('Google Calendar disconnected successfully.');
-            
-            // Refresh calendar status
-            this.loadCalendarStatus();
-
-        } catch (error) {
-            console.error('[SHARED-NAV] Failed to disconnect calendar:', error);
-            alert('Failed to disconnect calendar: ' + error.message);
-        }
-    }
-
-    handleCalendarAuthCallback() {
-        // Handle OAuth callback results from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const authResult = urlParams.get('calendar_auth');
-        const email = urlParams.get('email');
-
-        if (authResult === 'success') {
-            console.log('[SHARED-NAV] Calendar connected successfully');
-            alert(`Google Calendar connected successfully! Email: ${email || 'Unknown'}`);
-            
-            // Clean up URL
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-            
-            // Refresh calendar status
-            setTimeout(() => this.loadCalendarStatus(), 1000);
-            
-        } else if (authResult === 'denied') {
-            console.log('[SHARED-NAV] Calendar authorization denied by user');
-            alert('Calendar connection was cancelled. You can try again anytime.');
-            
-            // Clean up URL
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-            
-        } else if (authResult === 'error') {
-            console.error('[SHARED-NAV] Calendar authorization failed');
-            alert('Failed to connect Google Calendar. Please try again.');
-            
-            // Clean up URL
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-        }
-    }
-
-    // === END GOOGLE CALENDAR INTEGRATION ===
-    
 }
 
 // Conditional initialization - only initialize if not already done by page-specific script
@@ -1227,9 +858,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.sharedNavigationInstance = sharedNav;
     
     await sharedNav.initialize();
-    
-    // Handle calendar OAuth callback if present
-    sharedNav.handleCalendarAuthCallback();
     
     // Delay user info initialization to ensure DOM is fully ready
     setTimeout(() => {

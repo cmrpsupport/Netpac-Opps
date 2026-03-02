@@ -1,6 +1,6 @@
 /**
  * SQLite Compatibility Helper Functions
- * Handles differences between PostgreSQL and SQLiteCloud
+ * Handles differences between PostgreSQL and local SQLite
  */
 
 const db = require('./db_adapter');
@@ -63,7 +63,7 @@ async function updateWithReturning(sql, params, tableName, whereClause, wherePar
  */
 function toSQLiteBoolean(value) {
     const dbType = db.getDBType();
-    if (dbType === 'sqlitecloud') {
+    if (dbType === 'sqlite') {
         return value ? 1 : 0;
     }
     return value;
@@ -74,7 +74,7 @@ function toSQLiteBoolean(value) {
  */
 function fromSQLiteBoolean(value) {
     const dbType = db.getDBType();
-    if (dbType === 'sqlitecloud') {
+    if (dbType === 'sqlite') {
         return value === 1 || value === '1' || value === true;
     }
     return Boolean(value);
@@ -85,7 +85,7 @@ function fromSQLiteBoolean(value) {
  */
 function toSQLiteJSON(value) {
     const dbType = db.getDBType();
-    if (dbType === 'sqlitecloud') {
+    if (dbType === 'sqlite') {
         return typeof value === 'string' ? value : JSON.stringify(value);
     }
     return value;
@@ -96,7 +96,7 @@ function toSQLiteJSON(value) {
  */
 function fromSQLiteJSON(value) {
     const dbType = db.getDBType();
-    if (dbType === 'sqlitecloud' && typeof value === 'string') {
+    if (dbType === 'sqlite' && typeof value === 'string') {
         try {
             return JSON.parse(value);
         } catch (e) {
@@ -111,7 +111,7 @@ function fromSQLiteJSON(value) {
  */
 function toSQLiteArray(value) {
     const dbType = db.getDBType();
-    if (dbType === 'sqlitecloud') {
+    if (dbType === 'sqlite') {
         if (Array.isArray(value)) {
             return JSON.stringify(value);
         }
@@ -125,7 +125,7 @@ function toSQLiteArray(value) {
  */
 function fromSQLiteArray(value) {
     const dbType = db.getDBType();
-    if (dbType === 'sqlitecloud') {
+    if (dbType === 'sqlite') {
         if (typeof value === 'string') {
             try {
                 const parsed = JSON.parse(value);
@@ -168,7 +168,7 @@ function processRow(row) {
     if (!row) return row;
 
     const dbType = db.getDBType();
-    if (dbType !== 'sqlitecloud') return row;
+    if (dbType !== 'sqlite') return row;
 
     const processed = { ...row };
 

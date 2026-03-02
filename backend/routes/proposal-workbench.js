@@ -5,7 +5,6 @@ const { body, validationResult } = require('express-validator');
 const XLSX = require('xlsx');
 const ExcelJS = require('exceljs');
 const XlsxPopulate = require('xlsx-populate');
-const GoogleDriveService = require('../../google_drive_service');
 
 // Add JSON parsing middleware for this router
 router.use(express.json());
@@ -137,131 +136,40 @@ router.get('/proposals/workbench', async (req, res) => {
     }
 });
 
-// EXCEL SYNC ENDPOINT - moved to top for priority
+// EXCEL SYNC FROM DRIVE - disabled (Google Drive removed)
 router.post('/sync-from-drive/:proposalUid', async (req, res) => {
+    return res.status(410).json({
+        success: false,
+        error: 'Google Drive sync is disabled.',
+        step: 'drive_sync'
+    });
+});
+
+// Get master list of account managers (for filter dropdown - all authenticated users)
+router.get('/proposals/account-managers-list', async (req, res) => {
     try {
-        const { proposalUid } = req.params;
-        const userId = req.user?.id;
-        const userName = req.user?.name || req.user?.email;
-        
-        console.log(`[EXCEL_SYNC] Starting sync for proposal ${proposalUid} by user ${userId}`);
-        
-        if (!proposalUid) {
-            return res.status(400).json({ error: 'Proposal UID is required' });
-        }
-        
-        // Initialize Google Drive service
-        const driveService = new GoogleDriveService();
-        await driveService.initialize();
-        
-        // Sync proposal from Drive and get Excel file
-        const syncResult = await driveService.syncProposalFromDrive(proposalUid);
-        
-        if (!syncResult.success) {
-            console.log(`[EXCEL_SYNC] Sync failed: ${syncResult.error}`);
-            return res.status(400).json({ 
-                success: false, 
-                error: syncResult.error,
-                step: 'drive_sync'
-            });
-        }
-        
-        // Parse Excel file with password
-        console.log(`[EXCEL_SYNC] Attempting to parse Excel file: ${syncResult.excelFile.name} (Rev: ${syncResult.excelFile.revisionNumber})`);
-        console.log(`[EXCEL_SYNC] File size: ${syncResult.excelFile.buffer.length} bytes`);
-        
-        // For debugging: save first few KB to check if download is working
-        const sampleSize = Math.min(1024, syncResult.excelFile.buffer.length);
-        const sampleHex = syncResult.excelFile.buffer.slice(0, sampleSize).toString('hex').substring(0, 100);
-        console.log(`[EXCEL_SYNC] File sample (first 50 hex chars): ${sampleHex}`);
-        
-        // Try multiple password variations and parsing approaches
-        const passwordVariations = [
-            null, // Try without password first
-            '0601CMRP!',
-            '0601CMRP',
-            '0601cmrp!',
-            '0601cmrp',
-            // Add some variations based on common mistakes
-            '0601 CMRP!',
-            '0601_CMRP!',
-            'CMRP0601!',
-            '0601cmrp'
-        ];
-        
-        let excelData = null;
-        let lastError = null;
-        
-        for (const password of passwordVariations) {
-            const passwordLabel = password === null ? 'no password' : `"${password}"`;
-            console.log(`[EXCEL_SYNC] Trying with: ${passwordLabel}`);
-            excelData = await parseExcelFile(syncResult.excelFile.buffer, password);
-            if (excelData.success) {
-                console.log(`[EXCEL_SYNC] Successfully parsed with: ${passwordLabel}`);
-                break;
-            } else {
-                lastError = excelData.error;
-                console.log(`[EXCEL_SYNC] Failed with ${passwordLabel}: ${excelData.error}`);
-            }
-        }
-        
-        if (!excelData || !excelData.success) {
-            console.log(`[EXCEL_SYNC] Excel parsing failed for file ${syncResult.excelFile.name} with all password attempts: ${lastError}`);
-            return res.status(400).json({ 
-                success: false, 
-                error: `Failed to parse Excel file "${syncResult.excelFile.name}" with all password attempts. Last error: ${lastError}`,
-                step: 'excel_parse',
-                fileName: syncResult.excelFile.name,
-                revisionNumber: syncResult.excelFile.revisionNumber,
-                passwordsAttempted: passwordVariations
-            });
-        }
-        
-        // Update proposal in database
-        const updateResult = await updateProposalFromExcel(
-            req.db, 
-            proposalUid, 
-            {
-                revisionNumber: syncResult.excelFile.revisionNumber,
-                margin: excelData.margin,
-                finalAmount: excelData.finalAmount,
-                submittedDate: syncResult.excelFile.modifiedTime,
-                excelFileName: syncResult.excelFile.name
-            },
-            userName
+        const result = await db.query(
+            'SELECT id, name FROM account_managers WHERE is_active = 1 ORDER BY name ASC'
         );
-        
-        if (!updateResult.success) {
-            console.log(`[EXCEL_SYNC] Database update failed: ${updateResult.error}`);
-            return res.status(500).json({ 
-                success: false, 
-                error: updateResult.error,
-                step: 'database_update'
-            });
-        }
-        
-        console.log(`[EXCEL_SYNC] Successfully synced proposal ${proposalUid}`);
-        
-        res.json({
-            success: true,
-            proposalUid: proposalUid,
-            syncedData: {
-                revisionNumber: syncResult.excelFile.revisionNumber,
-                margin: excelData.margin,
-                finalAmount: excelData.finalAmount,
-                submittedDate: syncResult.excelFile.modifiedTime,
-                excelFileName: syncResult.excelFile.name
-            },
-            calcsheetFolder: syncResult.calcsheetFolder
-        });
-        
-    } catch (error) {
-        console.error('[ERROR] Excel sync failed:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Excel sync failed: ' + error.message,
-            step: 'general_error'
-        });
+        const list = (result.rows || []).map(row => ({ id: row.id, name: row.name }));
+        res.json(list);
+    } catch (err) {
+        console.error('[ERROR] Failed to fetch account managers list:', err);
+        res.json([]);
+    }
+});
+
+// Get master list of PICs (for filter dropdown - all authenticated users)
+router.get('/proposals/pics-master-list', async (req, res) => {
+    try {
+        const result = await db.query(
+            'SELECT id, name FROM pics WHERE is_active = 1 ORDER BY name ASC'
+        );
+        const list = (result.rows || []).map(row => ({ id: row.id, name: row.name }));
+        res.json(list);
+    } catch (err) {
+        console.error('[ERROR] Failed to fetch PICs master list:', err);
+        res.json([]);
     }
 });
 
@@ -957,50 +865,45 @@ router.put('/schedule/tasks/:taskId/move', async (req, res) => {
     }
 });
 
-// Get users who have scheduled items (for user filtering dropdown)
+// Get all app users for proposal workbench dropdown (schedule filter and assignment)
+// Includes schedule_count so users with items show count; others show 0
 router.get('/schedule/users', async (req, res) => {
     try {
-        // Allow all authenticated users to view schedule users for collaboration
-        // This enables users to see who has scheduled items for better coordination
-        
-        console.log('[SCHEDULE] Fetching users with scheduled items');
+        console.log('[SCHEDULE] Fetching all users for dropdown');
 
-        // Get users with scheduled items (SQLite version)
         const query = `
             SELECT
-                user_id,
-                user_name,
-                SUM(count) as schedule_count
-            FROM (
-                SELECT ps.user_id, u.name as user_name, COUNT(*) as count
-                FROM proposal_schedule ps
-                LEFT JOIN users u ON ps.user_id = u.id
-                WHERE ps.user_id IS NOT NULL
-                GROUP BY ps.user_id, u.name
-
-                UNION ALL
-
-                SELECT ct.user_id, u.name as user_name, COUNT(*) as count
-                FROM custom_tasks ct
-                LEFT JOIN users u ON ct.user_id = u.id
-                WHERE ct.user_id IS NOT NULL
-                GROUP BY ct.user_id, u.name
-            ) schedule_users
-            WHERE user_id IS NOT NULL
-            GROUP BY user_id, user_name
-            ORDER BY schedule_count DESC, user_name
+                u.id AS user_id,
+                COALESCE(u.name, u.email) AS user_name,
+                COALESCE(schedule_counts.total_count, 0) AS schedule_count
+            FROM users u
+            LEFT JOIN (
+                SELECT user_id, SUM(cnt) AS total_count
+                FROM (
+                    SELECT ps.user_id, COUNT(*) AS cnt
+                    FROM proposal_schedule ps
+                    WHERE ps.user_id IS NOT NULL
+                    GROUP BY ps.user_id
+                    UNION ALL
+                    SELECT ct.user_id, COUNT(*) AS cnt
+                    FROM custom_tasks ct
+                    WHERE ct.user_id IS NOT NULL
+                    GROUP BY ct.user_id
+                ) combined
+                GROUP BY user_id
+            ) schedule_counts ON schedule_counts.user_id = u.id
+            ORDER BY schedule_count DESC, user_name ASC
         `;
 
         const result = await db.query(query);
 
-        // Transform the result to match expected format
-        const users = result.rows.map(row => ({
+        const users = (result.rows || []).map(row => ({
             id: row.user_id,
-            username: row.user_name,
-            schedule_count: parseInt(row.schedule_count)
+            username: row.user_name || row.user_id,
+            schedule_count: parseInt(row.schedule_count, 10) || 0
         }));
 
-        console.log(`[SCHEDULE] Retrieved ${users.length} users with scheduled items`);
+        console.log(`[SCHEDULE] Retrieved ${users.length} users for dropdown`);
         res.json(users);
         
     } catch (error) {

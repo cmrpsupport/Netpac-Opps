@@ -1,7 +1,6 @@
 // --- Login Page Logic ---
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
-    const loginTenantCode = document.getElementById('loginTenantCode');
     const loginEmail = document.getElementById('loginEmail');
     const loginPassword = document.getElementById('loginPassword');
     const loginError = document.getElementById('loginError');
@@ -11,8 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginRemember = document.getElementById('loginRemember');
     const loginHeading = document.getElementById('loginHeading');
     const signupForm = document.getElementById('signupForm');
-    const signupTenantCode = document.getElementById('signupTenantCode');
-    const signupTenantName = document.getElementById('signupTenantName');
     const signupName = document.getElementById('signupName');
     const signupEmail = document.getElementById('signupEmail');
     const signupPassword = document.getElementById('signupPassword');
@@ -32,17 +29,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingLogo = document.getElementById('loadingLogo');
     const baseUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || '';
 
+    // Net Pacific only: single tenant code (must match server NETPACIFIC_TENANT_CODE)
+    const NETPACIFIC_TENANT_CODE = 'default';
+
     function showLogin() {
         if (loginForm) loginForm.classList.remove('hidden');
         if (signupForm) signupForm.classList.add('hidden');
-        if (loginHeading) loginHeading.textContent = 'Member Login';
-        if (loginSubtitle) loginSubtitle.textContent = 'Please enter your credentials to continue';
+        if (loginHeading) loginHeading.textContent = 'Welcome Back';
+        if (loginSubtitle) loginSubtitle.textContent = 'Net Pacific — sign in to access your dashboard.';
     }
     function showSignup() {
         if (loginForm) loginForm.classList.add('hidden');
         if (signupForm) signupForm.classList.remove('hidden');
         if (loginHeading) loginHeading.textContent = 'Create an account';
-        if (loginSubtitle) loginSubtitle.textContent = 'Enter your details to get started';
+        if (loginSubtitle) loginSubtitle.textContent = 'Net Pacific — enter your details to get started.';
     }
     if (showSignupBtn) showSignupBtn.addEventListener('click', function() { showSignup(); });
     if (showLoginBtn) showLoginBtn.addEventListener('click', function() { showLogin(); });
@@ -97,15 +97,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
     initializeTheme();
 
-    // Remember me: restore email/tenant if previously saved
+    // Remember me: restore email if previously saved (Net Pacific only — no org field)
     (function () {
         try {
             var saved = localStorage.getItem('loginRemember');
-            if (saved === 'true' && loginTenantCode && loginEmail) {
+            if (saved === 'true' && loginEmail) {
                 var data = localStorage.getItem('loginRememberData');
                 if (data) {
                     var obj = JSON.parse(data);
-                    if (obj.tenantCode) loginTenantCode.value = obj.tenantCode;
                     if (obj.email) loginEmail.value = obj.email;
                     if (loginRemember) loginRemember.checked = true;
                 }
@@ -164,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loginSubmitBtn.disabled = true;
             const email = loginEmail.value.trim();
             const password = loginPassword.value;
-            const tenantCode = (loginTenantCode?.value || '').trim() || 'default';
+            const tenantCode = NETPACIFIC_TENANT_CODE;
             if (!email || !password) {
                 if (loginErrorText) loginErrorText.textContent = 'Email and password are required.';
                 if (loginError) loginError.classList.remove('hidden');
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (loginRemember) {
                 if (loginRemember.checked) {
                     localStorage.setItem('loginRemember', 'true');
-                    localStorage.setItem('loginRememberData', JSON.stringify({ tenantCode: tenantCode || 'default', email: email }));
+                    localStorage.setItem('loginRememberData', JSON.stringify({ email: email }));
                 } else {
                     localStorage.removeItem('loginRemember');
                     localStorage.removeItem('loginRememberData');
@@ -252,8 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = signupPassword ? signupPassword.value : '';
             const passwordConfirm = signupPasswordConfirm ? signupPasswordConfirm.value : '';
             const name = (signupName && signupName.value.trim()) || '';
-            const tenantCode = (signupTenantCode?.value || '').trim() || 'default';
-            const tenantName = (signupTenantName?.value || '').trim() || '';
+            const tenantCode = NETPACIFIC_TENANT_CODE;
 
             if (!email) {
                 if (signupErrorText) signupErrorText.textContent = 'Email is required.';
@@ -279,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(baseUrl + '/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, name: name || undefined, tenantCode, tenantName: tenantName || undefined })
+                    body: JSON.stringify({ email, password, name: name || undefined, tenantCode })
                 });
                 const data = await response.json();
 

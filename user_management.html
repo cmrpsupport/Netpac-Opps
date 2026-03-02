@@ -38,9 +38,11 @@
         .resizable-table th:nth-child(2) { width: 180px; min-width: 150px; } /* EMAIL */
         .resizable-table th:nth-child(3) { width: 100px; min-width: 80px; } /* ROLES */
         .resizable-table th:nth-child(4) { width: 90px; min-width: 70px; } /* ACCOUNT TYPE */
-        .resizable-table th:nth-child(5) { width: 120px; min-width: 100px; } /* LAST LOGIN */
-        .resizable-table th:nth-child(6) { width: 100px; min-width: 80px; } /* TIMESTAMP */
-        .resizable-table th:nth-child(7) { width: 200px; min-width: 180px; } /* ACTIONS */
+        .resizable-table th:nth-child(5) { width: 120px; min-width: 100px; } /* ACCOUNT MGR */
+        .resizable-table th:nth-child(6) { width: 100px; min-width: 80px; } /* PIC */
+        .resizable-table th:nth-child(7) { width: 120px; min-width: 100px; } /* LAST LOGIN */
+        .resizable-table th:nth-child(8) { width: 100px; min-width: 80px; } /* TIMESTAMP */
+        .resizable-table th:nth-child(9) { width: 200px; min-width: 180px; } /* ACTIONS */
         
         /* Resize handle */
         .resize-handle {
@@ -127,6 +129,14 @@
                                     <div class="resize-handle"></div>
                                 </th>
                                 <th class="px-3 py-2 text-left">
+                                    ACCOUNT MGR
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
+                                    PIC
+                                    <div class="resize-handle"></div>
+                                </th>
+                                <th class="px-3 py-2 text-left">
                                     LAST LOGIN
                                     <div class="resize-handle"></div>
                                 </th>
@@ -139,7 +149,7 @@
                     </thead>
                     <tbody id="userTableBody">
                             <tr>
-                                <td colspan="7" class="text-center p-4 loading-text">Loading users...</td>
+                                <td colspan="9" class="text-center p-4 loading-text">Loading users...</td>
                             </tr>
                     </tbody>
                 </table>
@@ -218,6 +228,20 @@
                                 <option value="System Admin">System Admin</option>
                             </select>
                         </div>
+                        <div class="enhanced-field">
+                            <label for="accountManagerId">Tag to Account Manager</label>
+                            <select id="accountManagerId" name="accountManagerId">
+                                <option value="">— None —</option>
+                            </select>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Optional: link this user once they have an account.</span>
+                        </div>
+                        <div class="enhanced-field">
+                            <label for="picId">Tag to PIC (Person in Charge)</label>
+                            <select id="picId" name="picId">
+                                <option value="">— None —</option>
+                            </select>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Optional: link this user to a PIC once they have an account.</span>
+                        </div>
                     </div>
                     </div>
                 </form>
@@ -291,6 +315,58 @@
         }
     }
 
+    // Load account managers into the dropdown (used in user add/edit modal)
+    async function loadAccountManagersDropdown() {
+        const select = document.getElementById('accountManagerId');
+        if (!select) return;
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) return;
+        try {
+            const response = await fetch(getApiUrl('/api/account-managers'), {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            const list = response.ok ? await response.json() : [];
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">— None —</option>' + (list || [])
+                .filter(am => am.is_active !== 0)
+                .map(am => `<option value="${am.id}">${escapeHtml(am.name)}${am.email ? ' (' + escapeHtml(am.email) + ')' : ''}</option>`)
+                .join('');
+            if (currentValue) select.value = currentValue;
+        } catch (e) {
+            console.warn('Could not load account managers:', e);
+        }
+    }
+    async function loadPicsDropdown() {
+        const select = document.getElementById('picId');
+        if (!select) return;
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) return;
+        try {
+            const response = await fetch(getApiUrl('/api/pics'), {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            const list = response.ok ? await response.json() : [];
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">— None —</option>' + (list || [])
+                .filter(p => p.is_active !== 0)
+                .map(p => `<option value="${p.id}">${escapeHtml(p.name)}${p.email ? ' (' + escapeHtml(p.email) + ')' : ''}</option>`)
+                .join('');
+            if (currentValue) select.value = currentValue;
+        } catch (e) {
+            console.warn('Could not load PICs:', e);
+        }
+    }
+    function escapeHtml(s) {
+        if (s == null) return '';
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
     // Fetch users from API
     async function fetchUsers() {
         try {
@@ -349,7 +425,7 @@
             console.error('Error fetching users:', error);
             // Show detailed error in table
             const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-red-600">
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center p-4 text-red-600">
                 <div class="font-bold">Error loading users</div>
                 <div class="text-sm mt-2">${error.message}</div>
             </td></tr>`;
@@ -362,7 +438,7 @@
         tbody.innerHTML = '';
 
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">No users found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center p-4 text-gray-500">No users found</td></tr>';
                 return;
             }
 
@@ -421,6 +497,8 @@
             }
             
             const accountType = user.accountType || user.account_type || 'User';
+            const accountMgrName = user.accountManagerName || user.account_manager_name || '—';
+            const picName = user.picName || user.pic_name || '—';
             
             // Format last login date
             let lastLogin = 'Never';
@@ -463,6 +541,8 @@
                 <td class="px-3 py-2">${email}</td>
                 <td class="px-3 py-2"><strong>${roles}</strong></td>
                 <td class="px-3 py-2">${accountType}</td>
+                <td class="px-3 py-2">${accountMgrName}</td>
+                <td class="px-3 py-2">${picName}</td>
                 <td class="px-3 py-2">${lastLogin}</td>
                 <td class="px-3 py-2">${timestamp}</td>
                 <td class="px-3 py-2">
@@ -560,12 +640,15 @@
         // Add user button
         const addUserButton = document.getElementById('addUserButton');
         if (addUserButton) {
-            addUserButton.addEventListener('click', () => {
-                // Reset form for new user
+            addUserButton.addEventListener('click', async () => {
                 document.getElementById('userForm').reset();
                 document.getElementById('userId').value = '';
                 document.getElementById('password').required = true;
                 document.getElementById('modalTitle').textContent = 'Add New User';
+                await loadAccountManagersDropdown();
+            await loadPicsDropdown();
+                document.getElementById('accountManagerId').value = '';
+                document.getElementById('picId').value = '';
                 document.getElementById('userModalOverlay').classList.remove('hidden');
                 document.getElementById('userModal').classList.remove('hidden');
             });
@@ -621,11 +704,15 @@
         try {
             const formData = new FormData(e.target);
             const userId = formData.get('userId');
+            const accountManagerIdVal = formData.get('accountManagerId');
+            const picIdVal = formData.get('picId');
             const userData = {
-                name: formData.get('username'), // Use 'name' field for username
+                name: formData.get('username'),
                 email: formData.get('email'),
-                roles: Array.from(formData.getAll('roles')), // Updated to match the new field name
-                accountType: formData.get('accountType')
+                roles: Array.from(formData.getAll('roles')),
+                accountType: formData.get('accountType'),
+                accountManagerId: accountManagerIdVal && accountManagerIdVal !== '' ? parseInt(accountManagerIdVal, 10) : null,
+                picId: picIdVal && picIdVal !== '' ? parseInt(picIdVal, 10) : null
             };
 
             // Validate required fields
@@ -721,6 +808,12 @@
             passwordField.placeholder = 'Leave blank to keep current password';
             
             document.getElementById('accountType').value = user.accountType || user.account_type || 'User';
+            await loadAccountManagersDropdown();
+            await loadPicsDropdown();
+            const amSelect = document.getElementById('accountManagerId');
+            if (amSelect) amSelect.value = (user.accountManagerId != null && user.accountManagerId !== '') ? String(user.accountManagerId) : '';
+            const picSelect = document.getElementById('picId');
+            if (picSelect) picSelect.value = (user.picId != null && user.picId !== '') ? String(user.picId) : '';
             
             // Reset and set role checkboxes
             const roleCheckboxes = document.querySelectorAll('#roleCheckboxes input[type="checkbox"]');

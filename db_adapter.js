@@ -1,5 +1,5 @@
 /**
- * Database Adapter for PostgreSQL, SQLiteCloud, and local SQLite
+ * Database Adapter for PostgreSQL and local SQLite
  * Set USE_SQLITE_LOCAL=1 and run `node scripts/init-local-sqlite.js` to use a local SQLite DB.
  */
 
@@ -13,12 +13,16 @@ let dbType = null;
 
 /**
  * Initialize database connection.
- * Uses local SQLite if USE_SQLITE_LOCAL=1 (or SQLITE_DB_PATH is set). Otherwise attempts PostgreSQL/SQLiteCloud if DATABASE_URL is set.
- * If none are set, no connection is made (mock/disabled mode).
+ * Uses local SQLite only (no cloud DB). Set USE_SQLITE_LOCAL=1 or leave unset to use default ./data/local.db.
+ * Cloud PostgreSQL is not used; DATABASE_URL is ignored.
  */
 async function initDatabase() {
-    const useLocalSqlite = process.env.USE_SQLITE_LOCAL === '1' || process.env.USE_SQLITE_LOCAL === 'true' || process.env.SQLITE_DB_PATH;
+    const useLocalSqlite = process.env.USE_SQLITE_LOCAL !== '0' && process.env.USE_SQLITE_LOCAL !== 'false';
     const dbPath = process.env.SQLITE_DB_PATH || path.join(__dirname, 'data', 'local.db');
+
+    if (process.env.DATABASE_URL) {
+        console.log('ℹ️  DATABASE_URL is set but ignored; using local SQLite only.');
+    }
 
     if (useLocalSqlite) {
         try {
@@ -32,41 +36,19 @@ async function initDatabase() {
             db.pragma('foreign_keys = ON');
             dbType = 'sqlite';
             console.log('✅ Local SQLite database connected:', dbPath);
-            // Return pool-like object so server's pool.connect() works
             return {
                 connect: async () => ({ query, release: () => {} })
             };
         } catch (error) {
             console.error('❌ Local SQLite connection error:', error.message);
-            console.warn('⚠️  Falling back to no DB. Create the DB with: node scripts/init-local-sqlite.js');
+            console.warn('⚠️  Run: node scripts/init-local-sqlite.js');
             db = null;
             dbType = null;
             return null;
         }
     }
 
-    if (process.env.DATABASE_URL) {
-        const url = process.env.DATABASE_URL;
-        if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
-            const { Pool } = require('pg');
-            db = new Pool({ connectionString: url });
-            dbType = 'postgresql';
-            console.log('✅ PostgreSQL database connected');
-            return db;
-        }
-        if (url.startsWith('sqlitecloud://') || url.includes('sqlitecloud')) {
-            const { SQLiteCloud } = require('@sqlitecloud/drivers');
-            db = new SQLiteCloud(url);
-            await db.connect();
-            dbType = 'sqlitecloud';
-            console.log('✅ SQLiteCloud database connected');
-            return db;
-        }
-    }
-
-    // No DB configured
-    console.warn('⚠️  SQL database connection is disabled. All DB queries return empty results.');
-    console.warn('   To use local SQLite: set USE_SQLITE_LOCAL=1 and run node scripts/init-local-sqlite.js');
+    console.warn('⚠️  To use local SQLite set USE_SQLITE_LOCAL=1 (or leave unset). Cloud DB is disabled.');
     return null;
 }
 
@@ -105,29 +87,25 @@ async function query(sql, params = []) {
         });
     }
 
-    if (dbType === 'sqlitecloud') {
-        try {
-            const runSql = convertSQL(sql);
-            const result = await db.sql(runSql, ...params);
-            if (Array.isArray(result)) {
-                return { rows: result, rowCount: result.length };
-            }
-            return {
-                rows: [],
-                rowCount: result.changes || 0,
-                lastID: result.lastID
-            };
-        } catch (error) {
-            console.error('SQLiteCloud query error:', error);
-            throw error;
-        }
-    }
-
     if (dbType === 'postgresql') {
-        return await db.query(sql, params);
+        const pgSql = convertToPgPlaceholders(sql);
+        const result = await db.query(pgSql, params);
+        const rows = result.rows || [];
+        const rowCount = result.rowCount ?? rows.length;
+        const lastID = rows[0] && (rows[0].id != null) ? rows[0].id : undefined;
+        return { rows, rowCount, lastID };
     }
 
     return { rows: [], rowCount: 0 };
+}
+
+/**
+ * Convert ? placeholders to $1, $2, $3 for node-pg (PostgreSQL).
+ */
+function convertToPgPlaceholders(sql) {
+    if (dbType !== 'postgresql') return sql;
+    let n = 0;
+    return sql.replace(/\?/g, () => `$${++n}`);
 }
 
 /**
@@ -163,16 +141,7 @@ async function transaction(callback) {
         return;
     }
 
-    if (dbType === 'sqlitecloud') {
-        await query('BEGIN TRANSACTION');
-        try {
-            await callback(query);
-            await query('COMMIT');
-        } catch (error) {
-            await query('ROLLBACK');
-            throw error;
-        }
-    } else if (dbType === 'postgresql') {
+    if (dbType === 'postgresql') {
         const client = await db.connect();
         try {
             await client.query('BEGIN');
@@ -200,7 +169,7 @@ async function getClient() {
     if (dbType === 'postgresql') {
         return await db.connect();
     }
-    if (dbType === 'sqlite' || dbType === 'sqlitecloud') {
+    if (dbType === 'sqlite') {
         return { query: query, release: () => {} };
     }
     return { query: async () => ({ rows: [], rowCount: 0 }), release: () => {} };
@@ -213,8 +182,6 @@ async function close() {
     if (db) {
         if (dbType === 'postgresql') {
             await db.end();
-        } else if (dbType === 'sqlitecloud') {
-            db.close();
         } else if (dbType === 'sqlite') {
             db.close();
         }
@@ -236,12 +203,13 @@ function getDBType() {
  * Convert PostgreSQL-specific SQL to SQLite-compatible SQL.
  */
 function convertSQL(sql) {
-    if (dbType !== 'sqlite' && dbType !== 'sqlitecloud') {
+    if (dbType !== 'sqlite') {
         return sql;
     }
 
     let converted = sql;
     converted = converted.replace(/RETURNING \*/gi, '');
+    converted = converted.replace(/\s*RETURNING\s+[\w*, ]+\s*$/gi, '');
     converted = converted.replace(/gen_random_uuid\(\)/gi, "lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab',abs(random())%4+1,1) || hex(randomblob(2)) || '-' || hex(randomblob(6)))");
     converted = converted.replace(/NOW\(\)/gi, "datetime('now')");
     converted = converted.replace(/CURRENT_TIMESTAMP/gi, "datetime('now')");

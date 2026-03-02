@@ -2,22 +2,27 @@ require('dotenv').config(); // Load environment variables from .env
 console.log("=== SERVER.JS STARTED ===");
 console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log('🔗 Database: SQL connection removed (no DB)');
-console.log(`🚀 Port: ${process.env.PORT || 3000}`);
+console.log(`🚀 Bind: ${process.env.HOST || '0.0.0.0'}:${process.env.PORT || 3000}`);
 
 const express = require('express');
 const path = require('path'); // Import the path module
-const db = require('./db_adapter'); // Database adapter for PostgreSQL/SQLiteCloud
+const db = require('./db_adapter'); // Database adapter for PostgreSQL / local SQLite
 const { v4: uuidv4 } = require('uuid'); // Import uuid package
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey'; // Use env var in production
+// Net Pacific only: single allowed tenant (default = Net Pacific company)
+const NETPACIFIC_TENANT_CODE = (process.env.NETPACIFIC_TENANT_CODE || 'default').toString().trim().toLowerCase() || 'default';
+// Project code prefix: set once in .env (e.g. PROJECT_CODE_PREFIX=NETPAC) to align with your company; default CMRP. Format: PREFIX + YYMM + 4-digit sequence.
+const PROJECT_CODE_PREFIX = (process.env.PROJECT_CODE_PREFIX || 'CMRP').toString().trim().toUpperCase() || 'CMRP';
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3000; // Use environment port for Render
+const port = process.env.PORT || 3000;
+const host = process.env.HOST || '0.0.0.0'; // 0.0.0.0 = all interfaces; use 127.0.0.1 for local only
 
 // Import routes
 const snapshotsRouter = require('./backend/routes/snapshots');
@@ -72,8 +77,18 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Add JSON body parser middleware - must be before routes that need it
-app.use(express.json());
+// JSON body parser + ensure req.body is always a plain object (avoids hasOwnProperty on undefined in validators)
+app.use((req, res, next) => {
+  express.json()(req, res, (err) => {
+    if (err) return next(err);
+    if (req.body == null || typeof req.body !== 'object' || Array.isArray(req.body)) {
+      req.body = {};
+    } else {
+      req.body = { ...req.body };
+    }
+    next();
+  });
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -96,18 +111,73 @@ app.get('/api/cors-test', (req, res) => {
   });
 });
 
-// Database: SQL connection removed — initDatabase() returns null, queries return empty
+// Database: init then run migrations, then start listening so tables exist before first request
 let pool;
+function startServer() {
+  const server = app.listen(port, host, () => {
+    console.log(`🚀 Server listening at http://${host}:${port}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📁 Serving static files from: ${__dirname}`);
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔒 CORS allowed origins:', getAllowedOrigins());
+    }
+    console.log(`🩺 Health check: http://localhost:${port}/api/health`);
+    console.log(`🔒 CORS test: http://localhost:${port}/api/cors-test`);
+    console.log(`📊 Win/Loss Dashboard available at http://localhost:${port}/win-loss_dashboard.html`);
+    console.log(`📈 Forecast Dashboard available at http://localhost:${port}/forecast_dashboard.html`);
+  });
+  server.on('error', (error) => {
+    console.error('❌ Server startup error:', error);
+    process.exit(1);
+  });
+  return server;
+}
+
 (async () => {
   try {
     pool = await db.initDatabase();
+    await ensureAccountManagerAndPicTables();
+    server = startServer();
   } catch (error) {
     console.error('❌ Database init error:', error);
+    server = startServer();
   }
 })();
 
-// Google Drive Service Integration  
-const GoogleDriveService = require('./google_drive_service');
+async function ensureAccountManagerAndPicTables() {
+  if (!db.getDB()) return;
+  const dbType = db.getDBType();
+  try {
+    if (dbType === 'sqlite') {
+      await db.query("CREATE TABLE IF NOT EXISTS account_managers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
+      await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
+      try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { /* column may exist */ }
+      try { await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER'); } catch (e) { /* column may exist */ }
+    } else if (dbType === 'postgresql') {
+      await db.query(`CREATE TABLE IF NOT EXISTS account_managers (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      await db.query(`CREATE TABLE IF NOT EXISTS pics (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+      try { await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS account_manager_id INTEGER'); } catch (e) { /* ignore */ }
+      try { await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS pic_id INTEGER'); } catch (e) { /* ignore */ }
+    }
+  } catch (err) {
+    console.warn('Account managers/PIC tables migration warning:', err.message);
+    console.warn('Migration stack:', err.stack);
+  }
+}
 
 // Google Calendar OAuth Service Integration
 const GoogleCalendarOAuthService = require('./google_calendar_oauth_service');
@@ -130,8 +200,12 @@ console.log(`🧪 Mock data: ${USE_MOCK_DATA ? 'Enabled' : 'Disabled'}`);
 // Mock login handler for development
 app.post('/api/login', express.json(), async (req, res) => {
     try {
-        const tenantCode = (req.body?.tenantCode || req.body?.tenant_code || 'default').toString().trim().toLowerCase() || 'default';
-        // Resolve tenant id from tenant code (fallback to 'default')
+        const requestedCode = (req.body?.tenantCode || req.body?.tenant_code || 'default').toString().trim().toLowerCase() || 'default';
+        // Net Pacific only: reject login for any other tenant
+        if (requestedCode !== NETPACIFIC_TENANT_CODE) {
+            return res.status(403).json({ error: 'This application is for Net Pacific only. Invalid organization.' });
+        }
+        const tenantCode = NETPACIFIC_TENANT_CODE;
         let tenantId = 'default';
         try {
             const tenantRes = await db.query('SELECT id FROM tenants WHERE code = ?', [tenantCode]);
@@ -1008,6 +1082,11 @@ function getColumnInsensitive(obj, target) {
     return null;
 }
 
+/** Safe hasOwnProperty: avoids "Cannot read properties of undefined (reading 'hasOwnProperty')". */
+function safeHas(obj, key) {
+    return obj != null && typeof obj === 'object' && Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 // Robust date parsing function - attempts to parse various formats into a JS Date object (UTC midnight)
 function robustParseDate(val) {
     if (!val) return null;
@@ -1602,24 +1681,20 @@ app.post('/api/signup', authLimiter, [
         return res.status(400).json({ error: errors.array()[0].msg || 'Invalid input', details: errors.array() });
     }
 
-    const { email, password, name, tenantCode, tenantName } = req.body;
+    const { email, password, name } = req.body;
     const emailLower = (email || '').toLowerCase();
-    const orgCode = (tenantCode || 'default').toString().trim().toLowerCase() || 'default';
-    const orgName = (tenantName || '').toString().trim();
+    // Net Pacific only: always use the single allowed tenant; ignore any org from body
+    const orgCode = NETPACIFIC_TENANT_CODE;
 
     try {
-        // Ensure tenant exists (create it on first signup if non-default)
         let tenantId = 'default';
         try {
             const tenantRes = await db.query('SELECT id, name FROM tenants WHERE code = ?', [orgCode]);
             if (tenantRes.rows?.length) {
                 tenantId = tenantRes.rows[0].id;
-            } else if (orgCode !== 'default') {
-                tenantId = uuidv4();
-                await db.query('INSERT INTO tenants (id, code, name) VALUES (?, ?, ?)', [tenantId, orgCode, orgName || orgCode.toUpperCase()]);
             }
+            // Do not create new tenants; signup is Net Pacific only
         } catch (e) {
-            // If tenants table doesn't exist, fall back to default
             tenantId = 'default';
         }
 
@@ -1838,7 +1913,6 @@ app.get('/api/opportunities', authenticateToken, async (req, res) => {
   }
 });
 
-// API endpoint to get next project code by checking Google Drive
 // Check if project code already exists
 app.get('/api/opportunities/check-project-code', authenticateToken, async (req, res) => {
   const { code } = req.query;
@@ -1863,139 +1937,41 @@ app.get('/api/opportunities/check-project-code', authenticateToken, async (req, 
   }
 });
 
+// Next project code (database-only)
 app.get('/api/next-project-code', authenticateToken, async (req, res) => {
   console.log('[API /api/next-project-code] Request received');
-  
   try {
-    // Initialize Google Drive service to check existing folders
-    const GoogleDriveService = require('./google_drive_service.js');
-    const driveService = new GoogleDriveService();
-    
-    const initialized = await driveService.initialize();
-    if (!initialized) {
-      throw new Error('Failed to initialize Google Drive service');
-    }
-    
-    // Get all folders from the shared drive that match CMRP pattern
-    console.log('[API] Scanning Google Drive for existing CMRP project codes...');
-    
-    const listResponse = await driveService.drive.files.list({
-      q: `parents in '${process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID}' and mimeType='application/vnd.google-apps.folder' and name contains 'CMRP' and trashed=false`,
-      fields: 'files(id, name)',
-      pageSize: 1000 // Get up to 1000 folders
-    });
-    
-    const folders = listResponse.data.files || [];
-    console.log(`[API] Found ${folders.length} folders in Google Drive`);
-    
-    // Extract project codes from folder names
-    const existingCodes = [];
+    const result = await db.query(
+      'SELECT project_code FROM opps_monitoring WHERE project_code IS NOT NULL AND project_code LIKE ? ORDER BY project_code DESC LIMIT 1',
+      [PROJECT_CODE_PREFIX + '%']
+    );
     const currentYear = new Date().getFullYear().toString().slice(-2);
     const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-    
-    folders.forEach(folder => {
-      // Look for CMRP codes in folder names (format: CMRPYYMMXXXX-...)
-      const match = folder.name.match(/CMRP(\d{2})(\d{2})(\d{4})/);
-      if (match) {
-        const projectCode = match[0]; // Full CMRP code
-        existingCodes.push(projectCode);
-        console.log(`[API] Found existing code: ${projectCode} in folder: ${folder.name}`);
-      }
-    });
-    
-    // Sort codes to find the highest one for current year/month
-    existingCodes.sort();
-    
+    const prefixEscaped = PROJECT_CODE_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const fallbackPattern = new RegExp(`^${prefixEscaped}(\\d{2})(\\d{2})(\\d{4})$`);
     let nextCode;
-    let highestSequence = 0;
-    
-    // Find the highest sequence number for current year/month
-    existingCodes.forEach(code => {
-      const match = code.match(/^CMRP(\d{2})(\d{2})(\d{4})$/);
+    if (result.rows.length === 0) {
+      nextCode = `${PROJECT_CODE_PREFIX}${currentYear}${currentMonth}0001`;
+    } else {
+      const lastCode = result.rows[0].project_code;
+      const match = lastCode.match(fallbackPattern);
       if (match) {
-        const [, year, month, sequence] = match;
-        if (year === currentYear && month === currentMonth) {
-          highestSequence = Math.max(highestSequence, parseInt(sequence));
+        const [, lastYear, lastMonth, lastSequence] = match;
+        if (currentYear === lastYear && currentMonth === lastMonth) {
+          const nextSequence = (parseInt(lastSequence) + 1).toString().padStart(4, '0');
+          nextCode = `${PROJECT_CODE_PREFIX}${currentYear}${currentMonth}${nextSequence}`;
+        } else {
+          nextCode = `${PROJECT_CODE_PREFIX}${currentYear}${currentMonth}0001`;
         }
+      } else {
+        nextCode = `${PROJECT_CODE_PREFIX}${currentYear}${currentMonth}0001`;
       }
-    });
-    
-    // Generate next code
-    const nextSequence = (highestSequence + 1).toString().padStart(4, '0');
-    nextCode = `CMRP${currentYear}${currentMonth}${nextSequence}`;
-    
-    // Double-check that this code doesn't already exist
-    while (existingCodes.includes(nextCode)) {
-      highestSequence++;
-      const nextSequence = (highestSequence + 1).toString().padStart(4, '0');
-      nextCode = `CMRP${currentYear}${currentMonth}${nextSequence}`;
     }
-    
-    console.log(`[API] Generated next project code: ${nextCode} (highest existing sequence: ${highestSequence})`);
-    res.json({ 
-      nextProjectCode: nextCode,
-      existingCodesFound: existingCodes.length,
-      highestSequence: highestSequence
-    });
-    
+    console.log('[API] Generated next project code:', nextCode);
+    res.json({ nextProjectCode: nextCode });
   } catch (error) {
     console.error('[API /api/next-project-code] Error:', error);
-    
-    // Fallback to database-based generation if Google Drive fails
-    console.log('[API] Google Drive failed, falling back to database method...');
-    
-    try {
-      const client = await pool.connect();
-      
-      try {
-        const result = await client.query(`
-          SELECT project_code 
-          FROM opps_monitoring 
-          WHERE project_code IS NOT NULL 
-            AND project_code LIKE 'CMRP%' 
-          ORDER BY project_code DESC 
-          LIMIT 1
-        `);
-        
-        let nextCode;
-        const currentYear = new Date().getFullYear().toString().slice(-2);
-        const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-        
-        if (result.rows.length === 0) {
-          nextCode = `CMRP${currentYear}${currentMonth}0001`;
-        } else {
-          const lastCode = result.rows[0].project_code;
-          const match = lastCode.match(/^CMRP(\d{2})(\d{2})(\d{4})$/);
-          
-          if (match) {
-            const [, lastYear, lastMonth, lastSequence] = match;
-            
-            if (currentYear === lastYear && currentMonth === lastMonth) {
-              const nextSequence = (parseInt(lastSequence) + 1).toString().padStart(4, '0');
-              nextCode = `CMRP${currentYear}${currentMonth}${nextSequence}`;
-            } else {
-              nextCode = `CMRP${currentYear}${currentMonth}0001`;
-            }
-          } else {
-            nextCode = `CMRP${currentYear}${currentMonth}0001`;
-          }
-        }
-        
-        console.log('[API] Fallback generated next project code:', nextCode);
-        res.json({ 
-          nextProjectCode: nextCode,
-          fallbackUsed: true,
-          warning: 'Google Drive scan failed, using database fallback'
-        });
-        
-      } finally {
-        client.release();
-      }
-      
-    } catch (fallbackError) {
-      console.error('[API /api/next-project-code] Fallback error:', fallbackError);
-      res.status(500).json({ error: 'Failed to generate project code' });
-    }
+    res.status(500).json({ error: 'Failed to generate project code' });
   }
 });
 
@@ -2072,19 +2048,20 @@ app.get('/api/dashboard', async (req, res) => {
         margin
       FROM opps_monitoring
     `);
-    const allOpportunities = result.rows;
+    const allOpportunities = Array.isArray(result.rows) ? result.rows : [];
 
     // Unique Solutions
     const solutionKey = 'solutions';
-    const uniqueSolutions = allOpportunities.length > 0 && allOpportunities[0].hasOwnProperty(solutionKey)
-        ? Array.from(new Set(allOpportunities.map(opp => opp[solutionKey]).filter(Boolean))).sort()
+    const firstOpp = allOpportunities.length > 0 ? allOpportunities[0] : null;
+    const uniqueSolutions = safeHas(firstOpp, solutionKey)
+        ? Array.from(new Set(allOpportunities.map(opp => opp && opp[solutionKey]).filter(Boolean))).sort()
         : [];
     console.log(`[API /api/dashboard] Unique Solutions found: ${uniqueSolutions.join(', ')}`);
 
     // Unique Account Managers
     const accountMgrKey = 'account_mgr';
-    const uniqueAccountMgrs = allOpportunities.length > 0 && allOpportunities[0].hasOwnProperty(accountMgrKey)
-        ? Array.from(new Set(allOpportunities.map(opp => opp[accountMgrKey]).filter(Boolean))).sort()
+    const uniqueAccountMgrs = safeHas(firstOpp, accountMgrKey)
+        ? Array.from(new Set(allOpportunities.map(opp => opp && opp[accountMgrKey]).filter(Boolean))).sort()
         : [];
     console.log(`[API /api/dashboard] Unique Account Managers found: ${uniqueAccountMgrs.join(', ')}`);
 
@@ -2551,74 +2528,64 @@ app.get('/api/forecast-sliding-summary', async (req, res) => {
 app.post('/api/opportunities', authenticateToken,
   [
     body().customSanitizer(obj => {
-      // Sanitize all string fields in the object
-      for (const key in obj) {
-        if (typeof obj[key] === 'string') {
-          obj[key] = obj[key].trim();
-        }
+      if (obj == null || typeof obj !== 'object') return {};
+      const out = {};
+      for (const key of Object.keys(obj)) {
+        const v = obj[key];
+        out[key] = typeof v === 'string' ? v.trim() : v;
       }
-      return obj;
+      return out;
     }),
-    // More flexible validation: only validate if field has content
     body('opp_name').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 200;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 200;
+      return true;
     }).escape(),
     body('project_name').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 200;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 200;
+      return true;
     }).escape(),
     body('project_code').optional().custom(async (value) => {
-      if (value && value.length > 0) {
-        // Check for duplicate project code in database
-        const existingProject = await db.query(
-          'SELECT uid FROM opps_monitoring WHERE project_code = ?',
-          [value.trim()]
-        );
-        if (existingProject.rows.length > 0) {
-          throw new Error(`Project code "${value}" already exists`);
-        }
+      if (value == null || (typeof value !== 'string') || value.trim() === '') return true;
+      const existingProject = await db.query(
+        'SELECT uid FROM opps_monitoring WHERE project_code = ?',
+        [value.trim()]
+      );
+      if (existingProject && Array.isArray(existingProject.rows) && existingProject.rows.length > 0) {
+        throw new Error(`Project code "${value}" already exists`);
       }
       return true;
     }),
     body('client').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 200;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 200;
+      return true;
     }).escape(),
     body('account_mgr').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 100;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 100;
+      return true;
     }).escape(),
     body('margin').optional().custom(value => {
-      if (!value) return true; // Allow empty values
-      // Handle percentage format (e.g., "15%")
+      if (value == null || value === '') return true;
       const cleanedValue = typeof value === 'string' ? value.replace(/[%]/g, '').trim() : value;
       return !isNaN(parseFloat(cleanedValue)) && isFinite(cleanedValue);
     }),
     body('margin_percentage').optional().custom(value => {
-      if (!value) return true; // Allow empty values
-      // Handle percentage format (e.g., "15%")
+      if (value == null || value === '') return true;
       const cleanedValue = typeof value === 'string' ? value.replace(/[%]/g, '').trim() : value;
       return !isNaN(parseFloat(cleanedValue)) && isFinite(cleanedValue);
     }),
     body('final_amt').optional().custom(value => {
-      if (!value) return true; // Allow empty values
-      // Handle currency format (e.g., "₱10,000.00", "$1,000.00")
+      if (value == null || value === '') return true;
       const cleanedValue = typeof value === 'string' ? value.replace(/[₱$,]/g, '').trim() : value;
       return !isNaN(parseFloat(cleanedValue)) && isFinite(cleanedValue);
     }),
     body('date_awarded_lost').optional().isISO8601().toDate(),
-    // Add more fields as needed
   ],
   async (req, res) => {
+    if (req.body == null || typeof req.body !== 'object') req.body = {};
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: 'Invalid input', details: errors.array() });
@@ -2650,7 +2617,15 @@ app.post('/api/opportunities', authenticateToken,
     console.log('Executing SQL:', sql); console.log('With Values:', values);
     try {
       const result = await db.query(sql, values);
-      const createdOpp = result.rows[0];
+      // SQLite strips RETURNING *, so rows[0] may be undefined; use newOpp + uid as fallback
+      let createdOpp = result.rows && result.rows[0];
+      if (!createdOpp && newOpp && newOpp.uid) {
+        createdOpp = { ...newOpp, ...Object.fromEntries(keys.map((k, i) => [k, values[i]])) };
+      }
+      if (!createdOpp) {
+        return res.status(500).json({ error: 'Failed to create opportunity (no row returned)' });
+      }
+      createdOpp = { ...createdOpp };
       const revKey = getColumnInsensitive(createdOpp, 'rev');
       const revNumber = revKey ? (Number(createdOpp[revKey]) || 0) : 0;
       // *** FIX: Use correct database column names in fieldsToStore ***
@@ -2658,7 +2633,7 @@ app.post('/api/opportunities', authenticateToken,
       const snapshotFields = {};
       fieldsToStore.forEach(f => {
         const key = (f === 'rev') ? 'rev' : getColumnInsensitive(createdOpp, f);
-        if (key && createdOpp.hasOwnProperty(key)) snapshotFields[f] = createdOpp[key]; else snapshotFields[f] = null;
+        if (safeHas(createdOpp, key)) snapshotFields[f] = createdOpp[key]; else snapshotFields[f] = null;
       });
       await db.query(
         db.convertSQL(`INSERT INTO opportunity_revisions (opportunity_uid, revision_number, changed_by, changed_at, changed_fields, full_snapshot)
@@ -2667,41 +2642,15 @@ app.post('/api/opportunities', authenticateToken,
       );
       console.log(`Revision ${revNumber} created for new opportunity ${createdOpp.uid}`);
       
-      // Auto-create Google Drive folder if project has a code and no existing folder
-      if (createdOpp.project_code && !createdOpp.google_drive_folder_id) {
-        try {
-          console.log(`🔄 Auto-creating Google Drive folder for project: ${createdOpp.project_code}`);
-          const GoogleDriveService = require('./google_drive_service.js');
-          const driveService = new GoogleDriveService();
-          
-          const initialized = await driveService.initialize();
-          if (initialized) {
-            const folderResult = await driveService.createFolderForOpportunity(
-              createdOpp, 
-              req.user?.name || req.user?.email || 'SYSTEM'
-            );
-            console.log(`✅ Auto-created Google Drive folder: ${folderResult.name}`);
-          } else {
-            console.log(`⚠️ Google Drive service not available, skipping auto-folder creation`);
-          }
-        } catch (driveError) {
-          // Don't fail the opportunity creation if folder creation fails
-          console.error('❌ Auto Google Drive folder creation failed:', driveError.message);
-        }
-      } else if (createdOpp.google_drive_folder_id) {
-        console.log(`📁 Project already has linked Google Drive folder, skipping auto-creation`);
-      }
-      
-      // Create notifications for assignments in new opportunities
+      // Create notifications for assignments in new opportunities (only when pool has .query, e.g. pg)
       try {
-        const notificationService = new NotificationService(pool);
         const assignmentFields = ['pic', 'bom', 'account_mgr'];
-        
+        const canNotify = pool && typeof pool.query === 'function';
+        if (canNotify) {
+          const notificationService = new NotificationService(pool);
         for (const field of assignmentFields) {
           const assignedValue = createdOpp[field];
-          
-          // Check if assignment field has a value
-          if (assignedValue && assignedValue.trim() !== '') {
+          if (typeof assignedValue !== 'string' || assignedValue.trim() === '') continue;
             // Find user by name (assuming the field contains user names)
             const userQuery = 'SELECT id FROM users WHERE name ILIKE ? OR email ILIKE ? LIMIT 1';
             const userResult = await db.query(userQuery, [assignedValue.trim(), assignedValue.trim()]);
@@ -2726,7 +2675,7 @@ app.post('/api/opportunities', authenticateToken,
                 console.log(`[NOTIFICATION] Skipped self-assignment notification for ${field} on project ${projectName}`);
               }
             }
-          }
+        }
         }
       } catch (notificationError) {
         // Don't fail the creation if notification creation fails
@@ -2736,6 +2685,7 @@ app.post('/api/opportunities', authenticateToken,
       res.status(201).json(createdOpp);
     } catch (error) {
       console.error('Error inserting new opportunity or revision:', error);
+      if (error && error.stack) console.error('Stack:', error.stack);
       console.error('Error details:', {
         message: error.message,
         detail: error.detail,
@@ -2762,37 +2712,35 @@ app.post('/api/opportunities', authenticateToken,
 app.put('/api/opportunities/:uid', authenticateToken,
   [
     body().customSanitizer(obj => {
-      for (const key in obj) {
-        if (typeof obj[key] === 'string') {
-          obj[key] = obj[key].trim();
-        }
+      if (obj == null || typeof obj !== 'object') return {};
+      const out = {};
+      for (const key of Object.keys(obj)) {
+        const v = obj[key];
+        out[key] = typeof v === 'string' ? v.trim() : v;
       }
-      return obj;
+      return out;
     }),
-    // More flexible validation: only validate if field has content (same as POST endpoint)
     body('opp_name').optional().custom(value => {
-      if (value && value.length > 0) {
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) {
         return value.length >= 2 && value.length <= 200;
       }
       return true; // Allow empty values
     }).escape(),
     body('project_name').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 200;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 200;
+      return true;
     }).escape(),
     body('client').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 200;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 200;
+      return true;
     }).escape(),
     body('account_mgr').optional().custom(value => {
-      if (value && value.length > 0) {
-        return value.length >= 2 && value.length <= 100;
-      }
-      return true; // Allow empty values
+      if (value == null || typeof value !== 'string') return true;
+      if (value.length > 0) return value.length >= 2 && value.length <= 100;
+      return true;
     }).escape(),
     body('margin').optional().custom(value => {
       if (!value) return true; // Allow empty values
@@ -2816,6 +2764,7 @@ app.put('/api/opportunities/:uid', authenticateToken,
     // Add more fields as needed
   ],
   async (req, res) => {
+    if (req.body == null || typeof req.body !== 'object') req.body = {};
     console.log(`[PUT /api/opportunities/${req.params.uid}] === START ===`);
     console.log(`[PUT] Request headers:`, req.headers);
     console.log(`[PUT] Raw body received:`, JSON.stringify(req.body, null, 2));
@@ -2883,9 +2832,10 @@ app.put('/api/opportunities/:uid', authenticateToken,
       const fieldsToStore = ['rev', 'final_amt', 'margin', 'client_deadline', 'submitted_date', 'forecast_date'];
       const buildSnapshot = (row) => {
           const snap = {};
+          if (!row || typeof row !== 'object') return snap;
           fieldsToStore.forEach(f => {
               const key = (f === 'rev') ? 'rev' : getColumnInsensitive(row, f);
-              if (key && row.hasOwnProperty(key)) { snap[f] = row[key]; }
+              if (safeHas(row, key)) { snap[f] = row[key]; }
               else { snap[f] = null; }
           });
           return snap;
@@ -3097,17 +3047,23 @@ app.get('/update_password.html', (req, res) => {
 // GET all users
 app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await db.query('SELECT id, email, name, is_verified, roles, account_type, last_login_at FROM users ORDER BY email ASC');
-    const users = result.rows.map(u => ({
+    const result = await db.query(
+      'SELECT u.id, u.email, u.name, u.is_verified, u.roles, u.account_type, u.last_login_at, u.account_manager_id, am.name AS account_manager_name, u.pic_id, p.name AS pic_name FROM users u LEFT JOIN account_managers am ON am.id = u.account_manager_id LEFT JOIN pics p ON p.id = u.pic_id ORDER BY u.email ASC'
+    );
+    const users = (result.rows || []).map(u => ({
       _id: u.id,
-      id: u.id, // Add id field for frontend compatibility
-      username: u.name, // Map 'name' to 'username' for frontend compatibility
-      name: u.name, // Also include name field
+      id: u.id,
+      username: u.name,
+      name: u.name,
       email: u.email,
-      roles: typeof u.roles === 'string' ? JSON.parse(u.roles) : (Array.isArray(u.roles) ? u.roles : []), // Multi-role support - parse JSON string
+      roles: typeof u.roles === 'string' ? JSON.parse(u.roles) : (Array.isArray(u.roles) ? u.roles : []),
       accountType: u.account_type || 'User',
       is_verified: u.is_verified,
-      lastLoginAt: u.last_login_at
+      lastLoginAt: u.last_login_at,
+      accountManagerId: u.account_manager_id,
+      accountManagerName: u.account_manager_name,
+      picId: u.pic_id,
+      picName: u.pic_name
     }));
     res.json(users);
   } catch (err) {
@@ -3119,18 +3075,25 @@ app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
 // GET a single user by ID
 app.get('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const result = await db.query('SELECT id, email, name, is_verified, roles, account_type FROM users WHERE id = ?', [req.params.id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    const result = await db.query(
+      'SELECT u.id, u.email, u.name, u.is_verified, u.roles, u.account_type, u.account_manager_id, am.name AS account_manager_name, u.pic_id, p.name AS pic_name FROM users u LEFT JOIN account_managers am ON am.id = u.account_manager_id LEFT JOIN pics p ON p.id = u.pic_id WHERE u.id = ?',
+      [req.params.id]
+    );
+    if (!result.rows || result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
     const u = result.rows[0];
-    res.json({ 
-      _id: u.id, 
-      id: u.id, // Add id field for frontend compatibility
-      username: u.name, 
-      name: u.name, // Also include name field
-      email: u.email, 
-      roles: Array.isArray(u.roles) ? u.roles : [], // Multi-role support - use 'roles' plural
-      accountType: u.account_type || 'User', 
-      is_verified: u.is_verified 
+    res.json({
+      _id: u.id,
+      id: u.id,
+      username: u.name,
+      name: u.name,
+      email: u.email,
+      roles: Array.isArray(u.roles) ? u.roles : [],
+      accountType: u.account_type || 'User',
+      is_verified: u.is_verified,
+      accountManagerId: u.account_manager_id,
+      accountManagerName: u.account_manager_name,
+      picId: u.pic_id,
+      picName: u.pic_name
     });
   } catch (err) {
     console.error('Error fetching user:', err);
@@ -3145,7 +3108,9 @@ app.post('/api/users', authenticateToken, requireAdmin,
     body('password').isLength({ min: 8, max: 100 }).withMessage('Password must be 8-100 characters'), // Required for new users
     body('roles').isArray({ min: 1 }).withMessage('At least one role is required'),
     body('roles.*').isString().trim().escape().withMessage('Role must be a valid string'),
-    body('accountType').optional().isIn(['Admin', 'User', 'System Admin']).withMessage('Account type must be Admin, User, or System Admin')
+    body('accountType').optional().isIn(['Admin', 'User', 'System Admin']).withMessage('Account type must be Admin, User, or System Admin'),
+    body('accountManagerId').optional({ checkFalsy: true }).isInt().toInt(),
+    body('picId').optional({ checkFalsy: true }).isInt().toInt()
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -3153,7 +3118,7 @@ app.post('/api/users', authenticateToken, requireAdmin,
       return res.status(400).json({ error: 'Invalid input', details: errors.array() });
     }
     try {
-      const { username, name, email, password, roles, accountType } = req.body;
+      const { username, name, email, password, roles, accountType, accountManagerId, picId } = req.body;
       if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required.' });
       }
@@ -3166,18 +3131,20 @@ app.post('/api/users', authenticateToken, requireAdmin,
       const id = uuidv4();
       const finalName = name || username || null;
       await db.query(
-        'INSERT INTO users (id, email, password_hash, name, is_verified, roles, account_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, email, password_hash, finalName, true, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User']
+        'INSERT INTO users (id, email, password_hash, name, is_verified, roles, account_type, account_manager_id, pic_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [id, email, password_hash, finalName, true, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', accountManagerId || null, picId || null]
       );
-      res.status(201).json({ 
-        _id: id, 
+      res.status(201).json({
+        _id: id,
         id: id,
-        username: finalName, 
+        username: finalName,
         name: finalName,
-        email, 
-        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []), 
-        accountType: accountType || 'User', 
-        is_verified: true 
+        email,
+        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []),
+        accountType: accountType || 'User',
+        accountManagerId: accountManagerId || null,
+        picId: picId || null,
+        is_verified: true
       });
     } catch (err) {
       console.error('Error creating user:', err);
@@ -3193,7 +3160,9 @@ app.put('/api/users/:id', authenticateToken, requireAdmin,
     body('password').optional().isLength({ min: 8, max: 100 }),
     body('roles').isArray({ min: 1 }),
     body('roles.*').isString().trim().escape(),
-    body('accountType').optional().isIn(['Admin', 'User', 'System Admin'])
+    body('accountType').optional().isIn(['Admin', 'User', 'System Admin']),
+    body('accountManagerId').optional({ checkFalsy: true }).isInt().toInt(),
+    body('picId').optional({ checkFalsy: true }).isInt().toInt()
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -3201,28 +3170,30 @@ app.put('/api/users/:id', authenticateToken, requireAdmin,
       return res.status(400).json({ error: 'Invalid input', details: errors.array() });
     }
     try {
-      const { username, name, email, password, roles, accountType } = req.body;
+      const { username, name, email, password, roles, accountType, accountManagerId, picId } = req.body;
       const id = req.params.id;
       const finalName = name || username || null;
-      let updateSql = 'UPDATE users SET name=?, email=?, roles=?, account_type=?';
-      let params = [finalName, email, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', id];
+      let updateSql = 'UPDATE users SET name=?, email=?, roles=?, account_type=?, account_manager_id=?, pic_id=?';
+      let params = [finalName, email, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', accountManagerId || null, picId || null, id];
       if (password) {
         const password_hash = await bcrypt.hash(password, 10);
-        updateSql = 'UPDATE users SET name=?, email=?, password_hash=?, roles=?, account_type=? WHERE id=?';
-        params = [finalName, email, password_hash, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', id];
+        updateSql = 'UPDATE users SET name=?, email=?, password_hash=?, roles=?, account_type=?, account_manager_id=?, pic_id=? WHERE id=?';
+        params = [finalName, email, password_hash, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', accountManagerId || null, picId || null, id];
       } else {
         updateSql += ' WHERE id=?';
       }
       const result = await db.query(updateSql, params);
       if (result.rowCount === 0) return res.status(404).json({ message: 'User not found' });
-      res.json({ 
-        _id: id, 
+      res.json({
+        _id: id,
         id: id,
-        username: finalName, 
+        username: finalName,
         name: finalName,
-        email, 
-        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []), 
-        accountType: accountType || 'User' 
+        email,
+        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []),
+        accountType: accountType || 'User',
+        accountManagerId: accountManagerId || null,
+        picId: picId || null
       });
     } catch (err) {
       console.error('Error updating user:', err);
@@ -3241,6 +3212,181 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
   } catch (err) {
     console.error('Error deleting user:', err);
     res.status(500).json({ error: 'Failed to delete user.' });
+  }
+});
+
+// --- Account Managers API (master list; tag users to one when they have an account) ---
+app.get('/api/account-managers', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT id, name, email, is_active, created_at, updated_at FROM account_managers ORDER BY name ASC'
+    );
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error fetching account managers:', err);
+    res.json([]);
+  }
+});
+
+app.post('/api/account-managers', authenticateToken, requireAdmin,
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').optional({ checkFalsy: true }).trim().isEmail(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() });
+    const { name, email } = req.body;
+    const doInsert = async () => {
+      const result = await db.query(
+        'INSERT INTO account_managers (name, email, is_active) VALUES (?, ?, 1) RETURNING id',
+        [name, email || null]
+      );
+      return (result.rows && result.rows[0] && result.rows[0].id) || result.lastID;
+    };
+    try {
+      let id = await doInsert();
+      if (id == null || id === undefined) return res.status(500).json({ error: 'Failed to create account manager.' });
+      res.status(201).json({ id, name, email: email || null, is_active: 1 });
+    } catch (err) {
+      try {
+        await ensureAccountManagerAndPicTables();
+        const id = await doInsert();
+        if (id != null && id !== undefined) {
+          return res.status(201).json({ id, name, email: email || null, is_active: 1 });
+        }
+      } catch (retryErr) {
+        console.error('Error creating account manager (after migration):', retryErr);
+      }
+      console.error('Error creating account manager:', err);
+      res.status(500).json({ error: 'Failed to create account manager.', details: process.env.NODE_ENV === 'development' ? err.message : undefined });
+    }
+  }
+);
+
+app.put('/api/account-managers/:id', authenticateToken, requireAdmin,
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').optional({ checkFalsy: true }).trim().isEmail(),
+    body('is_active').optional().isBoolean(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() });
+    try {
+      const id = req.params.id;
+      const { name, email, is_active } = req.body;
+      await db.query(
+        'UPDATE account_managers SET name = ?, email = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [name, email || null, is_active !== false ? 1 : 0, id]
+      );
+      res.json({ id: parseInt(id, 10), name, email: email || null, is_active: is_active !== false ? 1 : 0 });
+    } catch (err) {
+      console.error('Error updating account manager:', err);
+      res.status(500).json({ error: 'Failed to update account manager.' });
+    }
+  }
+);
+
+app.delete('/api/account-managers/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    await db.query('UPDATE users SET account_manager_id = NULL WHERE account_manager_id = ?', [id]);
+    const result = await db.query('DELETE FROM account_managers WHERE id = ?', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ message: 'Account manager not found' });
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error deleting account manager:', err);
+    res.status(500).json({ error: 'Failed to delete account manager.' });
+  }
+});
+
+// --- PIC (Person in Charge) API ---
+app.get('/api/pics', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT id, name, email, is_active, created_at, updated_at FROM pics ORDER BY name ASC'
+    );
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error fetching pics:', err);
+    res.json([]);
+  }
+});
+
+app.post('/api/pics', authenticateToken, requireAdmin,
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').optional({ checkFalsy: true }).trim().isEmail(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() });
+    const { name, email } = req.body;
+    const doInsert = async () => {
+      const result = await db.query(
+        'INSERT INTO pics (name, email, is_active) VALUES (?, ?, 1) RETURNING id',
+        [name, email || null]
+      );
+      return (result.rows && result.rows[0] && result.rows[0].id) || result.lastID;
+    };
+    try {
+      let id = await doInsert();
+      if (id == null || id === undefined) return res.status(500).json({ error: 'Failed to create PIC.' });
+      res.status(201).json({ id, name, email: email || null, is_active: 1 });
+    } catch (err) {
+      const isNoTable = (err.message || '').includes('no such table') || (err.message || '').includes('does not exist');
+      if (isNoTable) {
+        try {
+          await ensureAccountManagerAndPicTables();
+          const id = await doInsert();
+          if (id != null && id !== undefined) {
+            return res.status(201).json({ id, name, email: email || null, is_active: 1 });
+          }
+        } catch (retryErr) {
+          console.error('Error creating PIC (after migration):', retryErr);
+        }
+      }
+      console.error('Error creating PIC:', err);
+      res.status(500).json({ error: 'Failed to create PIC.' });
+    }
+  }
+);
+
+app.put('/api/pics/:id', authenticateToken, requireAdmin,
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').optional({ checkFalsy: true }).trim().isEmail(),
+    body('is_active').optional().isBoolean(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Invalid input', details: errors.array() });
+    try {
+      const id = req.params.id;
+      const { name, email, is_active } = req.body;
+      await db.query(
+        'UPDATE pics SET name = ?, email = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [name, email || null, is_active !== false ? 1 : 0, id]
+      );
+      res.json({ id: parseInt(id, 10), name, email: email || null, is_active: is_active !== false ? 1 : 0 });
+    } catch (err) {
+      console.error('Error updating PIC:', err);
+      res.status(500).json({ error: 'Failed to update PIC.' });
+    }
+  }
+);
+
+app.delete('/api/pics/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    await db.query('UPDATE users SET pic_id = NULL WHERE pic_id = ?', [id]);
+    const result = await db.query('DELETE FROM pics WHERE id = ?', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ message: 'PIC not found' });
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error deleting PIC:', err);
+    res.status(500).json({ error: 'Failed to delete PIC.' });
   }
 });
 
@@ -4079,38 +4225,30 @@ app.post('/api/emergency/run-last-excel-sync-migration', async (req, res) => {
 
 // --- GLOBAL ERROR HANDLER ---
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'An unexpected error occurred.' });
-});
-
-const server = app.listen(port, () => {
-  console.log(`🚀 Server listening at http://localhost:${port}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📁 Serving static files from: ${__dirname}`);
-  
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🔒 CORS allowed origins:', getAllowedOrigins());
+  const msg = err?.message ?? String(err);
+  console.error('Unhandled error:', msg);
+  if (err?.stack) console.error('Stack:', err.stack);
+  if (req) {
+    console.error('Request:', req.method, req.url || req.originalUrl);
+    if (msg.includes('hasOwnProperty') && req.body !== undefined) {
+      console.error('Body keys:', typeof req.body === 'object' ? Object.keys(req.body) : req.body);
+    }
   }
-  
-  console.log(`🩺 Health check: http://localhost:${port}/api/health`);
-  console.log(`🔒 CORS test: http://localhost:${port}/api/cors-test`);
-  console.log(`📊 Win/Loss Dashboard available at http://localhost:${port}/win-loss_dashboard.html`);
-  console.log(`📈 Forecast Dashboard available at http://localhost:${port}/forecast_dashboard.html`);
+  res.status(500).json({ error: msg || 'An unexpected error occurred.' });
 });
 
-// Handle server startup errors
-server.on('error', (error) => {
-  console.error('❌ Server startup error:', error);
-  process.exit(1);
-});
-
-// Graceful shutdown
+let server;
+// Graceful shutdown (server is set after async init)
 process.on('SIGTERM', () => {
   console.log('👋 SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('✅ Server closed.');
+  if (server) {
+    server.close(() => {
+      console.log('✅ Server closed.');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 // DELETE Endpoint for Opportunities
@@ -4130,50 +4268,16 @@ app.delete('/api/opportunities/:uid', authenticateToken, async (req, res) => {
         throw new Error('Opportunity not found.');
       }
 
-      // 2. Delete opportunity revisions first (due to foreign key constraint)
+      // 2. Delete child rows first (foreign key constraints)
       await query('DELETE FROM opportunity_revisions WHERE opportunity_uid = ?', [uid]);
-
-      // 3. Delete forecast revisions if they exist
       await query('DELETE FROM forecast_revisions WHERE opportunity_uid = ?', [uid]);
-
-      // 4. Delete drive folder audit records if they exist
       await query('DELETE FROM drive_folder_audit WHERE opportunity_uid = ?', [uid]);
+      await query('DELETE FROM proposal_story_entries WHERE opportunity_uid = ?', [uid]);
+      await query('DELETE FROM user_notifications WHERE opportunity_uid = ?', [uid]);
+      await query('DELETE FROM proposal_schedule WHERE proposal_id = ?', [uid]);
+      await query('DELETE FROM proposal_status_history WHERE proposal_id = ?', [uid]);
 
-      // 5. Delete Google Drive folder if it exists
-      try {
-        const folderResult = await query(
-          'SELECT google_drive_folder_id, google_drive_folder_name FROM opps_monitoring WHERE uid = ?',
-          [uid]
-        );
-
-        if (folderResult.rows.length > 0 && folderResult.rows[0].google_drive_folder_id) {
-          const folderId = folderResult.rows[0].google_drive_folder_id;
-          const folderName = folderResult.rows[0].google_drive_folder_name;
-
-          console.log(`[DELETE] Deleting Google Drive folder: ${folderName} (ID: ${folderId})`);
-
-          const GoogleDriveService = require('./google_drive_service.js');
-          const driveService = new GoogleDriveService();
-
-          const initialized = await driveService.initialize();
-          if (initialized) {
-            try {
-              await driveService.drive.files.delete({ fileId: folderId });
-              console.log(`✅ Successfully deleted Google Drive folder: ${folderName}`);
-            } catch (driveError) {
-              console.warn(`⚠️ Could not delete Google Drive folder: ${driveError.message}`);
-              // Don't fail the whole delete operation if Drive deletion fails
-            }
-          } else {
-            console.warn('⚠️ Could not initialize Google Drive service for folder deletion');
-          }
-        }
-      } catch (folderError) {
-        console.warn(`⚠️ Error during folder deletion: ${folderError.message}`);
-        // Don't fail the whole delete operation if Drive deletion fails
-      }
-
-      // 6. Delete the opportunity
+      // 5. Delete the opportunity
       await query('DELETE FROM opps_monitoring WHERE uid = ?', [uid]);
     });
 
@@ -4191,429 +4295,6 @@ app.delete('/api/opportunities/:uid', authenticateToken, async (req, res) => {
         details: error.stack
       });
     }
-  }
-});
-
-// === GOOGLE DRIVE API ENDPOINTS ===
-
-// Create Google Drive folder for an opportunity
-app.post('/api/opportunities/:uid/drive-folder', authenticateToken, async (req, res) => {
-  const { uid } = req.params;
-  console.log(`[POST /api/opportunities/${uid}/drive-folder] === START ===`);
-
-  try {
-    // Get opportunity data
-    const client = await pool.connect();
-    try {
-      const result = await client.query(
-        'SELECT * FROM opps_monitoring WHERE uid = $1',
-        [uid]
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Opportunity not found' });
-      }
-
-      const opportunity = result.rows[0];
-
-      // Check if folder already exists
-      if (opportunity.google_drive_folder_id) {
-        return res.status(400).json({ 
-          error: 'Drive folder already linked to this opportunity',
-          folderId: opportunity.google_drive_folder_id,
-          folderUrl: opportunity.google_drive_folder_url
-        });
-      }
-
-      // Create folder using Drive service
-      const driveService = new GoogleDriveService();
-      await driveService.initialize();
-
-      const folderResult = await driveService.createFolderForOpportunity(
-        opportunity, 
-        req.user.name || req.user.email
-      );
-
-      res.json({
-        success: true,
-        folder: folderResult,
-        message: 'Drive folder created and linked successfully'
-      });
-
-    } finally {
-      client.release();
-    }
-
-  } catch (error) {
-    console.error(`[POST /api/opportunities/${uid}/drive-folder] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to create Drive folder',
-      message: error.message
-    });
-  }
-});
-
-// Link existing Google Drive folder to an opportunity
-app.put('/api/opportunities/:uid/drive-folder', authenticateToken, async (req, res) => {
-  const { uid } = req.params;
-  const { folderId } = req.body;
-  console.log(`[PUT /api/opportunities/${uid}/drive-folder] === START ===`);
-  console.log(`[DEBUG] Request body:`, req.body);
-  console.log(`[DEBUG] Folder ID:`, folderId);
-  console.log(`[DEBUG] Folder ID type:`, typeof folderId);
-  console.log(`[DEBUG] Folder ID length:`, folderId ? folderId.length : 'N/A');
-
-  if (!folderId) {
-    console.log(`[ERROR] Missing folder ID in request`);
-    return res.status(400).json({ error: 'Folder ID is required' });
-  }
-
-  if (typeof folderId !== 'string' || folderId.trim() === '') {
-    console.log(`[ERROR] Invalid folder ID format:`, folderId);
-    return res.status(400).json({ error: 'Folder ID must be a non-empty string' });
-  }
-
-  try {
-    // Validate folder exists and is accessible
-    const driveService = new GoogleDriveService();
-    await driveService.initialize();
-
-    const validation = await driveService.validateFolderAccess(folderId);
-    if (!validation.valid) {
-      return res.status(400).json({ 
-        error: 'Invalid folder ID or access denied',
-        details: validation.error
-      });
-    }
-
-    // Link the folder
-    const folderResult = await driveService.linkExistingFolder(
-      uid, 
-      folderId, 
-      req.user.name || req.user.email
-    );
-
-    res.json({
-      success: true,
-      folder: folderResult,
-      message: 'Drive folder linked successfully'
-    });
-
-  } catch (error) {
-    console.error(`[PUT /api/opportunities/${uid}/drive-folder] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to link Drive folder',
-      message: error.message
-    });
-  }
-});
-
-// Unlink Google Drive folder from an opportunity
-app.delete('/api/opportunities/:uid/drive-folder', authenticateToken, async (req, res) => {
-  const { uid } = req.params;
-  const { deleteFolder } = req.query; // Optional: also delete the folder from Drive
-  console.log(`[DELETE /api/opportunities/${uid}/drive-folder] === START ===`);
-
-  try {
-    const driveService = new GoogleDriveService();
-    await driveService.initialize();
-
-    const result = await driveService.unlinkFolder(
-      uid, 
-      req.user.name || req.user.email,
-      deleteFolder === 'true'
-    );
-
-    res.json({
-      success: true,
-      deleted: result.deleted,
-      message: result.deleted ? 
-        'Drive folder unlinked and deleted from Drive' : 
-        'Drive folder unlinked from opportunity'
-    });
-
-  } catch (error) {
-    console.error(`[DELETE /api/opportunities/${uid}/drive-folder] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to unlink Drive folder',
-      message: error.message
-    });
-  }
-});
-
-// Get Google Drive folder information for an opportunity
-app.get('/api/opportunities/:uid/drive-folder', authenticateToken, async (req, res) => {
-  const { uid } = req.params;
-  console.log(`[GET /api/opportunities/${uid}/drive-folder] === START ===`);
-
-  try {
-    const client = await pool.connect();
-    try {
-      const result = await client.query(
-        `SELECT 
-          google_drive_folder_id,
-          google_drive_folder_url,
-          google_drive_folder_name,
-          drive_folder_created_at,
-          drive_folder_created_by
-        FROM opps_monitoring 
-        WHERE uid = $1`,
-        [uid]
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Opportunity not found' });
-      }
-
-      const folderData = result.rows[0];
-
-      if (!folderData.google_drive_folder_id) {
-        return res.json({ 
-          hasFolder: false,
-          message: 'No Drive folder linked to this opportunity'
-        });
-      }
-
-      res.json({
-        hasFolder: true,
-        folder: {
-          id: folderData.google_drive_folder_id,
-          url: folderData.google_drive_folder_url,
-          name: folderData.google_drive_folder_name,
-          createdAt: folderData.drive_folder_created_at,
-          createdBy: folderData.drive_folder_created_by
-        }
-      });
-
-    } finally {
-      client.release();
-    }
-
-  } catch (error) {
-    console.error(`[GET /api/opportunities/${uid}/drive-folder] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to get Drive folder information',
-      message: error.message
-    });
-  }
-});
-
-// List all opportunities with Drive folders
-app.get('/api/opportunities/drive-folders', authenticateToken, async (req, res) => {
-  console.log('[GET /api/opportunities/drive-folders] === START ===');
-
-  try {
-    const driveService = new GoogleDriveService();
-    await driveService.initialize();
-
-    const opportunities = await driveService.listOpportunitiesWithFolders();
-
-    res.json({
-      success: true,
-      count: opportunities.length,
-      opportunities: opportunities
-    });
-
-  } catch (error) {
-    console.error('[GET /api/opportunities/drive-folders] Error:', error);
-    res.status(500).json({
-      error: 'Failed to list opportunities with Drive folders',
-      message: error.message
-    });
-  }
-});
-
-// Search Google Drive folders
-app.get('/api/drive/search', authenticateToken, async (req, res) => {
-  const { query, maxResults = 10 } = req.query;
-  console.log(`[GET /api/drive/search] === START ===`);
-  console.log(`[DEBUG] Search query: ${query}, maxResults: ${maxResults}`);
-
-  if (!query || query.trim().length === 0) {
-    return res.status(400).json({
-      error: 'Search query is required',
-      message: 'Please provide a search query parameter'
-    });
-  }
-
-  try {
-    const driveService = new GoogleDriveService();
-    const initialized = await driveService.initialize();
-    
-    if (!initialized) {
-      throw new Error('Failed to initialize Google Drive service');
-    }
-
-    const folders = await driveService.searchFolders(query.trim(), parseInt(maxResults));
-    
-    console.log(`[GET /api/drive/search] Found ${folders.length} folders`);
-    
-    res.json({
-      success: true,
-      query: query.trim(),
-      folders: folders
-    });
-
-  } catch (error) {
-    console.error('[GET /api/drive/search] Error:', error);
-    res.status(500).json({
-      error: 'Failed to search Drive folders',
-      message: error.message
-    });
-  }
-});
-
-// Smart search Google Drive folders for a specific opportunity
-app.get('/api/opportunities/:uid/drive-folder/search', authenticateToken, async (req, res) => {
-  const { uid } = req.params;
-  console.log(`[GET /api/opportunities/${uid}/drive-folder/search] === START ===`);
-
-  try {
-    // Get opportunity data first
-    const client = await pool.connect();
-    let opportunity;
-    
-    try {
-      const result = await client.query(
-        'SELECT uid, project_code, project_name, client, opp_status FROM opps_monitoring WHERE uid = $1',
-        [uid]
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Opportunity not found' });
-      }
-
-      opportunity = result.rows[0];
-    } finally {
-      client.release();
-    }
-
-    // Perform smart search
-    const driveService = new GoogleDriveService();
-    const initialized = await driveService.initialize();
-    
-    if (!initialized) {
-      throw new Error('Failed to initialize Google Drive service');
-    }
-
-    const folders = await driveService.smartSearchForOpportunity(opportunity);
-    
-    console.log(`[GET /api/opportunities/${uid}/drive-folder/search] Found ${folders.length} relevant folders`);
-    
-    res.json({
-      success: true,
-      opportunity: {
-        uid: opportunity.uid,
-        project_code: opportunity.project_code,
-        project_name: opportunity.project_name,
-        client: opportunity.client,
-        opp_status: opportunity.opp_status
-      },
-      folders: folders
-    });
-
-  } catch (error) {
-    console.error(`[GET /api/opportunities/${uid}/drive-folder/search] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to search Drive folders for opportunity',
-      message: error.message
-    });
-  }
-});
-
-// Search Google Drive folders
-app.get('/api/google-drive/folders/search', authenticateToken, async (req, res) => {
-  const searchQuery = req.query.q || '';
-  console.log(`[GET /api/google-drive/folders/search] === START ===`);
-  console.log(`[DEBUG] Search Query: "${searchQuery}"`);
-
-  try {
-    // Initialize Google Drive service
-    const driveService = new GoogleDriveService();
-    const initialized = await driveService.initialize();
-    
-    if (!initialized) {
-      throw new Error('Failed to initialize Google Drive service');
-    }
-
-    // Search for folders
-    console.log(`[SEARCH] Searching for folders with query: "${searchQuery}"`);
-    const folders = await driveService.searchFolders(searchQuery);
-    
-    console.log(`[SEARCH] Found ${folders.length} folders`);
-
-    res.json({
-      success: true,
-      folders: folders,
-      query: searchQuery,
-      count: folders.length
-    });
-
-  } catch (error) {
-    console.error(`[GET /api/google-drive/folders/search] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to search Google Drive folders',
-      message: error.message,
-      success: false
-    });
-  }
-});
-
-// Parse Google Drive folder for opportunity creation
-app.post('/api/google-drive/parse-folder-for-creation', authenticateToken, async (req, res) => {
-  const { folderId } = req.body;
-  console.log(`[POST /api/google-drive/parse-folder-for-creation] === START ===`);
-  console.log(`[DEBUG] Folder ID: ${folderId}`);
-
-  try {
-    // Validate input
-    if (!folderId) {
-      return res.status(400).json({
-        error: 'Folder ID is required'
-      });
-    }
-
-    // Initialize Google Drive service
-    const driveService = new GoogleDriveService();
-    const initialized = await driveService.initialize();
-    
-    if (!initialized) {
-      throw new Error('Failed to initialize Google Drive service');
-    }
-
-    // Parse the folder for creation data
-    console.log(`[PARSE_FOLDER] Parsing folder ${folderId} for project data...`);
-    const result = await driveService.parseFolderForCreation(folderId);
-    
-    if (!result.success) {
-      return res.status(400).json({
-        error: result.error,
-        success: false
-      });
-    }
-
-    console.log(`[PARSE_FOLDER] Successfully parsed folder data:`, {
-      projectName: result.projectData.projectName,
-      projectCode: result.projectData.projectCode,
-      clientName: result.projectData.clientName,
-      revision: result.projectData.revision
-    });
-
-    res.json({
-      success: true,
-      folderData: result.folderData,
-      projectData: result.projectData,
-      excelFile: result.excelFile,
-      message: 'Successfully parsed project data from Google Drive folder'
-    });
-
-  } catch (error) {
-    console.error(`[POST /api/google-drive/parse-folder-for-creation] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to parse Google Drive folder for creation',
-      message: error.message,
-      success: false
-    });
   }
 });
 
@@ -5353,75 +5034,11 @@ app.get('/api/debug/users', authenticateToken, async (req, res) => {
   }
 });
 
-// Get Google Drive folder contents for project
-app.get('/api/project/:uid/drive-folder-contents', authenticateToken, async (req, res) => {
-  const { uid } = req.params;
-  console.log(`[GET /api/project/${uid}/drive-folder-contents] === START ===`);
-
-  try {
-    const client = await pool.connect();
-    try {
-      // Get the Drive folder data from the opps_monitoring table
-      const folderResult = await client.query(
-        `SELECT 
-          google_drive_folder_id as folder_id,
-          google_drive_folder_url as folder_url,
-          google_drive_folder_name as folder_name,
-          drive_folder_created_at as created_at,
-          drive_folder_created_by as created_by
-        FROM opps_monitoring 
-        WHERE uid = $1`,
-        [uid]
-      );
-
-      if (!folderResult.rows.length) {
-        return res.json({
-          success: false,
-          message: 'Project not found',
-          hasFolder: false
-        });
-      }
-
-      const folderData = folderResult.rows[0];
-      
-      // Check if project has a linked Google Drive folder
-      if (!folderData.folder_id) {
-        return res.json({
-          success: false,
-          message: 'No Google Drive folder linked to this project',
-          hasFolder: false
-        });
-      }
-
-      // Initialize Google Drive service and get folder contents
-      const driveService = new GoogleDriveService();
-      const initialized = await driveService.initialize();
-      
-      if (!initialized) {
-        throw new Error('Failed to initialize Google Drive service');
-      }
-
-      const folderContents = await driveService.getFolderContents(folderData.folder_id);
-      
-      console.log(`[GET /api/project/${uid}/drive-folder-contents] Retrieved ${folderContents.files?.length || 0} files`);
-      
-      res.json({
-        success: true,
-        hasFolder: true,
-        folderData: folderData,
-        contents: folderContents,
-        folderUrl: folderData.folder_url || `https://drive.google.com/drive/folders/${folderData.folder_id}`
-      });
-
-    } finally {
-      client.release();
-    }
-
-  } catch (error) {
-    console.error(`[GET /api/project/${uid}/drive-folder-contents] Error:`, error);
-    res.status(500).json({
-      error: 'Failed to get Drive folder contents',
-      message: error.message
-    });
-  }
+// Google Drive removed - return disabled
+app.get('/api/project/:uid/drive-folder-contents', authenticateToken, (_req, res) => {
+  res.status(410).json({
+    success: false,
+    message: 'Google Drive integration is disabled.',
+    hasFolder: false
+  });
 });

@@ -535,7 +535,7 @@ function setupEventListeners() {
     document.getElementById('saveProposalChanges').addEventListener('click', handleProposalEditSubmit);
     document.getElementById('cancelProposalEdit').addEventListener('click', closeProposalEditModal);
     document.getElementById('closeProposalEditModal').addEventListener('click', closeProposalEditModal);
-    document.getElementById('syncFromDriveBtn').addEventListener('click', handleSyncFromDrive);
+    // Google Drive sync removed - syncFromDriveBtn not attached
     
     // Close modal when clicking outside
     document.getElementById('proposalEditModal').addEventListener('click', (e) => {
@@ -730,39 +730,45 @@ function toggleTheme() {
 // --- Data Loading ---
 async function loadPicOptions() {
     try {
+        // Master list (from PICs table) so dropdown is never empty
+        let masterPics = [];
+        try {
+            const masterRes = await fetchWithAuth(getApiUrl('/api/proposal-workbench/proposals/pics-master-list'));
+            if (masterRes.ok) masterPics = await masterRes.json();
+        } catch (e) { console.warn('Could not load PICs master list:', e); }
+
         const response = await fetchWithAuth(getApiUrl('/api/proposal-workbench/proposals/pics'));
         if (!response.ok) {
-            // If user doesn't have permission (403), skip loading PIC options
             if (response.status === 403) {
                 console.log('User does not have permission to view PIC filter options');
                 return;
             }
             throw new Error(`Failed to fetch PIC options: ${response.statusText}`);
         }
-        const pics = await response.json();
-        
-        // Clear existing options except "All PICs"
+        const picsFromOpps = await response.json();
+        const countByPic = {};
+        picsFromOpps.forEach(p => { if (p.pic) countByPic[p.pic] = (p.count || 0); });
+
+        const masterNames = (masterPics || []).map(m => (typeof m === 'string' ? m : m.name));
+        const allPicNames = [...new Set([...masterNames, ...Object.keys(countByPic)])].filter(Boolean).sort();
+
         picFilterSelect.innerHTML = '<option value="">All PICs</option>';
-        
-        // Add PIC options
-        pics.forEach(pic => {
+        allPicNames.forEach(name => {
             const option = document.createElement('option');
-            option.value = pic.pic;
-            option.textContent = `${pic.pic} (${pic.count})`;
+            option.value = name;
+            const count = countByPic[name] || 0;
+            option.textContent = count ? `${name} (${count})` : name;
             picFilterSelect.appendChild(option);
         });
-        
-        // Also populate the proposal selection modal PIC filter
+
         const proposalPicFilter = document.getElementById('proposalPicFilter');
         if (proposalPicFilter) {
-            // Clear existing options
             proposalPicFilter.innerHTML = '<option value="">All PICs</option>';
-            
-            // Add PIC options
-            pics.forEach(pic => {
+            allPicNames.forEach(name => {
                 const option = document.createElement('option');
-                option.value = pic.pic;
-                option.textContent = `${pic.pic} (${pic.count})`;
+                option.value = name;
+                const count = countByPic[name] || 0;
+                option.textContent = count ? `${name} (${count})` : name;
                 proposalPicFilter.appendChild(option);
             });
         }
@@ -889,7 +895,13 @@ async function loadProposals() {
             }
         }
         
-        populateFilters(proposals);
+        // Load master account managers so dropdown is never empty
+        let masterAccountManagers = [];
+        try {
+            const amRes = await fetchWithAuth(getApiUrl('/api/proposal-workbench/proposals/account-managers-list'));
+            if (amRes.ok) masterAccountManagers = await amRes.json();
+        } catch (e) { console.warn('Could not load account managers list:', e); }
+        populateFilters(proposals, masterAccountManagers);
         
         // Apply auto-filters for DS/SE users after filters are populated
         applyAutoFiltersForUser();
@@ -1360,7 +1372,7 @@ function toggleWeekends() {
     }
 }
 
-function populateFilters(data) {
+function populateFilters(data, masterAccountManagers = []) {
     console.log('[POPULATE-FILTERS] Starting filter population with data:', data.length, 'proposals');
     
     // Log first few proposals to see the actual structure
@@ -1371,8 +1383,10 @@ function populateFilters(data) {
     // Extract unique clients from multiple possible field names
     const clients = [...new Set(data.map(p => p.client_name || p.client).filter(Boolean))].sort();
     
-    // Extract unique account managers from multiple possible field names  
-    const accountManagers = [...new Set(data.map(p => p.account_manager || p.account_mgr).filter(Boolean))].sort();
+    // Account managers: start with master list (so dropdown is never empty), add any from proposals
+    const fromProposals = [...new Set(data.map(p => p.account_manager || p.account_mgr).filter(Boolean))];
+    const masterNames = (masterAccountManagers || []).map(m => (typeof m === 'string' ? m : m.name));
+    const accountManagers = [...new Set([...masterNames, ...fromProposals])].sort();
     
     // Extract unique solutions
     const solutions = [...new Set(data.map(p => p.solutions || p.solution).filter(Boolean))].sort();
@@ -1397,7 +1411,7 @@ function populateFilters(data) {
         console.warn('[POPULATE-FILTERS] clientFilter element not found');
     }
 
-    // Populate account manager filter
+    // Populate account manager filter (master list + any from proposals)
     if (accountManagerFilterSelect) {
         accountManagerFilterSelect.innerHTML = '<option value="All Account Managers">All Account Managers</option>';
         accountManagers.forEach(am => {
@@ -3506,57 +3520,8 @@ async function handleProposalEditSubmit(event) {
 }
 
 async function handleSyncFromDrive(event) {
-    event.preventDefault();
-    
-    const proposalId = document.getElementById('editProposalId').value;
-    if (!proposalId) {
-        alert('No proposal selected for sync');
-        return;
-    }
-    
-    // Show loading state
-    const syncBtn = document.getElementById('syncFromDriveBtn');
-    const originalText = syncBtn.innerHTML;
-    syncBtn.disabled = true;
-    syncBtn.innerHTML = '<span class="material-icons text-sm mr-2 animate-spin">sync</span>Syncing...';
-    
-    try {
-        console.log(`[SYNC] Starting sync for proposal: ${proposalId}`);
-        
-        // Call the sync API endpoint
-        const response = await fetchWithAuth(getApiUrl(`/api/proposal-workbench/sync-from-drive/${proposalId}`), {
-            method: 'POST'
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.error || 'Sync failed');
-        }
-        
-        if (result.success) {
-            console.log('[SYNC] Successfully synced proposal data:', result.syncedData);
-            
-            // Update the form fields with synced data
-            updateFormWithSyncedData(result.syncedData);
-            
-            // Show success message
-            showSyncSuccessMessage(result.syncedData);
-            
-            // Note: In-memory data and views will be updated only when user clicks "Save Changes"
-            
-        } else {
-            throw new Error(result.error || 'Sync failed');
-        }
-        
-    } catch (error) {
-        console.error('[SYNC] Sync failed:', error);
-        showSyncErrorMessage(error.message);
-    } finally {
-        // Restore button state
-        syncBtn.disabled = false;
-        syncBtn.innerHTML = originalText;
-    }
+    if (event) event.preventDefault();
+    return;
 }
 
 function updateFormWithSyncedData(syncedData) {
@@ -3626,14 +3591,15 @@ ${syncedData.excelFileName ? `• Source: ${syncedData.excelFileName}` : ''}`;
 }
 
 function showSyncErrorMessage(errorMessage) {
-    let userFriendlyMessage = 'Failed to sync proposal data from Google Drive.';
-    
-    if (errorMessage.includes('Calcsheet folder not found')) {
-        userFriendlyMessage = 'No "Calcsheet" folder found in the linked Google Drive folder.';
+    let userFriendlyMessage = 'Sync is not available.';
+    if (errorMessage.includes('Google Drive sync is disabled')) {
+        userFriendlyMessage = 'Google Drive sync has been disabled.';
+    } else if (errorMessage.includes('Calcsheet folder not found')) {
+        userFriendlyMessage = 'No "Calcsheet" folder found in the linked folder.';
     } else if (errorMessage.includes('No Excel files found')) {
         userFriendlyMessage = 'No Excel files found in the Calcsheet folder.';
     } else if (errorMessage.includes('No Google Drive folder linked')) {
-        userFriendlyMessage = 'This proposal is not linked to a Google Drive folder.';
+        userFriendlyMessage = 'No folder linked to this proposal.';
     } else if (errorMessage.includes('password') || errorMessage.includes('encrypted')) {
         userFriendlyMessage = 'Failed to open Excel file. Please check if the file is properly encrypted with the expected password.';
     } else if (errorMessage.includes('Summary sheet not found')) {

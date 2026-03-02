@@ -93,6 +93,15 @@ const encodedDateHeaders = ['encodeddate'];
 const withDayHeaders = ['datereceived', 'clientdeadline', 'submitteddate', 'dateawardedlost', 'forecastdate'];
 const rightAlignColumns = ['finalamt'];
 const centerAlignColumns = ['mgr', 'pic', 'bom', 'rev', 'revision', 'margin', 'oppstatus', 'opportunitystatus', 'accountmanager', 'accountmgr', 'dateawardedlost'];
+
+/** Add your list of Account Managers and PIC here. They will appear in Create/Edit dropdowns and filters. */
+const CONFIG_ACCOUNT_MANAGERS = [];  // e.g. ['Jane Doe', 'John Smith']
+const CONFIG_PIC = [];                // e.g. ['Alice Lee', 'Bob Tan']
+
+/** Loaded from API (Account Mgrs List / PIC list) for Add/Edit opportunity dropdowns */
+let masterAccountManagersList = [];
+let masterPicsList = [];
+
 let dropdownOptions = {};
 
 // --- Utility Functions ---
@@ -379,6 +388,13 @@ async function refreshOpportunitiesData() {
             }
         });
 
+        if (response.status === 403) {
+            const data = await response.json().catch(() => ({}));
+            if (data.error && (data.error.includes('token') || data.error.includes('expired'))) {
+                handleAuthFailure();
+                return;
+            }
+        }
         if (!response.ok) {
             throw new Error('Failed to fetch opportunities');
         }
@@ -411,7 +427,13 @@ async function initializeAppWithToken(token) {
         });
 
         // API response received
-
+        if (response.status === 403) {
+            const data = await response.json().catch(() => ({}));
+            if (data.error && (data.error.includes('token') || data.error.includes('expired'))) {
+                handleAuthFailure();
+                return;
+            }
+        }
         if (!response.ok) {
             throw new Error('Failed to fetch opportunities');
         }
@@ -991,8 +1013,6 @@ function initializeEventListeners() {
     document.getElementById('editRowModalCloseX').addEventListener('click', hideEditRowModal);
     document.getElementById('closeEditRowModalButton').addEventListener('click', hideEditRowModal);
     document.getElementById('editRowForm').addEventListener('submit', handleEditFormSubmit);
-    document.getElementById('syncFromDriveBtn').addEventListener('click', handleSyncFromDrive);
-
     // Revision history modal events
     document.getElementById('closeRevisionHistoryButton').addEventListener('click', hideRevisionHistoryModal);
     document.getElementById('closeRevisionHistoryModalX').addEventListener('click', hideRevisionHistoryModal);
@@ -1095,112 +1115,6 @@ function initializeEventListeners() {
         processExcelUploadButton.addEventListener('click', processExcelUpload);
     }
 
-    // Google Drive Import Modal event listeners
-    const googleDriveImportModalOverlay = document.getElementById('googleDriveImportModalOverlay');
-    const closeGoogleDriveImportModalButton = document.getElementById('closeGoogleDriveImportModalButton');
-    const googleDriveImportModalCloseX = document.getElementById('googleDriveImportModalCloseX');
-    const importSearchFoldersButton = document.getElementById('importSearchFoldersButton');
-    const importFromManualFolderButtonNew = document.getElementById('importFromManualFolderButton');
-    
-    if (closeGoogleDriveImportModalButton) {
-        closeGoogleDriveImportModalButton.addEventListener('click', hideGoogleDriveImportModal);
-    }
-    if (googleDriveImportModalCloseX) {
-        googleDriveImportModalCloseX.addEventListener('click', hideGoogleDriveImportModal);
-    }
-    if (googleDriveImportModalOverlay) {
-        googleDriveImportModalOverlay.addEventListener('click', function(e) {
-            if (e.target === googleDriveImportModalOverlay) hideGoogleDriveImportModal();
-        });
-    }
-    if (importSearchFoldersButton) {
-        importSearchFoldersButton.addEventListener('click', performImportModalFolderSearch);
-    }
-    if (importFromManualFolderButtonNew) {
-        importFromManualFolderButtonNew.addEventListener('click', handleImportFromManualFolder);
-    }
-
-    // Enhanced import modal search input with instant suggestions
-    const importFolderSearchInput = document.getElementById('importFolderSearchInput');
-    if (importFolderSearchInput) {
-        // Enter key support
-        importFolderSearchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                performImportModalFolderSearch();
-            }
-        });
-        
-        // Real-time suggestions as user types
-        let searchTimeout;
-        importFolderSearchInput.addEventListener('input', function(e) {
-            clearTimeout(searchTimeout);
-            const query = e.target.value.trim();
-            
-            if (query.length >= 2) {
-                // Debounce search to avoid too many calls
-                searchTimeout = setTimeout(() => {
-                    showInstantSuggestions(query);
-                }, 300);
-            } else {
-                hideInstantSuggestions();
-            }
-        });
-        
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!importFolderSearchInput.contains(e.target) && 
-                !document.getElementById('instantSuggestionsDropdown').contains(e.target)) {
-                hideInstantSuggestions();
-            }
-        });
-        
-        // Keyboard navigation for suggestions
-        importFolderSearchInput.addEventListener('keydown', function(e) {
-            const dropdown = document.getElementById('instantSuggestionsDropdown');
-            const suggestions = dropdown.querySelectorAll('.suggestion-item');
-            
-            if (suggestions.length === 0) return;
-            
-            let selectedIndex = Array.from(suggestions).findIndex(item => 
-                item.classList.contains('suggestion-selected'));
-            
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                selectedIndex = selectedIndex < suggestions.length - 1 ? selectedIndex + 1 : 0;
-                updateSelectedSuggestion(suggestions, selectedIndex);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : suggestions.length - 1;
-                updateSelectedSuggestion(suggestions, selectedIndex);
-            } else if (e.key === 'Tab' && selectedIndex >= 0) {
-                e.preventDefault();
-                selectSuggestion(suggestions[selectedIndex]);
-            }
-        });
-    }
-
-    // Add Enter key support for manual folder input in import modal
-    const importManualFolderInput = document.getElementById('importManualFolderIdInput');
-    if (importManualFolderInput) {
-        importManualFolderInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleImportFromManualFolder();
-            }
-        });
-    }
-
-    // "Import from Google Drive" button in Create Modal
-    const openGoogleDriveImportButton = document.getElementById('openGoogleDriveImportButton');
-    if (openGoogleDriveImportButton) {
-        openGoogleDriveImportButton.addEventListener('click', function(e) {
-            console.log('🔄 Import button clicked! Opening import results modal');
-            e.preventDefault();
-            showImportResultsModal();
-        });
-    }
-    
     // Import Results Modal event listeners
     const importResultsCloseButton = document.getElementById('importResultsCloseButton');
     const importResultsModalCloseX = document.getElementById('importResultsModalCloseX');
@@ -1572,8 +1486,7 @@ function createEditFieldContainer(field, rowData, headers) {
         // Add real-time formatting
         input.addEventListener('input', formatFinalAmountInput);
     } else if (field === 'google_drive_folder') {
-        // Special handling for Google Drive folder field
-        return createGoogleDriveFolderField(rowData);
+        return null; // Google Drive link removed
     } else {
         input = document.createElement('input');
         input.type = 'text';
@@ -1594,302 +1507,18 @@ function createEditFieldContainer(field, rowData, headers) {
     return fieldContainer;
 }
 
-function createGoogleDriveFolderField(rowData) {
-    const fieldContainer = document.createElement('div');
-    fieldContainer.className = 'enhanced-field google-drive-field';
-    
-    const label = document.createElement('label');
-    label.textContent = 'Google Drive Folder';
-    fieldContainer.appendChild(label);
-    
-    // Check if opportunity has an existing Drive folder
-    const hasFolder = rowData.google_drive_folder_id && rowData.google_drive_folder_url;
-    
-    if (hasFolder) {
-        // Show existing folder information
-        const folderInfo = document.createElement('div');
-        folderInfo.className = 'drive-folder-info';
-        folderInfo.innerHTML = `
-            <div class="drive-folder-existing">
-                <span class="material-icons">folder</span>
-                <a href="${rowData.google_drive_folder_url}" target="_blank" class="drive-folder-link">
-                    ${rowData.google_drive_folder_name || 'Open Drive Folder'}
-                </a>
-                <button type="button" class="drive-folder-unlink-btn" data-uid="${rowData.uid}">
-                    <span class="material-icons">link_off</span>
-                    Unlink
-                </button>
-            </div>
-        `;
-        fieldContainer.appendChild(folderInfo);
-        
-        // Add unlink functionality
-        const unlinkBtn = folderInfo.querySelector('.drive-folder-unlink-btn');
-        unlinkBtn.addEventListener('click', () => unlinkDriveFolder(rowData.uid));
-        
-    } else {
-        // Show controls to create or link folder
-        const folderControls = document.createElement('div');
-        folderControls.className = 'drive-folder-controls';
-        folderControls.innerHTML = `
-            <div class="drive-folder-actions">
-                <button type="button" class="drive-folder-create-btn" data-uid="${rowData.uid}">
-                    <span class="material-icons">create_new_folder</span>
-                    Create Folder
-                </button>
-                <span class="drive-folder-or">or</span>
-                <button type="button" class="drive-folder-search-btn" data-uid="${rowData.uid}">
-                    <span class="material-icons">search</span>
-                    Search & Link
-                </button>
-                <span class="drive-folder-or">or</span>
-                <div class="drive-folder-link-section">
-                    <input type="text" placeholder="Paste Google Drive folder ID or URL" class="drive-folder-id-input" />
-                    <button type="button" class="drive-folder-link-btn" data-uid="${rowData.uid}">
-                        <span class="material-icons">link</span>
-                        Link Manually
-                    </button>
-                </div>
-            </div>
-        `;
-        fieldContainer.appendChild(folderControls);
-        
-        // Add create folder functionality
-        const createBtn = folderControls.querySelector('.drive-folder-create-btn');
-        createBtn.addEventListener('click', () => createDriveFolder(rowData.uid));
-        
-        // Add search functionality
-        const searchBtn = folderControls.querySelector('.drive-folder-search-btn');
-        searchBtn.addEventListener('click', () => showDriveFolderSearchModal(rowData));
-        
-        // Add link existing folder functionality
-        const linkBtn = folderControls.querySelector('.drive-folder-link-btn');
-        const folderIdInput = folderControls.querySelector('.drive-folder-id-input');
-        linkBtn.addEventListener('click', () => {
-            let folderId = folderIdInput.value.trim();
-            
-            if (!folderId) {
-                alert('Please enter a Google Drive folder ID or URL');
-                return;
-            }
-            
-            // Extract folder ID from URL if a full URL was pasted
-            if (folderId.includes('drive.google.com/drive/folders/')) {
-                const urlParts = folderId.split('/folders/');
-                if (urlParts.length > 1) {
-                    folderId = urlParts[1].split('?')[0]; // Remove query parameters
-                }
-            }
-            
-            // Validate folder ID format (Google Drive folder IDs are typically 25-50 characters)
-            if (folderId.length < 10 || folderId.length > 100) {
-                alert('Invalid folder ID format. Please check the ID and try again.');
-                return;
-            }
-            
-            // Linking folder
-            linkExistingDriveFolder(rowData.uid, folderId);
-        });
-    }
-    
-    return fieldContainer;
+function createGoogleDriveFolderField(_rowData) {
+    return null; // Google Drive link removed
 }
 
-// Google Drive folder API functions
-async function createDriveFolder(opportunityUid) {
-    try {
-        const btn = document.querySelector(`[data-uid="${opportunityUid}"].drive-folder-create-btn`);
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Creating...';
-        }
-        
-        const response = await fetch(getApiUrl(`/api/opportunities/${opportunityUid}/drive-folder`), {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            alert('Drive folder created successfully!');
-            // Refresh the form to show the new folder
-            location.reload();
-        } else {
-            throw new Error(data.message || 'Failed to create Drive folder');
-        }
-    } catch (error) {
-        // Error creating Drive folder
-        let errorMessage = error.message;
-        
-        // Provide more helpful error messages
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-            errorMessage = 'Access denied. This could be:\n' +
-                          '1. Authentication token expired (try refreshing the page)\n' +
-                          '2. Google Drive API not enabled in Google Cloud Console\n' +
-                          '3. Service account lacks proper permissions\n' +
-                          '4. Root folder is not shared with the service account';
-        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-            errorMessage = 'Authentication required. Please refresh the page and try again.';
-        }
-        
-        alert(`Error creating Drive folder:\n\n${errorMessage}`);
-    } finally {
-        const btn = document.querySelector(`[data-uid="${opportunityUid}"].drive-folder-create-btn`);
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons">create_new_folder</span> Create Folder';
-        }
-    }
-}
+// Google Drive removed - no-op stubs
+async function createDriveFolder(_opportunityUid) { return; }
 
-async function linkExistingDriveFolder(opportunityUid, folderId, skipReload = false) {
-    try {
-        // Linking folder to opportunity
-        
-        const btn = document.querySelector(`[data-uid="${opportunityUid}"].drive-folder-link-btn`);
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Linking...';
-        }
-        
-        const requestBody = { folderId };
-        // Sending request
-        
-        const response = await fetch(getApiUrl(`/api/opportunities/${opportunityUid}/drive-folder`), {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        // Response received
-        
-        const data = await response.json();
-        // Response data received
-        
-        if (response.ok && data.success) {
-            if (!skipReload) {
-                alert('Drive folder linked successfully!');
-                // Refresh the form to show the linked folder
-                location.reload();
-            }
-            // If skipReload is true, the calling function will handle the UI update
-        } else {
-            throw new Error(data.message || 'Failed to link Drive folder');
-        }
-    } catch (error) {
-        // Error linking Drive folder
-        let errorMessage = error.message;
-        
-        // Provide more helpful error messages
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-            errorMessage = 'Access denied. This could be:\n' +
-                          '1. Authentication token expired (try refreshing the page)\n' +
-                          '2. Google Drive API not enabled in Google Cloud Console\n' +
-                          '3. Service account lacks proper permissions\n' +
-                          '4. Folder is not shared with the service account';
-        } else if (error.message.includes('404') || error.message.includes('not found')) {
-            errorMessage = 'Folder not found. Please check:\n' +
-                          '1. Folder ID is correct\n' +
-                          '2. Folder exists and is accessible\n' +
-                          '3. Service account has access to the folder';
-        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-            errorMessage = 'Authentication required. Please refresh the page and try again.';
-        }
-        
-        alert(`Error linking Drive folder:\n\n${errorMessage}`);
-    } finally {
-        const btn = document.querySelector(`[data-uid="${opportunityUid}"].drive-folder-link-btn`);
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons">link</span> Link Existing';
-        }
-    }
-}
+async function linkExistingDriveFolder(_opportunityUid, _folderId, _skipReload = false) { return; }
 
-async function unlinkDriveFolder(opportunityUid) {
-    if (!confirm('Are you sure you want to unlink this Drive folder? The folder will remain in Drive but will no longer be associated with this opportunity.')) {
-        return;
-    }
-    
-    try {
-        const btn = document.querySelector(`[data-uid="${opportunityUid}"].drive-folder-unlink-btn`);
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Unlinking...';
-        }
-        
-        const response = await fetch(getApiUrl(`/api/opportunities/${opportunityUid}/drive-folder`), {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            alert('Drive folder unlinked successfully!');
-            // Refresh the form to show the updated state
-            location.reload();
-        } else {
-            throw new Error(data.message || 'Failed to unlink Drive folder');
-        }
-    } catch (error) {
-        // Error unlinking Drive folder
-        alert(`Error unlinking Drive folder: ${error.message}`);
-    } finally {
-        const btn = document.querySelector(`[data-uid="${opportunityUid}"].drive-folder-unlink-btn`);
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons">link_off</span> Unlink';
-        }
-    }
-}
+async function unlinkDriveFolder(_opportunityUid) { return; }
 
-// Google Drive Search Modal Functions
-function showDriveFolderSearchModal(rowData) {
-    // Create modal overlay if it doesn't exist
-    let searchModalOverlay = document.getElementById('driveFolderSearchModalOverlay');
-    if (!searchModalOverlay) {
-        searchModalOverlay = createDriveFolderSearchModal();
-        document.body.appendChild(searchModalOverlay);
-    }
-
-    // Set up modal content
-    const modalTitle = searchModalOverlay.querySelector('.search-modal-title');
-    const searchInput = searchModalOverlay.querySelector('.drive-search-input');
-    const searchBtn = searchModalOverlay.querySelector('.drive-search-btn');
-    const resultsContainer = searchModalOverlay.querySelector('.search-results-container');
-    
-    modalTitle.textContent = `Search Google Drive Folders for ${rowData.project_code || rowData.project_name || 'Project'}`;
-    
-    // Auto-search based on opportunity data
-    performSmartSearch(rowData, resultsContainer);
-    
-    // Set up search functionality
-    searchBtn.onclick = () => {
-        const query = searchInput.value.trim();
-        if (query) {
-            performManualSearch(query, resultsContainer);
-        }
-    };
-    
-    searchInput.onkeypress = (e) => {
-        if (e.key === 'Enter') {
-            searchBtn.click();
-        }
-    };
-    
-    // Show modal
-    searchModalOverlay.classList.remove('hidden');
-}
+function showDriveFolderSearchModal(_rowData) { return; }
 
 function createDriveFolderSearchModal() {
     const modalOverlay = document.createElement('div');
@@ -2173,28 +1802,9 @@ function getCurrentOpportunityUid() {
     return null;
 }
 
-// Function to refresh only the Google Drive section in the edit modal
-function refreshGoogleDriveSection(rowData) {
-    try {
-        // Find the Google Drive field container in the edit modal
-        const editForm = document.getElementById('editRowForm');
-        if (!editForm) return;
-        
-        // Find the existing Google Drive field by looking for the enhanced-field with google-drive-field class
-        const existingDriveField = editForm.querySelector('.google-drive-field');
-        if (!existingDriveField) return;
-        
-        // Create a new Google Drive field with updated data
-        const newDriveField = createGoogleDriveFolderField(rowData);
-        
-        // Replace the existing field with the new one
-        existingDriveField.parentNode.replaceChild(newDriveField, existingDriveField);
-        
-        console.log('✅ Google Drive section refreshed successfully');
-        
-    } catch (error) {
-        console.error('❌ Failed to refresh Google Drive section:', error);
-    }
+// Function to refresh only the Google Drive section in the edit modal (no-op; Google Drive link removed)
+function refreshGoogleDriveSection(_rowData) {
+    return;
 }
 
 // Subtle notification functions
@@ -2292,8 +1902,7 @@ function showEditRowModal(rowIndex, isDuplicate = false) {
         'Important Dates': ['date_received', 'client_deadline', 'date_awarded_lost', 'forecast_date'],
         'Decision & Comments': ['decision', 'remarks_comments'],
         'Lost Analysis': ['lost_rca', 'l_particulars'],
-        'ACRUD Fields': ['a', 'c', 'r', 'u', 'd', 'revision'],
-        'Google Drive': ['google_drive_folder']
+        'ACRUD Fields': ['a', 'c', 'r', 'u', 'd', 'revision']
     };
     
     // Create sectioned form
@@ -2317,14 +1926,14 @@ function showEditRowModal(rowIndex, isDuplicate = false) {
             const field1 = fields[i];
             if (field1) {
                 const fieldContainer = createEditFieldContainer(field1, rowData, headers);
-                row.appendChild(fieldContainer);
+                if (fieldContainer) row.appendChild(fieldContainer);
             }
             
             // Add second field if exists
             const field2 = fields[i + 1];
             if (field2) {
                 const fieldContainer = createEditFieldContainer(field2, rowData, headers);
-                row.appendChild(fieldContainer);
+                if (fieldContainer) row.appendChild(fieldContainer);
             } else if (fields.length > 1) {
                 // Add empty field for layout balance
                 const emptyField = document.createElement('div');
@@ -2444,17 +2053,7 @@ async function showCreateOpportunityModal(duplicateFromIndex = null) {
         console.log('📜 Modal body scroll enabled:', modalBody.style.overflowY);
     }
     
-    // Auto-generate and pre-fill project code for new opportunities (after modal is shown)
-    if (duplicateFromIndex === null) {
-        console.log('🔢 Loading next project code for new opportunity...');
-        try {
-            await loadNextProjectCode();
-        } catch (error) {
-            console.error('❌ Error loading project code:', error);
-        }
-    } else {
-        console.log('📋 Duplicating opportunity - skipping project code generation');
-    }
+    // Project code is left empty; user enters manually or can use "Get next code" if we add that button later.
 }
 
 // Helper function to set up Drive folder option handlers
@@ -3079,12 +2678,18 @@ function getFieldOptions(field) {
             return ['', 'Power', 'Manufacturing', 'Buildings'];
         case 'ind_particulars':
             return ['', 'F&B', 'PHARMA', 'CEMENT', 'COLD STORAGE', 'CONSTRUCTION', 'UTILITIES', 'SEMICON', 'POWER PLANT', 'OIL & GAS', 'MANUFACTURING', 'OTHERS'];
-        case 'account_mgr':
-            // Get values from dropdownOptions if available, otherwise return empty array with blank option
-            return dropdownOptions.accountmgr ? ['', ...dropdownOptions.accountmgr] : [''];
-        case 'pic':
-            // Get values from dropdownOptions if available, otherwise return empty array with blank option
-            return dropdownOptions.pic ? ['', ...dropdownOptions.pic] : [''];
+        case 'account_mgr': {
+            const fromData = dropdownOptions.accountmgr || [];
+            const master = masterAccountManagersList.length ? masterAccountManagersList.map(m => (typeof m === 'string' ? m : m.name)) : CONFIG_ACCOUNT_MANAGERS;
+            const combined = [...new Set([...master, ...fromData])].filter(Boolean).sort();
+            return ['', ...combined];
+        }
+        case 'pic': {
+            const fromData = dropdownOptions.pic || [];
+            const master = masterPicsList.length ? masterPicsList.map(m => (typeof m === 'string' ? m : m.name)) : CONFIG_PIC;
+            const combined = [...new Set([...master, ...fromData])].filter(Boolean).sort();
+            return ['', ...combined];
+        }
         case 'bom':
             // Get values from dropdownOptions if available, otherwise return empty array with blank option
             return dropdownOptions.bom ? ['', ...dropdownOptions.bom] : [''];
@@ -4201,7 +3806,7 @@ async function loadRevisionHistory(uid, tableBody) {
                     let newValue = '-';
                     
                     // Handle enhanced field tracking format with old/new values
-                    if (changeInfo && typeof changeInfo === 'object' && changeInfo.hasOwnProperty('old') && changeInfo.hasOwnProperty('new')) {
+                    if (changeInfo && typeof changeInfo === 'object' && Object.prototype.hasOwnProperty.call(changeInfo, 'old') && Object.prototype.hasOwnProperty.call(changeInfo, 'new')) {
                         oldValue = changeInfo.old !== null && changeInfo.old !== undefined ? changeInfo.old : '(empty)';
                         newValue = changeInfo.new !== null && changeInfo.new !== undefined ? changeInfo.new : '(empty)';
                     } else {
@@ -4369,7 +3974,16 @@ function getDropdownOptions(headersToUse, data) {
             }
         }
 
-        options[normField] = Array.from(values).sort();
+        let list = Array.from(values).sort();
+        if (normField === 'accountmgr') {
+            const master = masterAccountManagersList.length ? masterAccountManagersList.map(m => (typeof m === 'string' ? m : m.name)) : CONFIG_ACCOUNT_MANAGERS;
+            list = [...new Set([...master, ...list])].filter(Boolean).sort();
+        }
+        if (normField === 'pic') {
+            const master = masterPicsList.length ? masterPicsList.map(m => (typeof m === 'string' ? m : m.name)) : CONFIG_PIC;
+            list = [...new Set([...master, ...list])].filter(Boolean).sort();
+        }
+        options[normField] = list;
     });
 
     return options;
@@ -4439,22 +4053,9 @@ function populateTableBody(data) {
             if (!columnVisibility[header]) return; // Skip hidden columns
             const td = document.createElement('td');
             
-            // Special handling for Google Drive folder column
-            if (header === 'google_drive_folder_name' && row.google_drive_folder_url) {
-                td.innerHTML = `
-                    <div class="drive-folder-cell">
-                        <a href="${row.google_drive_folder_url}" target="_blank" class="drive-folder-table-link">
-                            <span class="material-icons">folder</span>
-                            ${row.google_drive_folder_name || 'Drive Folder'}
-                        </a>
-                    </div>
-                `;
-            } else if (header === 'google_drive_folder_name' && !row.google_drive_folder_url) {
-                td.innerHTML = `
-                    <div class="drive-folder-cell">
-                        <span class="drive-folder-none">No folder</span>
-                    </div>
-                `;
+            // Google Drive column: show text only (link removed)
+            if (header === 'google_drive_folder_name') {
+                td.textContent = row.google_drive_folder_name || '—';
             } else {
                 // Check if this is the project name column before formatting
                 const normalizedHeader = (header || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -7385,7 +6986,23 @@ function getActiveFiltersDescription() {
     return descriptions.length > 0 ? descriptions.join(', ') : '';
 }
 
+async function loadMasterAccountManagersAndPics() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+        const [amRes, picRes] = await Promise.all([
+            fetch(getApiUrl('/api/proposal-workbench/proposals/account-managers-list'), { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(getApiUrl('/api/proposal-workbench/proposals/pics-master-list'), { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        if (amRes.ok) masterAccountManagersList = await amRes.json();
+        if (picRes.ok) masterPicsList = await picRes.json();
+    } catch (e) {
+        console.warn('Could not load master Account Managers/PIC lists:', e);
+    }
+}
+
 async function initializeTable() {
+    await loadMasterAccountManagersAndPics();
     if (!opportunities || !opportunities.length) {
         tableBody.innerHTML = '<tr><td colspan="100%" class="text-center p-4">No data available</td></tr>';
         return;
@@ -7592,6 +7209,12 @@ function formatShortCurrency(num) {
         return prefix + (num / 1e3).toFixed(1) + 'K';
     }
     return prefix + num.toFixed(0);
+}
+
+/** Clear token and redirect to login when server returns invalid/expired token (403). */
+function handleAuthFailure() {
+    localStorage.removeItem('authToken');
+    window.location.href = 'login.html';
 }
 
 function getAuthToken() {
@@ -8387,8 +8010,8 @@ function startRealTimeUpdates() {
         }
     }, updateInterval);
     
-    // Clean up interval when page is unloaded
-    window.addEventListener('unload', () => {
+    // Clean up interval when page is hidden/unloaded (pagehide avoids Permissions Policy violation)
+    window.addEventListener('pagehide', () => {
         clearInterval(intervalId);
     });
     
@@ -8965,7 +8588,7 @@ function initializeUserInfoOnDOMReady() {
 // Set up event listeners
 document.addEventListener('visibilitychange', handleVisibilityChange);
 window.addEventListener('beforeunload', cleanupUserPresence);
-window.addEventListener('unload', cleanupUserPresence);
+window.addEventListener('pagehide', cleanupUserPresence);
 
 // Listen for storage changes (when other tabs update presence)
 window.addEventListener('storage', function(e) {
@@ -8975,63 +8598,10 @@ window.addEventListener('storage', function(e) {
     }
 });
 
-// Data Sync from Drive functionality
+// Google Drive sync removed
 async function handleSyncFromDrive(event) {
-    event.preventDefault();
-    
-    // Get the current opportunity UID from the edit modal
-    const opportunityUid = getCurrentOpportunityUid();
-    if (!opportunityUid) {
-        alert('No opportunity selected for sync');
-        return;
-    }
-    
-    // Show loading state
-    const syncBtn = document.getElementById('syncFromDriveBtn');
-    const originalText = syncBtn.innerHTML;
-    syncBtn.disabled = true;
-    syncBtn.innerHTML = '<span class="material-icons text-sm mr-2 animate-spin">sync</span>Syncing...';
-    
-    try {
-        console.log(`[SYNC] Starting sync for opportunity: ${opportunityUid}`);
-        
-        // Call the sync API endpoint
-        const response = await fetch(getApiUrl(`/api/proposal-workbench/sync-from-drive/${opportunityUid}`), {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.error || 'Sync failed');
-        }
-        
-        if (result.success) {
-            console.log('[SYNC] Successfully synced opportunity data:', result.syncedData);
-            
-            // Update the form fields with synced data
-            updateFormWithSyncedData(result.syncedData);
-            
-            // Show success message
-            showSyncSuccessMessage(result.syncedData);
-            
-            // Note: In-memory data and views will be updated only when user clicks "Save Changes"
-            
-        } else {
-            throw new Error(result.error || 'Sync failed');
-        }
-        
-    } catch (error) {
-        console.error('[SYNC] Sync failed:', error);
-        showSyncErrorMessage(error.message);
-    } finally {
-        // Restore button state
-        syncBtn.disabled = false;
-        syncBtn.innerHTML = originalText;
-    }
+    if (event) event.preventDefault();
+    return;
 }
 
 function updateFormWithSyncedData(syncedData) {
@@ -9191,6 +8761,17 @@ async function sendHeartbeat() {
         
         console.log('[HEARTBEAT] Response status:', response.status);
         
+        if (response.status === 403) {
+            const errorText = await response.text();
+            console.error('[HEARTBEAT] Server error response:', errorText);
+            try {
+                const data = JSON.parse(errorText);
+                if (data.error && (data.error.includes('token') || data.error.includes('expired'))) {
+                    handleAuthFailure();
+                    return;
+                }
+            } catch (_) {}
+        }
         if (!response.ok) {
             const errorText = await response.text();
             console.error('[HEARTBEAT] Server error response:', errorText);
@@ -10422,12 +10003,13 @@ function updateCellSelectionSummary() {
     updateCellSummary();
 }
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
+// Cleanup and save on page hide/unload (pagehide avoids Permissions Policy violation)
+function onPageLeave() {
     clearInterval(heartbeatInterval);
-    // Save user preferences before page unload to prevent data loss
     if (getCurrentUserId()) {
         saveUserPreferences();
-        console.log('[PREFERENCES] Saved preferences before page unload');
+        console.log('[PREFERENCES] Saved preferences before page leave');
     }
-});
+}
+window.addEventListener('beforeunload', onPageLeave);
+window.addEventListener('pagehide', onPageLeave);

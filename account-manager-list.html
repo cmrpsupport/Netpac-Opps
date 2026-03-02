@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Manager List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/netpacific-logo.jpg">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    <script src="config.js"></script>
+</head>
+<body class="min-h-screen">
+    <div id="shared-topbar"></div>
+    <div id="shared-sidebar"></div>
+
+    <div class="main-content" style="padding-top: 1rem;">
+        <div id="accessDeniedBanner" style="display:none;color:#fff;background:#d32f2f;padding:1rem;text-align:center;font-weight:bold;margin-bottom:1rem;border-radius:4px;">
+            Access Denied: You do not have permission to view this page.
+        </div>
+
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-2xl font-bold mb-2">Account Managers & PIC List</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Add Account Managers and PICs (Person in Charge) here. In User Management you can tag users to an Account Manager and a PIC once they have an account.</p>
+
+            <!-- Account Managers -->
+            <div class="mb-10">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">Account Managers</h2>
+                    <button id="addAmButton" class="action-button">
+                        <span class="material-icons">add</span>
+                        Add Account Manager
+                    </button>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <div class="table-container">
+                        <table id="amTable" class="min-w-full divide-y">
+                            <thead class="sticky-header">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">NAME</th>
+                                    <th class="px-3 py-2 text-left">EMAIL</th>
+                                    <th class="px-3 py-2 text-left">STATUS</th>
+                                    <th class="px-3 py-2 text-left">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="amTableBody">
+                                <tr><td colspan="4" class="text-center p-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="rowCount" class="mt-2 text-sm"></div>
+            </div>
+
+            <!-- PIC (Person in Charge) -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">PIC (Person in Charge)</h2>
+                    <button id="addPicButton" class="action-button">
+                        <span class="material-icons">add</span>
+                        Add PIC
+                    </button>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <div class="table-container">
+                        <table id="picTable" class="min-w-full divide-y">
+                            <thead class="sticky-header">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">NAME</th>
+                                    <th class="px-3 py-2 text-left">EMAIL</th>
+                                    <th class="px-3 py-2 text-left">STATUS</th>
+                                    <th class="px-3 py-2 text-left">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="picTableBody">
+                                <tr><td colspan="4" class="text-center p-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="picRowCount" class="mt-2 text-sm"></div>
+            </div>
+        </div>
+
+        <div id="amModalOverlay" class="modal-overlay hidden">
+            <div id="amModal" class="modal hidden" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 id="amModalTitle">Add Account Manager</h2>
+                    <button type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                </div>
+                <form id="amForm" class="modal-body">
+                    <input type="hidden" id="amId" name="amId">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="amName">Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="amName" name="name" required />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="amEmail">Email</label>
+                                <input type="email" id="amEmail" name="email" />
+                            </div>
+                        </div>
+                        <div class="form-row" id="amActiveRow">
+                            <div class="enhanced-field">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="amActive" name="is_active" checked />
+                                    <span class="ml-2">Active</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-actions">
+                    <button type="button" id="amCancelBtn" class="modal-close-btn">Cancel</button>
+                    <button type="submit" form="amForm" class="modal-save-btn">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="picModalOverlay" class="modal-overlay hidden">
+            <div id="picModal" class="modal hidden" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 id="picModalTitle">Add PIC</h2>
+                    <button type="button" aria-label="Close" class="modal-close-x pic-modal-close">&times;</button>
+                </div>
+                <form id="picForm" class="modal-body">
+                    <input type="hidden" id="picId" name="picId">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="picName">Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="picName" name="name" required />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="picEmail">Email</label>
+                                <input type="email" id="picEmail" name="email" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="picActive" name="is_active" checked />
+                                    <span class="ml-2">Active</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-actions">
+                    <button type="button" id="picCancelBtn" class="modal-close-btn">Cancel</button>
+                    <button type="submit" form="picForm" class="modal-save-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared-navigation.js?v=1750741456"></script>
+    <script>
+    function getApiUrl(endpoint) {
+        if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) {
+            return window.APP_CONFIG.API_BASE_URL + endpoint;
+        }
+        const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000' : 'https://cmrp-opps-backend.onrender.com';
+        return baseUrl + endpoint;
+    }
+
+    let sharedNav;
+    async function initializeApp() {
+        if (!window.APP_CONFIG) {
+            window.APP_CONFIG = { API_BASE_URL: getApiUrl(''), ENDPOINTS: {} };
+        }
+        sharedNav = new SharedNavigation();
+        await sharedNav.initialize();
+        await fetchAccountManagers();
+        await fetchPics();
+        setupEventListeners();
+    }
+
+    async function fetchAccountManagers() {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            document.getElementById('amTableBody').innerHTML = '<tr><td colspan="4" class="text-center p-4">Please log in.</td></tr>';
+            return;
+        }
+        try {
+            const response = await fetch(getApiUrl('/api/account-managers'), {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                if (response.status === 401) { window.location.href = 'login.html'; return; }
+                if (response.status === 403) { document.getElementById('accessDeniedBanner').style.display = 'block'; return; }
+                throw new Error('Failed to fetch: ' + response.status);
+            }
+            const list = await response.json();
+            populateTable(list);
+            document.getElementById('rowCount').textContent = list.length + ' account manager(s)';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('amTableBody').innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-600">Error loading list.</td></tr>';
+        }
+    }
+
+    function populateTable(list) {
+        const tbody = document.getElementById('amTableBody');
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">No account managers. Click "Add Account Manager" to add one.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(am => {
+            const name = escapeHtml(am.name);
+            const nameAttr = (am.name || '').replace(/"/g, '&quot;');
+            const emailAttr = (am.email || '').replace(/"/g, '&quot;');
+            return `<tr>
+                <td class="px-3 py-2">${name}</td>
+                <td class="px-3 py-2">${escapeHtml(am.email || '—')}</td>
+                <td class="px-3 py-2">${am.is_active ? 'Active' : 'Inactive'}</td>
+                <td class="px-3 py-2">
+                    <button type="button" class="edit-am action-button small" data-id="${am.id}" data-name="${nameAttr}" data-email="${emailAttr}" data-active="${am.is_active ? 1 : 0}">Edit</button>
+                    <button type="button" class="delete-am action-button small danger" data-id="${am.id}" data-name="${nameAttr}">Delete</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    async function fetchPics() {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            document.getElementById('picTableBody').innerHTML = '<tr><td colspan="4" class="text-center p-4">Please log in.</td></tr>';
+            return;
+        }
+        try {
+            const response = await fetch(getApiUrl('/api/pics'), {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                if (response.status === 401) { window.location.href = 'login.html'; return; }
+                if (response.status === 403) { document.getElementById('accessDeniedBanner').style.display = 'block'; return; }
+                throw new Error('Failed to fetch: ' + response.status);
+            }
+            const list = await response.json();
+            populatePicTable(list);
+            document.getElementById('picRowCount').textContent = list.length + ' PIC(s)';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('picTableBody').innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-600">Error loading list.</td></tr>';
+        }
+    }
+
+    function populatePicTable(list) {
+        const tbody = document.getElementById('picTableBody');
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">No PICs. Click "Add PIC" to add one.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(pic => {
+            const name = escapeHtml(pic.name);
+            const nameAttr = (pic.name || '').replace(/"/g, '&quot;');
+            const emailAttr = (pic.email || '').replace(/"/g, '&quot;');
+            return `<tr>
+                <td class="px-3 py-2">${name}</td>
+                <td class="px-3 py-2">${escapeHtml(pic.email || '—')}</td>
+                <td class="px-3 py-2">${pic.is_active ? 'Active' : 'Inactive'}</td>
+                <td class="px-3 py-2">
+                    <button type="button" class="edit-pic action-button small" data-id="${pic.id}" data-name="${nameAttr}" data-email="${emailAttr}" data-active="${pic.is_active ? 1 : 0}">Edit</button>
+                    <button type="button" class="delete-pic action-button small danger" data-id="${pic.id}" data-name="${nameAttr}">Delete</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function setupEventListeners() {
+        document.getElementById('addAmButton').addEventListener('click', () => {
+            document.getElementById('amForm').reset();
+            document.getElementById('amId').value = '';
+            document.getElementById('amActive').checked = true;
+            document.getElementById('amModalTitle').textContent = 'Add Account Manager';
+            document.getElementById('amModalOverlay').classList.remove('hidden');
+            document.getElementById('amModal').classList.remove('hidden');
+        });
+
+        function closeModal() {
+            document.getElementById('amModalOverlay').classList.add('hidden');
+            document.getElementById('amModal').classList.add('hidden');
+        }
+        document.getElementById('amCancelBtn').addEventListener('click', closeModal);
+        document.querySelector('#amModal .modal-close-x').addEventListener('click', closeModal);
+
+        document.getElementById('amForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('amId').value;
+            const name = document.getElementById('amName').value.trim();
+            const email = document.getElementById('amEmail').value.trim() || null;
+            const is_active = document.getElementById('amActive').checked;
+            if (!name) { alert('Name is required'); return; }
+            const authToken = localStorage.getItem('authToken');
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? getApiUrl('/api/account-managers/' + id) : getApiUrl('/api/account-managers');
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name, email, is_active })
+                });
+                if (!response.ok) throw new Error(await response.text());
+                await fetchAccountManagers();
+                closeModal();
+            } catch (err) {
+                alert('Error saving: ' + err.message);
+            }
+        });
+
+        document.getElementById('amTableBody').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-am');
+            const deleteBtn = e.target.closest('.delete-am');
+            if (editBtn) {
+                document.getElementById('amId').value = editBtn.dataset.id;
+                document.getElementById('amName').value = editBtn.dataset.name || '';
+                document.getElementById('amEmail').value = editBtn.dataset.email || '';
+                document.getElementById('amActive').checked = editBtn.dataset.active === '1';
+                document.getElementById('amModalTitle').textContent = 'Edit Account Manager';
+                document.getElementById('amModalOverlay').classList.remove('hidden');
+                document.getElementById('amModal').classList.remove('hidden');
+            }
+            if (deleteBtn) {
+                if (!confirm('Delete account manager "' + deleteBtn.dataset.name + '"?')) return;
+                try {
+                    const response = await fetch(getApiUrl('/api/account-managers/' + deleteBtn.dataset.id), {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}`, 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    await fetchAccountManagers();
+                } catch (err) {
+                    alert('Error deleting: ' + err.message);
+                }
+            }
+        });
+
+        // PIC modal and form
+        document.getElementById('addPicButton').addEventListener('click', () => {
+            document.getElementById('picForm').reset();
+            document.getElementById('picId').value = '';
+            document.getElementById('picActive').checked = true;
+            document.getElementById('picModalTitle').textContent = 'Add PIC';
+            document.getElementById('picModalOverlay').classList.remove('hidden');
+            document.getElementById('picModal').classList.remove('hidden');
+        });
+        function closePicModal() {
+            document.getElementById('picModalOverlay').classList.add('hidden');
+            document.getElementById('picModal').classList.add('hidden');
+        }
+        document.getElementById('picCancelBtn').addEventListener('click', closePicModal);
+        document.querySelector('.pic-modal-close').addEventListener('click', closePicModal);
+        document.getElementById('picForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('picId').value;
+            const name = document.getElementById('picName').value.trim();
+            const email = document.getElementById('picEmail').value.trim() || null;
+            const is_active = document.getElementById('picActive').checked;
+            if (!name) { alert('Name is required'); return; }
+            const authToken = localStorage.getItem('authToken');
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? getApiUrl('/api/pics/' + id) : getApiUrl('/api/pics');
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name, email, is_active })
+                });
+                if (!response.ok) throw new Error(await response.text());
+                await fetchPics();
+                closePicModal();
+            } catch (err) {
+                alert('Error saving: ' + err.message);
+            }
+        });
+        document.getElementById('picTableBody').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-pic');
+            const deleteBtn = e.target.closest('.delete-pic');
+            if (editBtn) {
+                document.getElementById('picId').value = editBtn.dataset.id;
+                document.getElementById('picName').value = editBtn.dataset.name || '';
+                document.getElementById('picEmail').value = editBtn.dataset.email || '';
+                document.getElementById('picActive').checked = editBtn.dataset.active === '1';
+                document.getElementById('picModalTitle').textContent = 'Edit PIC';
+                document.getElementById('picModalOverlay').classList.remove('hidden');
+                document.getElementById('picModal').classList.remove('hidden');
+            }
+            if (deleteBtn) {
+                if (!confirm('Delete PIC "' + deleteBtn.dataset.name + '"?')) return;
+                try {
+                    const response = await fetch(getApiUrl('/api/pics/' + deleteBtn.dataset.id), {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}`, 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    await fetchPics();
+                } catch (err) {
+                    alert('Error deleting: ' + err.message);
+                }
+            }
+        });
+    }
+
+    initializeApp().catch(console.error);
+    </script>
+</body>
+</html>

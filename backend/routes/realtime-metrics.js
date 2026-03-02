@@ -16,22 +16,18 @@ router.get('/realtime/account-managers', async (req, res) => {
     try {
         const query = `
             SELECT 
-                om.account_mgr as account_manager,
+                account_mgr as account_manager,
                 COUNT(*) as total_opportunities,
-                COUNT(CASE WHEN om.status = 'Submitted' THEN 1 END) as submitted_count,
-                COALESCE(SUM(CASE WHEN om.status = 'Submitted' THEN om.final_amt END), 0) as submitted_amount,
-                COUNT(CASE WHEN om.opp_status IN ('OP100', 'OP90', 'OP60', 'OP30') THEN 1 END) as active_pipeline_count,
-                COALESCE(SUM(CASE WHEN om.opp_status IN ('OP100', 'OP90', 'OP60', 'OP30') THEN om.final_amt END), 0) as active_pipeline_amount,
-                MAX(om.date_received) as last_activity
-            FROM opps_monitoring om
-            INNER JOIN role_definitions rd ON rd.code = om.account_mgr 
-            WHERE rd.role_type = 'account_manager' 
-            AND rd.is_active = 1
-            AND (om.is_deleted = 0 OR om.is_deleted IS NULL)
-            AND om.account_mgr IS NOT NULL 
-            AND om.account_mgr != ''
-            GROUP BY om.account_mgr
-            ORDER BY submitted_amount DESC, om.account_mgr
+                COUNT(CASE WHEN status = 'Submitted' THEN 1 END) as submitted_count,
+                COALESCE(SUM(CASE WHEN status = 'Submitted' THEN final_amt END), 0) as submitted_amount,
+                COUNT(CASE WHEN opp_status IN ('OP100', 'OP90', 'OP60', 'OP30') THEN 1 END) as active_pipeline_count,
+                COALESCE(SUM(CASE WHEN opp_status IN ('OP100', 'OP90', 'OP60', 'OP30') THEN final_amt END), 0) as active_pipeline_amount,
+                MAX(date_received) as last_activity
+            FROM opps_monitoring
+            WHERE account_mgr IS NOT NULL 
+            AND account_mgr != ''
+            GROUP BY account_mgr
+            ORDER BY submitted_amount DESC, account_mgr
         `;
 
         const result = await db.query(query);
@@ -76,7 +72,6 @@ router.get('/realtime/account-managers/:name/metrics', async (req, res) => {
             SELECT COUNT(*) as count
             FROM opps_monitoring
             WHERE account_mgr = ?
-            AND (is_deleted = 0 OR is_deleted IS NULL)
             LIMIT 1
         `;
         const validationResult = await db.query(validationQuery, [name]);
@@ -125,7 +120,6 @@ router.get('/realtime/account-managers/:name/metrics', async (req, res) => {
                 
             FROM opps_monitoring
             WHERE account_mgr = ?
-            AND (is_deleted = 0 OR is_deleted IS NULL)
             GROUP BY account_mgr
         `;
 
@@ -181,7 +175,6 @@ router.get('/realtime/account-managers/:name/metrics', async (req, res) => {
                     FROM opps_monitoring
                     WHERE account_mgr = ?
                     AND date_received <= ?
-                    AND (is_deleted = 0 OR is_deleted IS NULL)
                     GROUP BY account_mgr
                 `;
 
@@ -367,7 +360,6 @@ router.post('/realtime/snapshots/auto-create', async (req, res) => {
                 COALESCE(SUM(CASE WHEN rev IS NOT NULL AND rev > 0 THEN rev ELSE 0 END), 0) as revised_count
             FROM opps_monitoring 
             WHERE account_mgr IS NOT NULL AND account_mgr != ''
-            AND (is_deleted = 0 OR is_deleted IS NULL)
             GROUP BY account_mgr
             ORDER BY account_mgr
         `;
@@ -501,12 +493,8 @@ router.get('/realtime/metrics/global', async (req, res) => {
                 COUNT(CASE WHEN decision = 'Decline' THEN 1 END) as declined_count,
                 COUNT(CASE WHEN opp_status = 'Revised' THEN 1 END) as revised_count,
                 COUNT(DISTINCT account_mgr) as unique_account_managers,
-                MAX(MAX(
-                    COALESCE(created_at, '1970-01-01'), 
-                    COALESCE(updated_at, '1970-01-01')
-                )) as last_global_activity
+                MAX(date_received) as last_global_activity
             FROM opps_monitoring
-            WHERE (is_deleted = 0 OR is_deleted IS NULL)
         `;
 
         const result = await db.query(query);

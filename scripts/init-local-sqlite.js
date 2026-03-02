@@ -78,6 +78,38 @@ if (roleCount.n === 0) {
   `);
 }
 
+// Account managers table and users.account_manager_id (migration for existing DBs)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS account_managers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN account_manager_id INTEGER;`);
+} catch (e) {
+  // column may already exist
+}
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN pic_id INTEGER;`);
+} catch (e) {
+  // column may already exist
+}
+
 // Seed default admin user if no users
 const userCount = db.prepare('SELECT COUNT(*) as n FROM users').get();
 if (userCount.n === 0) {

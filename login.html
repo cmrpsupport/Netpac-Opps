@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:3000 https://cmrp-oppx.onrender.com;">
-    <title>oppX – Sign in</title>
+    <title>oppX – Net Pacific Sign in</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -301,14 +301,14 @@
             </div>
             <h1 class="login-hero-title"><span>MANAGE</span><span>OPPORTUNITIES</span></h1>
             <p class="login-tagline">Built to track, manage, and convert opportunities.</p>
-            <p class="login-desc">Track deals, forecasts, and team progress from anywhere—sign in to get started.</p>
+            <p class="login-desc">Track deals, forecasts, and team progress from anywhere. For Net Pacific use only—sign in to get started.</p>
         </div>
     </div>
 
     <div class="login-form-wrap">
         <div class="login-form-panel">
         <h2 id="loginHeading" class="login-hero">Welcome Back</h2>
-        <p id="loginSubtitle" style="font-size:0.875rem;color:rgba(255,255,255,0.85);margin-bottom:1.5rem;">Please login to access your dashboard.</p>
+        <p id="loginSubtitle" style="font-size:0.875rem;color:rgba(255,255,255,0.85);margin-bottom:1.5rem;">Net Pacific — sign in to access your dashboard.</p>
 
         <form id="loginForm" class="login-form">
             <div id="loginError" class="error-message hidden">
@@ -319,8 +319,6 @@
                 <span class="material-icons" style="font-size:1.125rem;">check_circle</span>
                 <span>Login successful! Redirecting...</span>
             </div>
-            <label for="loginTenantCode" class="form-label">Organization code</label>
-            <input type="text" id="loginTenantCode" name="tenantCode" class="form-input-new" placeholder="e.g. acme" autocomplete="organization">
             <label for="loginEmail" class="form-label">Email</label>
             <input type="email" id="loginEmail" name="email" class="form-input-new" placeholder="Enter your email" required autocomplete="email">
             <label for="loginPassword" class="form-label">Password</label>
@@ -351,10 +349,7 @@
                 <span class="material-icons" style="font-size:1.125rem;">check_circle</span>
                 <span>Account created! Redirecting...</span>
             </div>
-            <label for="signupTenantCode" class="form-label">Organization code</label>
-            <input type="text" id="signupTenantCode" name="tenantCode" class="form-input-new" placeholder="e.g. acme" required>
-            <label for="signupTenantName" class="form-label">Organization name (optional)</label>
-            <input type="text" id="signupTenantName" name="tenantName" class="form-input-new" placeholder="Acme Inc">
+            <p style="font-size:0.875rem;color:rgba(255,255,255,0.9);margin-bottom:1rem;">Create an account for Net Pacific.</p>
             <label for="signupName" class="form-label">Your name (optional)</label>
             <input type="text" id="signupName" name="name" class="form-input-new" placeholder="Your name" autocomplete="name">
             <label for="signupEmail" class="form-label">Email</label>
