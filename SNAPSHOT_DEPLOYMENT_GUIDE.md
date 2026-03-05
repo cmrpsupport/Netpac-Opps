@@ -1,89 +1,8 @@
-# 🚀 Database Snapshot Deployment Guide
+# Snapshot API (main server)
 
-## 📋 Current Status
-- ✅ **Database:** Snapshots stored in PostgreSQL (available to both environments)
-- ✅ **Frontend:** Updated to use database APIs
-- ⚠️ **Backend:** Snapshot endpoints needed in production
+Snapshots are served by the **main app** (`node server.js`). There is no separate snapshot server.
 
-## 🎯 Deployment Steps
-
-### **Step 1: Development Environment**
-```bash
-# Start the local snapshot server
-npm run snapshot-server
-# OR
-node snapshot_server.js
-
-# Server will run on http://localhost:3001
-# Dashboard available at http://localhost:3001
-```
-
-### **Step 2: Production Environment**
-
-#### **Option A: Add to Existing Backend (Recommended)**
-1. **Add snapshot endpoints** to your existing production backend server
-2. **Copy the routes** from `snapshot_endpoints_for_production.js`
-3. **Deploy** your updated backend to Render
-
-#### **Option B: Deploy Snapshot Server Separately**
-1. **Create new Render service** for snapshot server
-2. **Deploy** `snapshot_server.js` to new service
-3. **Update** config.js with new production URL
-
-### **Step 3: Verify Deployment**
-
-#### **Test Development:**
-```bash
-# Test local snapshot API
-curl http://localhost:3001/api/snapshots/weekly
-
-# Expected: JSON with snapshot data
-```
-
-#### **Test Production:**
-```bash
-# Test production snapshot API
-curl https://cmrp-opps-backend.onrender.com/api/snapshots/weekly
-
-# Expected: JSON with snapshot data
-```
-
-## 🔧 Configuration Matrix
-
-| Environment | Frontend URL | Backend API | Snapshot Storage |
-|-------------|--------------|-------------|------------------|
-| **Development** | localhost:3001 | localhost:3001 | PostgreSQL DB |
-| **Production** | your-domain.com | cmrp-opps-backend.onrender.com | PostgreSQL DB |
-
-## ✅ Verification Checklist
-
-- [ ] Database table `dashboard_snapshots` exists
-- [ ] Snapshot data populated with screenshot metrics
-- [ ] Local snapshot server running on port 3001
-- [ ] Production backend has snapshot endpoints
-- [ ] Frontend config points to correct APIs
-- [ ] Both environments can fetch snapshots
-
-## 🚨 Quick Fix Commands
-
-### **Reset Config for Development:**
-```bash
-# Use local snapshot server
-node snapshot_server.js
-```
-
-### **Deploy to Production:**
-```bash
-# Deploy frontend changes
-./deploy.sh
-
-# OR manually:
-git checkout master
-git merge main  
-git push origin master
-```
-
-## 📊 API Endpoints
+## Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -92,11 +11,11 @@ git push origin master
 | `POST` | `/api/snapshots` | Save new snapshot |
 | `GET` | `/api/snapshots` | Get all snapshots |
 
-## 🔗 Next Steps
+## Usage
 
-1. **Choose deployment option** (A or B above)
-2. **Add snapshot endpoints** to production backend
-3. **Test both environments** work correctly
-4. **Monitor dashboard** for proper baseline comparisons
+- **Development:** Start the app with `npm start` (or `npm run dev`). Snapshot APIs are on the same port (e.g. `http://localhost:3000/api/snapshots/weekly`).
+- **Production (Render):** The single web service serves both the app and snapshot APIs. No extra deployment.
 
-The snapshots will automatically sync between environments since they use the same PostgreSQL database! 🎯
+## Database
+
+Snapshot data is stored in the same database as the rest of the app (SQLite Cloud or local SQLite, depending on `SQLITECLOUD_URL` / `USE_SQLITE_LOCAL`).

@@ -1,104 +1,99 @@
-# CMRP Opps Management - Render Deployment Guide
+# Deploy on Render (production)
 
-## 🚀 **DEPLOYMENT READY!** 
-
-Your code is now prepared and pushed to GitHub. Follow these steps to deploy to Render:
+**Production runs on Render.** The app uses **SQLite Cloud** as the database (no local database on Render).
 
 ---
 
-## **Step 1: Deploy Backend (Node.js Server)**
+## Option A: Blueprint (recommended)
 
-1. **Go to Render**: Visit [https://render.com](https://render.com) and sign in
-2. **Create New Web Service**:
-   - Click "New +" → "Web Service"
-   - Connect to GitHub repository: `https://github.com/rjr-cmrp/CMRP-Opps-Management`
-   - Select branch: `main`
+1. **Go to Render**: [https://render.com](https://render.com) - sign in.
+2. **New -> Blueprint**: Connect your GitHub repo and select the branch (e.g. `main`).
+3. Render will read `render.yaml` and create the web service with:
+   - **Build**: `npm install`
+   - **Start**: `node server.js`
+   - **Env**: `NODE_ENV=production`
+4. **Set secrets in the dashboard** (Environment):
+   - `SQLITECLOUD_URL` - required; your SQLite Cloud connection URL (e.g. `sqlitecloud://xxx.g4.sqlite.cloud:8860/auth.sqlitecloud?apikey=...`). Get this from your SQLite Cloud dashboard.
+   - `JWT_SECRET` - required; use a strong random string.
+   - `FRONTEND_URL` - your frontend URL for CORS (e.g. `https://your-app.onrender.com`).
 
-3. **Configure Web Service**:
-   ```
-   Name: cmrp-opps-backend
-   Root Directory: (leave empty)
-   Environment: Node
-   Build Command: npm install
-   Start Command: node server.js
-   Instance Type: Free (or paid if needed)
-   ```
-
-4. **Environment Variables** (CRITICAL - Add these in Render dashboard):
-   ```
-   DATABASE_URL = postgresql://username:password@your-prod-endpoint.neon.tech/your_database?sslmode=require
-   JWT_SECRET = your-secure-random-string-here
-   NODE_ENV = production
-   FRONTEND_URL = https://your-frontend-url.onrender.com (add after frontend is deployed)
-   ```
+`PORT` is set automatically by Render; do not set it.
 
 ---
 
-## **Step 2: Deploy Frontend (Static Site)**
+## Option B: Manual Web Service
 
-1. **Create New Static Site**:
-   - Click "New +" → "Static Site"
-   - Connect same GitHub repository
-   - Select branch: `main`
+1. **Go to Render** - **New +** - **Web Service**.
+2. Connect your GitHub repo and branch (e.g. `main`).
+3. **Configure**:
+   - **Name**: e.g. `netpac-opps` or `cmrp-opps-backend`
+   - **Root Directory**: leave empty
+   - **Environment**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+   - **Instance Type**: Free or paid
 
-2. **Configure Static Site**:
-   ```
-   Name: cmrp-opps-frontend
-   Root Directory: (leave empty)
-   Build Command: (leave empty)
-   Publish Directory: .
-   ```
+4. **Environment variables** (in Render dashboard - Environment):
 
----
+   | Key               | Value |
+   |-------------------|--------|
+   | `NODE_ENV`        | `production` |
+   | `SQLITECLOUD_URL` | your SQLite Cloud URL (from SQLite Cloud dashboard) |
+   | `JWT_SECRET`      | your-secure-random-string |
+   | `FRONTEND_URL`    | `https://your-frontend-url.onrender.com` |
 
-## **Step 3: Configuration Complete**
-
-✅ **Already Done**: Your backend URL has been configured!
-
-1. **Backend URL configured**: `https://cmrp-opps-backend.onrender.com`
-
-2. **config.js already updated** with your backend URL:
-   ```javascript
-   // Your actual backend URL is already configured
-   API_BASE_URL: 'https://cmrp-opps-backend.onrender.com'
-   ```
-
-3. **After frontend is deployed**: Update FRONTEND_URL environment variable in your backend service with your frontend URL
-
-4. **No need to commit again** - the configuration is already pushed to GitHub!
+   Do **not** set `PORT` - Render sets it.
 
 ---
 
-## **Key Features Added for Deployment:**
+## Database (SQLite Cloud)
 
-✅ **CORS Support** - Backend now accepts requests from frontend  
-✅ **Environment Port** - Uses Render's PORT environment variable  
-✅ **API Configuration** - Dynamic API URLs for dev/production  
-✅ **Proper npm scripts** - `npm start` runs the server  
-
----
-
-## **Testing After Deployment:**
-
-1. Visit your frontend URL
-2. Test login functionality
-3. Verify data loading from backend
-4. Test CRUD operations
-5. Check all dashboard pages
+- The app uses **SQLite Cloud** only in production. Set `SQLITECLOUD_URL` to your connection URL (includes host, database name, and apikey).
+- **One-time setup**: Run the schema and migrations once against your SQLite Cloud database:
+  ```bash
+  SQLITECLOUD_URL='your-url-here' node scripts/init-sqlite-cloud.js
+  ```
+  Or set `SQLITECLOUD_URL` in `.env` and run: `npm run db:init-cloud`
+- Do not commit your `SQLITECLOUD_URL` or API key to git; set it only in Render Environment or in a local `.env` file.
 
 ---
 
-## **Troubleshooting:**
+## Frontend (if separate)
 
-- **CORS errors**: Check FRONTEND_URL environment variable in backend
-- **API not found**: Verify backend URL in config.js
-- **Database errors**: Check DATABASE_URL environment variable
-- **Authentication issues**: Verify JWT_SECRET is set
-- **Module not found**: Ensure Start Command is `node server.js` not `npm start`
+1. **New +** - **Static Site**.
+2. Connect the same repo and branch.
+3. **Publish Directory**: set to the folder that contains your built frontend (e.g. `.` or `dist`).
+4. After deploy, set the backend's `FRONTEND_URL` to this site's URL (for CORS).
 
 ---
 
-## **Your Repository:**
-🔗 **GitHub**: https://github.com/rjr-cmrp/CMRP-Opps-Management
+## After deployment
 
-**Ready to deploy! 🎉**
+- Backend URL will be like: `https://<service-name>.onrender.com`.
+- Point your frontend's API/config to this URL (e.g. `API_BASE_URL` or `config.js`).
+- Ensure `FRONTEND_URL` in the backend matches the frontend origin to avoid CORS errors.
+
+---
+
+## Troubleshooting
+
+| Issue | Check |
+|-------|--------|
+| CORS errors | `FRONTEND_URL` in backend matches frontend origin (scheme + host, no trailing slash). |
+| API not found | Frontend `API_BASE_URL` / config points to the Render backend URL. |
+| Auth / JWT | `JWT_SECRET` is set in Render Environment. |
+| DB errors | `SQLITECLOUD_URL` is set correctly in Render Environment. Run `npm run db:init-cloud` once to apply schema if the database is new. |
+| Module not found | Start command is `node server.js` (not `npm start`). |
+
+---
+
+## Quick reference
+
+| Item | Value |
+|------|--------|
+| **Production** | Render (this guide) |
+| **Database** | SQLite Cloud (`SQLITECLOUD_URL`) |
+| **Local / on-prem** | [RUN_ON_SERVER_POWERSHELL.md](./RUN_ON_SERVER_POWERSHELL.md) (optional) |
+| **Start** | `node server.js` |
+| **Build** | `npm install` |
+| **Init DB (one-time)** | `npm run db:init-cloud` (with `SQLITECLOUD_URL` set) |

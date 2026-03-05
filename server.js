@@ -1,7 +1,7 @@
 require('dotenv').config(); // Load environment variables from .env
 console.log("=== SERVER.JS STARTED ===");
 console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log('🔗 Database: SQL connection removed (no DB)');
+console.log('🔗 Database: SQLite Cloud or local SQLite (see db_adapter)');
 console.log(`🚀 Bind: ${process.env.HOST || '0.0.0.0'}:${process.env.PORT || 3000}`);
 
 const express = require('express');
@@ -193,8 +193,8 @@ app.use((req, res, next) => {
 
 // --- Mock Data for Development ---
 // Only use mock data if explicitly enabled or if no database connection is available
-const useLocalSqlite = process.env.USE_SQLITE_LOCAL === '1' || process.env.USE_SQLITE_LOCAL === 'true' || process.env.SQLITE_DB_PATH;
-const USE_MOCK_DATA = process.env.USE_MOCK_DATA === 'true' || (!process.env.DATABASE_URL && !useLocalSqlite && process.env.NODE_ENV !== 'production');
+const hasDb = !!(process.env.SQLITECLOUD_URL || process.env.USE_SQLITE_LOCAL === '1' || process.env.USE_SQLITE_LOCAL === 'true' || process.env.SQLITE_DB_PATH);
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA === 'true' || (!process.env.DATABASE_URL && !hasDb && process.env.NODE_ENV !== 'production');
 console.log(`🧪 Mock data: ${USE_MOCK_DATA ? 'Enabled' : 'Disabled'}`);
 
 // Mock login handler for development

@@ -6,7 +6,6 @@ const db = require('../../db_adapter');
 
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const { generateSimpleWeeklyPresentation } = require('../../lib/services/simple-powerpoint-generator');
 const { generateAndStoreHighlights, getMeetingHighlights } = require('../../lib/business-logic/highlight-detection');
 const { 
@@ -16,12 +15,6 @@ const {
     getWeeklySummary,
     getChangesSinceLastMeeting
 } = require('../../lib/business-logic/meeting-dates');
-
-// PostgreSQL connection pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://reuelrivera@localhost:5432/cmrp_opps_db?sslmode=disable',
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
 
 /**
  * GET /api/presentation/test

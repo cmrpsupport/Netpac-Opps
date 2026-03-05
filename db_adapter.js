@@ -1,6 +1,7 @@
 /**
- * Database Adapter for PostgreSQL and local SQLite
- * Set USE_SQLITE_LOCAL=1 and run `node scripts/init-local-sqlite.js` to use a local SQLite DB.
+ * Database Adapter: SQLite Cloud (production) or local SQLite (optional dev).
+ * Set SQLITECLOUD_URL (e.g. sqlitecloud://xxx.sqlite.cloud:8860/db?apikey=...) to use SQLite Cloud.
+ * Otherwise set USE_SQLITE_LOCAL=1 and run node scripts/init-local-sqlite.js for local SQLite.
  */
 
 require('dotenv').config();
@@ -13,16 +14,40 @@ let dbType = null;
 
 /**
  * Initialize database connection.
- * Uses local SQLite only (no cloud DB). Set USE_SQLITE_LOCAL=1 or leave unset to use default ./data/local.db.
- * Cloud PostgreSQL is not used; DATABASE_URL is ignored.
+ * Prefers SQLITECLOUD_URL. If not set, falls back to local SQLite when USE_SQLITE_LOCAL=1.
  */
 async function initDatabase() {
-    const useLocalSqlite = process.env.USE_SQLITE_LOCAL !== '0' && process.env.USE_SQLITE_LOCAL !== 'false';
-    const dbPath = process.env.SQLITE_DB_PATH || path.join(__dirname, 'data', 'local.db');
+    const cloudUrl = (process.env.SQLITECLOUD_URL || '').trim();
 
-    if (process.env.DATABASE_URL) {
-        console.log('ℹ️  DATABASE_URL is set but ignored; using local SQLite only.');
+    if (cloudUrl && cloudUrl.startsWith('sqlitecloud://')) {
+        try {
+            const { Database } = require('@sqlitecloud/drivers');
+            await new Promise((resolve, reject) => {
+                const t = setTimeout(() => reject(new Error('SQLite Cloud connection timeout')), 15000);
+                db = new Database(cloudUrl, (err) => {
+                    clearTimeout(t);
+                    if (err) {
+                        console.error('SQLite Cloud connection error:', err.message);
+                        db = null;
+                        reject(err);
+                    } else {
+                        dbType = 'sqlite_cloud';
+                        console.log('SQLite Cloud database connected');
+                        resolve();
+                    }
+                });
+            });
+            return { connect: async () => ({ query, release: () => {} }) };
+        } catch (error) {
+            console.error('SQLite Cloud connection error:', error.message);
+            db = null;
+            dbType = null;
+            return null;
+        }
     }
+
+    const useLocalSqlite = process.env.USE_SQLITE_LOCAL === '1' || process.env.USE_SQLITE_LOCAL === 'true';
+    const dbPath = process.env.SQLITE_DB_PATH || path.join(__dirname, 'data', 'local.db');
 
     if (useLocalSqlite) {
         try {
@@ -35,20 +60,18 @@ async function initDatabase() {
             db.pragma('journal_mode = WAL');
             db.pragma('foreign_keys = ON');
             dbType = 'sqlite';
-            console.log('✅ Local SQLite database connected:', dbPath);
-            return {
-                connect: async () => ({ query, release: () => {} })
-            };
+            console.log('Local SQLite database connected:', dbPath);
+            return { connect: async () => ({ query, release: () => {} }) };
         } catch (error) {
-            console.error('❌ Local SQLite connection error:', error.message);
-            console.warn('⚠️  Run: node scripts/init-local-sqlite.js');
+            console.error('Local SQLite connection error:', error.message);
+            console.warn('Run: node scripts/init-local-sqlite.js');
             db = null;
             dbType = null;
             return null;
         }
     }
 
-    console.warn('⚠️  To use local SQLite set USE_SQLITE_LOCAL=1 (or leave unset). Cloud DB is disabled.');
+    console.warn('Set SQLITECLOUD_URL for SQLite Cloud, or USE_SQLITE_LOCAL=1 for local SQLite.');
     return null;
 }
 
@@ -63,10 +86,33 @@ async function query(sql, params = []) {
         return { rows: [], rowCount: 0 };
     }
 
+    if (dbType === 'sqlite_cloud') {
+        try {
+            const runSql = convertSQL(sql);
+            const result = await db.sql(runSql, ...(params || []));
+            if (Array.isArray(result) || (result && typeof result.length === 'number')) {
+                const arr = Array.isArray(result) ? result : Array.from(result);
+                const rows = arr.map((r) => (r && typeof r === 'object' ? { ...r } : r));
+                return { rows, rowCount: rows.length };
+            }
+            if (result && typeof result === 'object' && ('lastID' in result || 'changes' in result)) {
+                return {
+                    rows: [],
+                    rowCount: result.changes != null ? result.changes : 0,
+                    lastID: result.lastID
+                };
+            }
+            return { rows: [], rowCount: 0 };
+        } catch (error) {
+            console.error('SQLite Cloud query error:', error.message);
+            throw error;
+        }
+    }
+
     if (dbType === 'sqlite') {
         return new Promise((resolve, reject) => {
             try {
-                const runSql = dbType === 'sqlite' ? convertSQL(sql) : sql;
+                const runSql = convertSQL(sql);
                 const stmt = db.prepare(runSql);
                 const first = runSql.trim().toUpperCase();
                 if (first.startsWith('SELECT') || first.startsWith('WITH')) {
@@ -115,6 +161,19 @@ async function transaction(callback) {
     if (!db) {
         const noopQuery = async () => ({ rows: [], rowCount: 0 });
         await callback(noopQuery);
+        return;
+    }
+
+    if (dbType === 'sqlite_cloud') {
+        await db.sql('BEGIN TRANSACTION');
+        try {
+            const queryFn = async (sql, params = []) => query(sql, params);
+            await callback(queryFn);
+            await db.sql('COMMIT');
+        } catch (error) {
+            await db.sql('ROLLBACK').catch(() => {});
+            throw error;
+        }
         return;
     }
 
@@ -169,7 +228,7 @@ async function getClient() {
     if (dbType === 'postgresql') {
         return await db.connect();
     }
-    if (dbType === 'sqlite') {
+    if (dbType === 'sqlite' || dbType === 'sqlite_cloud') {
         return { query: query, release: () => {} };
     }
     return { query: async () => ({ rows: [], rowCount: 0 }), release: () => {} };
@@ -184,10 +243,12 @@ async function close() {
             await db.end();
         } else if (dbType === 'sqlite') {
             db.close();
+        } else if (dbType === 'sqlite_cloud') {
+            db.close();
         }
         db = null;
         dbType = null;
-        console.log('✅ Database connection closed');
+        console.log('Database connection closed');
     }
 }
 
@@ -203,7 +264,7 @@ function getDBType() {
  * Convert PostgreSQL-specific SQL to SQLite-compatible SQL.
  */
 function convertSQL(sql) {
-    if (dbType !== 'sqlite') {
+    if (dbType !== 'sqlite' && dbType !== 'sqlite_cloud') {
         return sql;
     }
 

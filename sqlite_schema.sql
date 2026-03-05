@@ -22,7 +22,7 @@
 -- Foreign key: quotation_comments.line_item_id -> quotation_line_items.id
 -- Foreign key: quotation_comments.author_id -> users.id
 
-CREATE TABLE account_manager_snapshots (
+CREATE TABLE IF NOT EXISTS account_manager_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   snapshot_date TEXT NOT NULL,
   snapshot_type TEXT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE account_manager_snapshots (
   declined_count INTEGER,
   revised_count INTEGER
 );
-CREATE TABLE catalog_items (
+CREATE TABLE IF NOT EXISTS catalog_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   item_code TEXT NOT NULL,
   brand TEXT,
@@ -79,7 +79,7 @@ CREATE TABLE catalog_items (
   updated_by TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE catalog_upload_history (
+CREATE TABLE IF NOT EXISTS catalog_upload_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   filename TEXT,
   uploaded_by TEXT,
@@ -89,7 +89,7 @@ CREATE TABLE catalog_upload_history (
   error_log TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE custom_snapshots (
+CREATE TABLE IF NOT EXISTS custom_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   snapshot_date TEXT NOT NULL,
   description TEXT,
@@ -116,7 +116,7 @@ CREATE TABLE custom_snapshots (
   created_by TEXT,
   is_manual INTEGER DEFAULT 0
 );
-CREATE TABLE custom_tasks (
+CREATE TABLE IF NOT EXISTS custom_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   task_id TEXT NOT NULL,
   user_id TEXT,
@@ -130,7 +130,7 @@ CREATE TABLE custom_tasks (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE dashboard_snapshots (
+CREATE TABLE IF NOT EXISTS dashboard_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   snapshot_type TEXT NOT NULL,
   total_opportunities INTEGER,
@@ -158,7 +158,7 @@ CREATE TABLE dashboard_snapshots (
   is_manual INTEGER DEFAULT 0,
   description TEXT
 );
-CREATE TABLE drive_folder_audit (
+CREATE TABLE IF NOT EXISTS drive_folder_audit (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   opportunity_uid TEXT NOT NULL,
   operation_type TEXT NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE drive_folder_audit (
   performed_at TEXT DEFAULT CURRENT_TIMESTAMP,
   operation_details TEXT DEFAULT '{}'
 );
-CREATE TABLE forecast_revisions (
+CREATE TABLE IF NOT EXISTS forecast_revisions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   opportunity_uid TEXT NOT NULL,
   old_forecast_date TEXT,
@@ -178,13 +178,13 @@ CREATE TABLE forecast_revisions (
   changed_at TEXT DEFAULT CURRENT_TIMESTAMP,
   comment TEXT
 );
-CREATE TABLE migration_log (
+CREATE TABLE IF NOT EXISTS migration_log (
   id TEXT PRIMARY KEY,
   migration_name TEXT NOT NULL,
   applied_at TEXT DEFAULT CURRENT_TIMESTAMP,
   description TEXT
 );
-CREATE TABLE opportunity_revisions (
+CREATE TABLE IF NOT EXISTS opportunity_revisions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   opportunity_uid TEXT,
   revision_number INTEGER NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE opportunity_revisions (
   full_snapshot TEXT,
   forecast_date TEXT
 );
-CREATE TABLE opps_monitoring (
+CREATE TABLE IF NOT EXISTS opps_monitoring (
   encoded_date TEXT,
   project_name TEXT,
   project_code TEXT,
@@ -234,7 +234,7 @@ CREATE TABLE opps_monitoring (
   proposal_status TEXT,
   revision TEXT
 );
-CREATE TABLE opps_monitoring_backup_20250619 (
+CREATE TABLE IF NOT EXISTS opps_monitoring_backup_20250619 (
   encoded_date TEXT,
   project_name TEXT,
   project_code TEXT,
@@ -267,12 +267,12 @@ CREATE TABLE opps_monitoring_backup_20250619 (
   uid TEXT,
   forecast_date TEXT
 );
-CREATE TABLE playing_with_neon (
+CREATE TABLE IF NOT EXISTS playing_with_neon (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   value REAL
 );
-CREATE TABLE proposal_schedule (
+CREATE TABLE IF NOT EXISTS proposal_schedule (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proposal_id TEXT NOT NULL,
   proposal_name TEXT NOT NULL,
@@ -287,7 +287,7 @@ CREATE TABLE proposal_schedule (
   completed_by TEXT,
   completion_notes TEXT
 );
-CREATE TABLE proposal_status_history (
+CREATE TABLE IF NOT EXISTS proposal_status_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   proposal_id TEXT NOT NULL,
   status TEXT NOT NULL,
@@ -296,7 +296,7 @@ CREATE TABLE proposal_status_history (
   change_reason TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE proposal_story_entries (
+CREATE TABLE IF NOT EXISTS proposal_story_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   opportunity_uid TEXT NOT NULL,
   created_by TEXT NOT NULL,
@@ -312,7 +312,7 @@ CREATE TABLE proposal_story_entries (
   is_deleted INTEGER DEFAULT 0,
   parent_entry_id INTEGER
 );
-CREATE TABLE quotation_comments (
+CREATE TABLE IF NOT EXISTS quotation_comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   quotation_id INTEGER NOT NULL,
   line_item_id INTEGER,
@@ -323,7 +323,7 @@ CREATE TABLE quotation_comments (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE quotation_line_items (
+CREATE TABLE IF NOT EXISTS quotation_line_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   quotation_id INTEGER NOT NULL,
   item_code TEXT,
@@ -343,7 +343,7 @@ CREATE TABLE quotation_line_items (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE quotation_revisions (
+CREATE TABLE IF NOT EXISTS quotation_revisions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   quotation_id INTEGER NOT NULL,
   revision_number INTEGER NOT NULL,
@@ -353,7 +353,7 @@ CREATE TABLE quotation_revisions (
   change_summary TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE quotations (
+CREATE TABLE IF NOT EXISTS quotations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   project_code TEXT NOT NULL,
   revision_no TEXT DEFAULT '00',
@@ -380,7 +380,7 @@ CREATE TABLE quotations (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
   metadata TEXT DEFAULT '{}'
 );
-CREATE TABLE role_definitions (
+CREATE TABLE IF NOT EXISTS role_definitions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   code TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -389,11 +389,11 @@ CREATE TABLE role_definitions (
   is_resigned INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL
 );
-CREATE TABLE schedule_task_completion (
+CREATE TABLE IF NOT EXISTS schedule_task_completion (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   task_id TEXT NOT NULL,
   task_type TEXT NOT NULL,
@@ -406,7 +406,7 @@ CREATE TABLE schedule_task_completion (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE story_entry_types (
+CREATE TABLE IF NOT EXISTS story_entry_types (
   type_name TEXT PRIMARY KEY,
   display_name TEXT NOT NULL,
   description TEXT,
@@ -415,7 +415,7 @@ CREATE TABLE story_entry_types (
   requires_title INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE user_column_preferences (
+CREATE TABLE IF NOT EXISTS user_column_preferences (
   id TEXT PRIMARY KEY,
   user_id TEXT,
   page_name TEXT NOT NULL,
@@ -423,7 +423,7 @@ CREATE TABLE user_column_preferences (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE user_notifications (
+CREATE TABLE IF NOT EXISTS user_notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   opportunity_uid TEXT,
@@ -436,12 +436,12 @@ CREATE TABLE user_notifications (
   created_by TEXT,
   read_at TEXT
 );
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
   user_id TEXT NOT NULL,
   role_id INTEGER NOT NULL,
   PRIMARY KEY (user_id, role_id)
 );
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
   id TEXT PRIMARY KEY,
   code TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
@@ -463,7 +463,7 @@ CREATE TABLE IF NOT EXISTS pics (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'default',
   email TEXT NOT NULL,
@@ -479,7 +479,7 @@ CREATE TABLE users (
   pic_id INTEGER,
   UNIQUE (tenant_id, email)
 );
-CREATE TABLE weekly_snapshot (
+CREATE TABLE IF NOT EXISTS weekly_snapshot (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   status TEXT NOT NULL,
   count INTEGER NOT NULL,

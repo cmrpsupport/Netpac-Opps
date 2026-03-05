@@ -1,0 +1,17 @@
+# Render Blueprint - Netpac Opps (production on Render)
+# https://render.com/docs/blueprint-spec
+# Connect this repo in Render and use "New -> Blueprint" to create the service.
+
+services:
+  - type: web
+    name: netpac-opps
+    runtime: node
+    region: oregon
+
+    buildCommand: npm install
+    startCommand: node server.js
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+    # In Render dashboard -> Environment, add: SQLITECLOUD_URL, JWT_SECRET, FRONTEND_URL. PORT is set by Render.
