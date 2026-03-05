@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/netpacific-logo.jpg">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    <script src="config.js"></script>
+    <style>
+        .csv-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border-color, #d1d5db); transition: background 0.15s; }
+        .csv-btn:hover { opacity: 0.85; }
+        .csv-import { background: #2563eb; color: #fff; border-color: #2563eb; }
+        .csv-export { background: #16a34a; color: #fff; border-color: #16a34a; }
+        .search-input { padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; font-size: 0.85rem; min-width: 220px; }
+        html.dark .search-input { background: var(--bg-control); color: var(--text-primary); border-color: var(--border-color); }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="shared-topbar"></div>
+    <div id="shared-sidebar"></div>
+
+    <div class="main-content" style="padding-top: 1rem;">
+        <div id="accessDeniedBanner" style="display:none;color:#fff;background:#d32f2f;padding:1rem;text-align:center;font-weight:bold;margin-bottom:1rem;border-radius:4px;">
+            Access Denied: You do not have permission to view this page.
+        </div>
+
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-2xl font-bold">Client Database</h1>
+                <div class="flex items-center gap-2">
+                    <label for="csvFileInput" class="csv-btn csv-import" title="Import clients from CSV">
+                        <span class="material-icons" style="font-size:18px">upload_file</span> Import CSV
+                    </label>
+                    <input type="file" id="csvFileInput" accept=".csv" style="display:none">
+                    <button id="exportCsvBtn" class="csv-btn csv-export" title="Export clients to CSV">
+                        <span class="material-icons" style="font-size:18px">download</span> Export CSV
+                    </button>
+                    <button id="addClientBtn" class="action-button">
+                        <span class="material-icons">add</span> Add Client
+                    </button>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Manage your client directory. Import or export via CSV for bulk updates.</p>
+
+            <div class="mb-4">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search clients...">
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <div class="table-container">
+                    <table id="clientsTable" class="min-w-full divide-y">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th class="px-3 py-2 text-left">COMPANY NAME</th>
+                                <th class="px-3 py-2 text-left">CONTACT PERSON</th>
+                                <th class="px-3 py-2 text-left">EMAIL</th>
+                                <th class="px-3 py-2 text-left">CONTACT #</th>
+                                <th class="px-3 py-2 text-left">COMPANY ADDRESS</th>
+                                <th class="px-3 py-2 text-left">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody">
+                            <tr><td colspan="6" class="text-center p-4">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="rowCount" class="mt-2 text-sm"></div>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div id="clientModalOverlay" class="modal-overlay hidden">
+            <div id="clientModal" class="modal hidden" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2 id="clientModalTitle">Add Client</h2>
+                    <button type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                </div>
+                <form id="clientForm" class="modal-body">
+                    <input type="hidden" id="clientId">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="companyName">Company Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="companyName" name="company_name" required />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="contactPerson">Contact Person</label>
+                                <input type="text" id="contactPerson" name="contact_person" />
+                            </div>
+                            <div class="enhanced-field">
+                                <label for="clientEmail">Email</label>
+                                <input type="email" id="clientEmail" name="email" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="contactNumber">Contact #</label>
+                                <input type="text" id="contactNumber" name="contact_number" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="companyAddress">Company Address</label>
+                                <input type="text" id="companyAddress" name="company_address" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-actions">
+                    <button type="button" id="clientCancelBtn" class="modal-close-btn">Cancel</button>
+                    <button type="submit" form="clientForm" class="modal-save-btn">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import result toast -->
+        <div id="importToast" style="display:none;position:fixed;bottom:24px;right:24px;background:#16a34a;color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.2);"></div>
+    </div>
+
+    <script src="shared-navigation.js?v=1750741456"></script>
+    <script>
+    function getApiUrl(endpoint) {
+        if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) {
+            return window.APP_CONFIG.API_BASE_URL + endpoint;
+        }
+        const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000' : '';
+        return baseUrl + endpoint;
+    }
+
+    function esc(s) {
+        if (s == null) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function attr(s) { return (s || '').replace(/"/g, '&quot;'); }
+
+    let allClients = [];
+
+    async function initializeApp() {
+        if (!window.APP_CONFIG) window.APP_CONFIG = { API_BASE_URL: getApiUrl(''), ENDPOINTS: {} };
+        const sharedNav = new SharedNavigation();
+        await sharedNav.initialize();
+        await fetchClients();
+        setupEventListeners();
+    }
+
+    async function fetchClients() {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) { document.getElementById('clientsTableBody').innerHTML = '<tr><td colspan="6" class="text-center p-4">Please log in.</td></tr>'; return; }
+        try {
+            const resp = await fetch(getApiUrl('/api/clients'), {
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' }, credentials: 'include'
+            });
+            if (!resp.ok) {
+                if (resp.status === 401) { window.location.href = 'login.html'; return; }
+                if (resp.status === 403) { document.getElementById('accessDeniedBanner').style.display = 'block'; return; }
+                throw new Error(resp.status);
+            }
+            allClients = await resp.json();
+            renderTable(allClients);
+        } catch (e) {
+            console.error(e);
+            document.getElementById('clientsTableBody').innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-600">Error loading clients.</td></tr>';
+        }
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById('clientsTableBody');
+        document.getElementById('rowCount').textContent = list.length + ' client(s)';
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">No clients yet. Add one or import a CSV.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(c => `<tr>
+            <td class="px-3 py-2">${esc(c.company_name)}</td>
+            <td class="px-3 py-2">${esc(c.contact_person)}</td>
+            <td class="px-3 py-2">${esc(c.email)}</td>
+            <td class="px-3 py-2">${esc(c.contact_number)}</td>
+            <td class="px-3 py-2">${esc(c.company_address)}</td>
+            <td class="px-3 py-2" style="white-space:nowrap">
+                <button class="edit-client action-button small" data-id="${c.id}" data-company="${attr(c.company_name)}" data-person="${attr(c.contact_person)}" data-email="${attr(c.email)}" data-number="${attr(c.contact_number)}" data-address="${attr(c.company_address)}">Edit</button>
+                <button class="delete-client action-button small danger" data-id="${c.id}" data-company="${attr(c.company_name)}">Delete</button>
+            </td>
+        </tr>`).join('');
+    }
+
+    function setupEventListeners() {
+        // Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            if (!q) { renderTable(allClients); return; }
+            renderTable(allClients.filter(c =>
+                (c.company_name || '').toLowerCase().includes(q) ||
+                (c.contact_person || '').toLowerCase().includes(q) ||
+                (c.email || '').toLowerCase().includes(q) ||
+                (c.contact_number || '').toLowerCase().includes(q) ||
+                (c.company_address || '').toLowerCase().includes(q)
+            ));
+        });
+
+        // Add
+        document.getElementById('addClientBtn').addEventListener('click', () => {
+            document.getElementById('clientForm').reset();
+            document.getElementById('clientId').value = '';
+            document.getElementById('clientModalTitle').textContent = 'Add Client';
+            openModal();
+        });
+
+        function openModal() {
+            document.getElementById('clientModalOverlay').classList.remove('hidden');
+            document.getElementById('clientModal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('clientModalOverlay').classList.add('hidden');
+            document.getElementById('clientModal').classList.add('hidden');
+        }
+        document.getElementById('clientCancelBtn').addEventListener('click', closeModal);
+        document.querySelector('#clientModal .modal-close-x').addEventListener('click', closeModal);
+
+        // Save (add/edit)
+        document.getElementById('clientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('clientId').value;
+            const data = {
+                company_name: document.getElementById('companyName').value.trim(),
+                contact_person: document.getElementById('contactPerson').value.trim() || null,
+                email: document.getElementById('clientEmail').value.trim() || null,
+                contact_number: document.getElementById('contactNumber').value.trim() || null,
+                company_address: document.getElementById('companyAddress').value.trim() || null
+            };
+            if (!data.company_name) { alert('Company name is required'); return; }
+            const authToken = localStorage.getItem('authToken');
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? getApiUrl('/api/clients/' + id) : getApiUrl('/api/clients');
+            try {
+                const resp = await fetch(url, { method, headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(data) });
+                if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.error || 'Save failed'); }
+                await fetchClients();
+                closeModal();
+            } catch (err) { alert('Error: ' + err.message); }
+        });
+
+        // Table click delegation (edit/delete)
+        document.getElementById('clientsTableBody').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-client');
+            const deleteBtn = e.target.closest('.delete-client');
+            if (editBtn) {
+                document.getElementById('clientId').value = editBtn.dataset.id;
+                document.getElementById('companyName').value = editBtn.dataset.company || '';
+                document.getElementById('contactPerson').value = editBtn.dataset.person || '';
+                document.getElementById('clientEmail').value = editBtn.dataset.email || '';
+                document.getElementById('contactNumber').value = editBtn.dataset.number || '';
+                document.getElementById('companyAddress').value = editBtn.dataset.address || '';
+                document.getElementById('clientModalTitle').textContent = 'Edit Client';
+                openModal();
+            }
+            if (deleteBtn) {
+                if (!confirm('Delete client "' + deleteBtn.dataset.company + '"?')) return;
+                try {
+                    const resp = await fetch(getApiUrl('/api/clients/' + deleteBtn.dataset.id), { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }, credentials: 'include' });
+                    if (!resp.ok) throw new Error(await resp.text());
+                    await fetchClients();
+                } catch (err) { alert('Error: ' + err.message); }
+            }
+        });
+
+        // Export CSV
+        document.getElementById('exportCsvBtn').addEventListener('click', async () => {
+            const authToken = localStorage.getItem('authToken');
+            try {
+                const resp = await fetch(getApiUrl('/api/clients/export/csv'), { headers: { 'Authorization': `Bearer ${authToken}` }, credentials: 'include' });
+                if (!resp.ok) throw new Error('Export failed');
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'clients.csv'; a.click();
+                URL.revokeObjectURL(url);
+            } catch (err) { alert('Export error: ' + err.message); }
+        });
+
+        // Import CSV
+        document.getElementById('csvFileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            const authToken = localStorage.getItem('authToken');
+            try {
+                const resp = await fetch(getApiUrl('/api/clients/import/csv'), {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'text/csv' },
+                    credentials: 'include',
+                    body: text
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Import failed');
+                showToast(data.message);
+                await fetchClients();
+            } catch (err) { alert('Import error: ' + err.message); }
+            e.target.value = '';
+        });
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('importToast');
+        t.textContent = msg;
+        t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 5000);
+    }
+
+    initializeApp().catch(console.error);
+    </script>
+</body>
+</html>

@@ -411,6 +411,26 @@ async function refreshOpportunitiesData() {
     }
 }
 
+let masterSolutionsList = [];
+
+async function populateSolutionsDropdown(token) {
+    try {
+        const resp = await fetch(getApiUrl('/api/solutions'), {
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (!resp.ok) return;
+        const solutions = await resp.json();
+        masterSolutionsList = solutions.filter(s => s.is_active).map(s => s.name);
+    } catch (e) {
+        console.warn('Could not load solutions list:', e.message);
+    }
+    const select = document.getElementById('newSolutions');
+    if (select) {
+        select.innerHTML = '<option value="">-- Select --</option>' +
+            masterSolutionsList.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+}
+
 // Common initialization logic
 async function initializeAppWithToken(token) {
     try {
@@ -446,9 +466,11 @@ async function initializeAppWithToken(token) {
         await loadUserPreferences();
         console.log('🚀 [INDEX-DEBUG] User preferences loaded, continuing initialization...');
         
+        // Populate solutions dropdown from API
+        await populateSolutionsDropdown(token);
+
         // Initialize the table with the data (this will apply auto-filters)
         await initializeTable();
-        
         
         // Initialize project code duplicate validation
         console.log('🔍 Setting up project code duplicate validation...');
@@ -2671,7 +2693,7 @@ function getFieldOptions(field) {
         case 'd':
             return ['', '10-Complete', '5-Limited', '2-No Data'];
         case 'solutions':
-            return ['', 'Digitalization', 'Automation', 'Electrification'];
+            return ['', ...masterSolutionsList];
         case 'sol_particulars':
             return ['', 'ELECTRICAL', 'FDAS', 'CCTV', 'ACS', 'SOLAR', 'EE & AUX', 'PABGM', 'SCS', 'PLC / SCADA', 'BMS', 'IT', 'INSTRUMENTATION', 'MECHANICAL', 'CIVIL', 'AUXILIARY', 'MEPFS', 'OTHERS'];
         case 'industries':

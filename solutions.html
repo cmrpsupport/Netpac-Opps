@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/netpacific-logo.jpg">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    <script src="config.js"></script>
+</head>
+<body class="min-h-screen">
+    <div id="shared-topbar"></div>
+    <div id="shared-sidebar"></div>
+
+    <div class="main-content" style="padding-top: 1rem;">
+        <div id="accessDeniedBanner" style="display:none;color:#fff;background:#d32f2f;padding:1rem;text-align:center;font-weight:bold;margin-bottom:1rem;border-radius:4px;">
+            Access Denied: You do not have permission to view this page.
+        </div>
+
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-2xl font-bold mb-2">Solutions</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Manage the list of solutions (departments). These are the selectable values for the Solutions field on opportunities.</p>
+
+            <div class="mb-10">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold">Solutions List</h2>
+                    <button id="addSolButton" class="action-button">
+                        <span class="material-icons">add</span>
+                        Add Solution
+                    </button>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <div class="table-container">
+                        <table id="solTable" class="min-w-full divide-y">
+                            <thead class="sticky-header">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">NAME</th>
+                                    <th class="px-3 py-2 text-left">STATUS</th>
+                                    <th class="px-3 py-2 text-left">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="solTableBody">
+                                <tr><td colspan="3" class="text-center p-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="rowCount" class="mt-2 text-sm"></div>
+            </div>
+        </div>
+
+        <div id="solModalOverlay" class="modal-overlay hidden">
+            <div id="solModal" class="modal hidden" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 id="solModalTitle">Add Solution</h2>
+                    <button type="button" aria-label="Close" class="modal-close-x">&times;</button>
+                </div>
+                <form id="solForm" class="modal-body">
+                    <input type="hidden" id="solId" name="solId">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="enhanced-field">
+                                <label for="solName">Solution Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="solName" name="name" required />
+                            </div>
+                        </div>
+                        <div class="form-row" id="solActiveRow">
+                            <div class="enhanced-field">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="solActive" name="is_active" checked />
+                                    <span class="ml-2">Active</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-actions">
+                    <button type="button" id="solCancelBtn" class="modal-close-btn">Cancel</button>
+                    <button type="submit" form="solForm" class="modal-save-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared-navigation.js?v=1750741456"></script>
+    <script>
+    function getApiUrl(endpoint) {
+        if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) {
+            return window.APP_CONFIG.API_BASE_URL + endpoint;
+        }
+        const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000' : '';
+        return baseUrl + endpoint;
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    let sharedNav;
+    async function initializeApp() {
+        if (!window.APP_CONFIG) {
+            window.APP_CONFIG = { API_BASE_URL: getApiUrl(''), ENDPOINTS: {} };
+        }
+        sharedNav = new SharedNavigation();
+        await sharedNav.initialize();
+        await fetchSolutions();
+        setupEventListeners();
+    }
+
+    async function fetchSolutions() {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            document.getElementById('solTableBody').innerHTML = '<tr><td colspan="3" class="text-center p-4">Please log in.</td></tr>';
+            return;
+        }
+        try {
+            const response = await fetch(getApiUrl('/api/solutions'), {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                if (response.status === 401) { window.location.href = 'login.html'; return; }
+                if (response.status === 403) { document.getElementById('accessDeniedBanner').style.display = 'block'; return; }
+                throw new Error('Failed to fetch: ' + response.status);
+            }
+            const list = await response.json();
+            populateTable(list);
+            document.getElementById('rowCount').textContent = list.length + ' solution(s)';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('solTableBody').innerHTML = '<tr><td colspan="3" class="text-center p-4 text-red-600">Error loading solutions.</td></tr>';
+        }
+    }
+
+    function populateTable(list) {
+        const tbody = document.getElementById('solTableBody');
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">No solutions yet. Click "Add Solution" to create one.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(sol => {
+            const name = escapeHtml(sol.name);
+            const nameAttr = (sol.name || '').replace(/"/g, '&quot;');
+            return `<tr>
+                <td class="px-3 py-2">${name}</td>
+                <td class="px-3 py-2">${sol.is_active ? 'Active' : 'Inactive'}</td>
+                <td class="px-3 py-2">
+                    <button type="button" class="edit-sol action-button small" data-id="${sol.id}" data-name="${nameAttr}" data-active="${sol.is_active ? 1 : 0}">Edit</button>
+                    <button type="button" class="delete-sol action-button small danger" data-id="${sol.id}" data-name="${nameAttr}">Delete</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function setupEventListeners() {
+        document.getElementById('addSolButton').addEventListener('click', () => {
+            document.getElementById('solForm').reset();
+            document.getElementById('solId').value = '';
+            document.getElementById('solActive').checked = true;
+            document.getElementById('solModalTitle').textContent = 'Add Solution';
+            openModal();
+        });
+
+        function openModal() {
+            document.getElementById('solModalOverlay').classList.remove('hidden');
+            document.getElementById('solModal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('solModalOverlay').classList.add('hidden');
+            document.getElementById('solModal').classList.add('hidden');
+        }
+        document.getElementById('solCancelBtn').addEventListener('click', closeModal);
+        document.querySelector('#solModal .modal-close-x').addEventListener('click', closeModal);
+
+        document.getElementById('solForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('solId').value;
+            const name = document.getElementById('solName').value.trim();
+            const is_active = document.getElementById('solActive').checked;
+            if (!name) { alert('Solution name is required'); return; }
+            const authToken = localStorage.getItem('authToken');
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? getApiUrl('/api/solutions/' + id) : getApiUrl('/api/solutions');
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name, is_active })
+                });
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.error || 'Failed to save');
+                }
+                await fetchSolutions();
+                closeModal();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+
+        document.getElementById('solTableBody').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-sol');
+            const deleteBtn = e.target.closest('.delete-sol');
+            if (editBtn) {
+                document.getElementById('solId').value = editBtn.dataset.id;
+                document.getElementById('solName').value = editBtn.dataset.name || '';
+                document.getElementById('solActive').checked = editBtn.dataset.active === '1';
+                document.getElementById('solModalTitle').textContent = 'Edit Solution';
+                openModal();
+            }
+            if (deleteBtn) {
+                if (!confirm('Delete solution "' + deleteBtn.dataset.name + '"?')) return;
+                try {
+                    const response = await fetch(getApiUrl('/api/solutions/' + deleteBtn.dataset.id), {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}`, 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    await fetchSolutions();
+                } catch (err) {
+                    alert('Error deleting: ' + err.message);
+                }
+            }
+        });
+    }
+
+    initializeApp().catch(console.error);
+    </script>
+</body>
+</html>

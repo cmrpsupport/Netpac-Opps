@@ -236,11 +236,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         try {
+            await loadSolutionsFilter();
+        } catch (error) {
+            console.warn('Failed to load solutions filter:', error);
+        }
+
+        try {
             await loadProposals();
         } catch (error) {
             console.error('Failed to load proposals:', error);
             hasErrors = true;
-            // Show error in the proposals section but continue
             showProposalLoadError();
         }
         
@@ -818,6 +823,32 @@ async function loadPicOptions() {
         if (picFilterContainer) {
             picFilterContainer.style.display = 'none';
         }
+    }
+}
+
+async function loadSolutionsFilter() {
+    const select = document.getElementById('solutionFilter');
+    if (!select) return;
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) return;
+    try {
+        const resp = await fetch(getApiUrl('/api/solutions'), {
+            headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' }
+        });
+        if (!resp.ok) return;
+        const solutions = await resp.json();
+        const active = solutions.filter(s => s.is_active);
+        const existing = new Set(Array.from(select.options).map(o => o.value));
+        active.forEach(s => {
+            if (!existing.has(s.name)) {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.name;
+                select.appendChild(opt);
+            }
+        });
+    } catch (e) {
+        console.warn('Could not load solutions for filter:', e.message);
     }
 }
 

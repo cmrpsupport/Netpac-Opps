@@ -114,6 +114,8 @@ async function ensureAccountManagerAndPicTables() {
     if (dbType === 'sqlite' || dbType === 'sqlite_cloud') {
       await db.query("CREATE TABLE IF NOT EXISTS account_managers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
       await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
+      await db.query("CREATE TABLE IF NOT EXISTS solutions (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, is_active INTEGER DEFAULT 1, created_at TEXT, updated_at TEXT)");
+      await db.query("CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY AUTOINCREMENT, company_name TEXT NOT NULL, contact_person TEXT, email TEXT, contact_number TEXT, company_address TEXT, is_active INTEGER DEFAULT 1, created_at TEXT, updated_at TEXT)");
       try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
       try { await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
     } else if (dbType === 'postgresql') {
@@ -3350,6 +3352,241 @@ app.delete('/api/pics/:id', authenticateToken, requireAdmin, async (req, res) =>
   } catch (err) {
     console.error('Error deleting PIC:', err);
     res.status(500).json({ error: 'Failed to delete PIC.' });
+  }
+});
+
+// --- Solutions API ---
+app.get('/api/solutions', authenticateToken, async (req, res) => {
+  try {
+    const result = await db.query('SELECT id, name, is_active, created_at, updated_at FROM solutions ORDER BY name ASC');
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error fetching solutions:', err);
+    res.json([]);
+  }
+});
+
+app.post('/api/solutions', authenticateToken, requireAdmin,
+  [body('name').trim().notEmpty().withMessage('Name is required')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+    const { name } = req.body;
+    const is_active = req.body.is_active !== undefined ? (req.body.is_active ? 1 : 0) : 1;
+    try {
+      const result = await db.query(
+        'INSERT INTO solutions (name, is_active, created_at, updated_at) VALUES (?, ?, datetime(\'now\'), datetime(\'now\')) RETURNING id',
+        [name.trim(), is_active]
+      );
+      let id = result.rows?.[0]?.id ?? result.lastID;
+      if (id == null) return res.status(500).json({ error: 'Failed to create solution.' });
+      res.status(201).json({ id, name: name.trim(), is_active });
+    } catch (err) {
+      if (err.message && err.message.includes('UNIQUE')) {
+        return res.status(409).json({ error: 'A solution with that name already exists.' });
+      }
+      console.error('Error creating solution:', err);
+      res.status(500).json({ error: 'Failed to create solution.' });
+    }
+  }
+);
+
+app.put('/api/solutions/:id', authenticateToken, requireAdmin,
+  [body('name').trim().notEmpty().withMessage('Name is required')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+    const { name, is_active } = req.body;
+    try {
+      const result = await db.query(
+        'UPDATE solutions SET name = ?, is_active = ?, updated_at = datetime(\'now\') WHERE id = ?',
+        [name.trim(), is_active !== undefined ? (is_active ? 1 : 0) : 1, req.params.id]
+      );
+      if (result.rowCount === 0) return res.status(404).json({ error: 'Solution not found.' });
+      res.json({ id: Number(req.params.id), name: name.trim(), is_active: is_active ? 1 : 0 });
+    } catch (err) {
+      if (err.message && err.message.includes('UNIQUE')) {
+        return res.status(409).json({ error: 'A solution with that name already exists.' });
+      }
+      console.error('Error updating solution:', err);
+      res.status(500).json({ error: 'Failed to update solution.' });
+    }
+  }
+);
+
+app.delete('/api/solutions/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query('DELETE FROM solutions WHERE id = ?', [req.params.id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Solution not found.' });
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error deleting solution:', err);
+    res.status(500).json({ error: 'Failed to delete solution.' });
+  }
+});
+
+// --- Clients API ---
+app.get('/api/clients', authenticateToken, async (req, res) => {
+  try {
+    const result = await db.query('SELECT id, company_name, contact_person, email, contact_number, company_address, is_active, created_at, updated_at FROM clients ORDER BY company_name ASC');
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error fetching clients:', err);
+    res.json([]);
+  }
+});
+
+app.post('/api/clients', authenticateToken, requireAdmin,
+  [body('company_name').trim().notEmpty().withMessage('Company name is required')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+    const { company_name, contact_person, email, contact_number, company_address } = req.body;
+    try {
+      const result = await db.query(
+        "INSERT INTO clients (company_name, contact_person, email, contact_number, company_address, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING id",
+        [company_name.trim(), contact_person || null, email || null, contact_number || null, company_address || null]
+      );
+      const id = result.rows?.[0]?.id ?? result.lastID;
+      res.status(201).json({ id, company_name: company_name.trim(), contact_person, email, contact_number, company_address });
+    } catch (err) {
+      console.error('Error creating client:', err);
+      res.status(500).json({ error: 'Failed to create client.' });
+    }
+  }
+);
+
+app.put('/api/clients/:id', authenticateToken, requireAdmin,
+  [body('company_name').trim().notEmpty().withMessage('Company name is required')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+    const { company_name, contact_person, email, contact_number, company_address } = req.body;
+    try {
+      const result = await db.query(
+        "UPDATE clients SET company_name = ?, contact_person = ?, email = ?, contact_number = ?, company_address = ?, updated_at = datetime('now') WHERE id = ?",
+        [company_name.trim(), contact_person || null, email || null, contact_number || null, company_address || null, req.params.id]
+      );
+      if (result.rowCount === 0) return res.status(404).json({ error: 'Client not found.' });
+      res.json({ id: Number(req.params.id), company_name: company_name.trim(), contact_person, email, contact_number, company_address });
+    } catch (err) {
+      console.error('Error updating client:', err);
+      res.status(500).json({ error: 'Failed to update client.' });
+    }
+  }
+);
+
+app.delete('/api/clients/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query('DELETE FROM clients WHERE id = ?', [req.params.id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Client not found.' });
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error deleting client:', err);
+    res.status(500).json({ error: 'Failed to delete client.' });
+  }
+});
+
+app.get('/api/clients/export/csv', authenticateToken, async (req, res) => {
+  try {
+    const result = await db.query('SELECT company_name, contact_person, email, contact_number, company_address FROM clients ORDER BY company_name ASC');
+    const rows = result.rows || [];
+    const header = 'Company Name,Contact Person,Email,Contact #,Company Address';
+    const csvRows = rows.map(r => {
+      return [r.company_name, r.contact_person, r.email, r.contact_number, r.company_address]
+        .map(v => {
+          if (v == null) return '';
+          const s = String(v);
+          return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }).join(',');
+    });
+    const csv = [header, ...csvRows].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="clients.csv"');
+    res.send(csv);
+  } catch (err) {
+    console.error('Error exporting clients:', err);
+    res.status(500).json({ error: 'Failed to export clients.' });
+  }
+});
+
+app.post('/api/clients/import/csv', authenticateToken, requireAdmin, express.text({ type: '*/*', limit: '5mb' }), async (req, res) => {
+  try {
+    const csvText = typeof req.body === 'string' ? req.body : '';
+    if (!csvText.trim()) return res.status(400).json({ error: 'Empty CSV data.' });
+
+    const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return res.status(400).json({ error: 'CSV must have a header row and at least one data row.' });
+
+    const headerLine = lines[0].toLowerCase();
+    if (!headerLine.includes('company') && !headerLine.includes('client')) {
+      return res.status(400).json({ error: 'CSV header must include Company Name column.' });
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+          if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+          else if (ch === '"') inQuotes = false;
+          else current += ch;
+        } else {
+          if (ch === '"') inQuotes = true;
+          else if (ch === ',') { result.push(current.trim()); current = ''; }
+          else current += ch;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+    const colMap = {
+      company_name: headers.findIndex(h => h.includes('company') || h.includes('client')),
+      contact_person: headers.findIndex(h => h.includes('contact') && h.includes('person')),
+      email: headers.findIndex(h => h.includes('email') || h.includes('e-mail')),
+      contact_number: headers.findIndex(h => h.includes('contact') && (h.includes('#') || h.includes('number') || h.includes('phone'))),
+      company_address: headers.findIndex(h => h.includes('address'))
+    };
+
+    if (colMap.company_name === -1) {
+      return res.status(400).json({ error: 'Could not find Company Name column in CSV header.' });
+    }
+
+    let imported = 0;
+    let skipped = 0;
+    let updated = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const fields = parseCSVLine(lines[i]);
+      const company_name = (fields[colMap.company_name] || '').trim();
+      if (!company_name) { skipped++; continue; }
+      const contact_person = colMap.contact_person >= 0 ? (fields[colMap.contact_person] || '').trim() || null : null;
+      const email = colMap.email >= 0 ? (fields[colMap.email] || '').trim() || null : null;
+      const contact_number = colMap.contact_number >= 0 ? (fields[colMap.contact_number] || '').trim() || null : null;
+      const company_address = colMap.company_address >= 0 ? (fields[colMap.company_address] || '').trim() || null : null;
+
+      const existing = await db.query('SELECT id FROM clients WHERE LOWER(company_name) = ?', [company_name.toLowerCase()]);
+      if (existing.rows.length > 0) {
+        await db.query(
+          "UPDATE clients SET contact_person = COALESCE(?, contact_person), email = COALESCE(?, email), contact_number = COALESCE(?, contact_number), company_address = COALESCE(?, company_address), updated_at = datetime('now') WHERE id = ?",
+          [contact_person, email, contact_number, company_address, existing.rows[0].id]
+        );
+        updated++;
+      } else {
+        await db.query(
+          "INSERT INTO clients (company_name, contact_person, email, contact_number, company_address, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
+          [company_name, contact_person, email, contact_number, company_address]
+        );
+        imported++;
+      }
+    }
+    res.json({ message: `Import complete: ${imported} added, ${updated} updated, ${skipped} skipped.`, imported, updated, skipped });
+  } catch (err) {
+    console.error('Error importing clients CSV:', err);
+    res.status(500).json({ error: 'Failed to import CSV: ' + err.message });
   }
 });
 
