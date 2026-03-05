@@ -35,41 +35,9 @@ const notificationsRouter = require('./backend/routes/notifications');
 // Trust proxy for Render deployment (fixes rate limiting with X-Forwarded-For headers)
 app.set('trust proxy', true);
 
-// CORS configuration - more restrictive in production
-const getAllowedOrigins = () => {
-  if (process.env.NODE_ENV === 'production') {
-    const origins = ['https://netpac-opps.onrender.com'];
-    if (process.env.FRONTEND_URL) {
-      origins.push(process.env.FRONTEND_URL);
-    }
-    console.log('🔒 [CORS] Production allowed origins:', origins);
-    return origins;
-  } else {
-    const devOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'];
-    console.log('🔒 [CORS] Development allowed origins:', devOrigins);
-    return devOrigins;
-  }
-};
-
+// CORS - frontend is served by this same Express server, so allow same-origin.
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (same-origin, mobile apps, Postman, etc.)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-
-    const allowedOrigins = getAllowedOrigins();
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.warn(`🔒 [CORS] Blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
