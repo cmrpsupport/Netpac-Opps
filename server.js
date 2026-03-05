@@ -53,20 +53,20 @@ const getAllowedOrigins = () => {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = getAllowedOrigins();
-    
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // Allow requests with no origin (same-origin, mobile apps, Postman, etc.)
     if (!origin) {
-      console.log('🔒 [CORS] Allowing request with no origin');
       return callback(null, true);
     }
-    
+
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    const allowedOrigins = getAllowedOrigins();
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log(`🔒 [CORS] Allowing origin: ${origin}`);
       callback(null, true);
     } else {
       console.warn(`🔒 [CORS] Blocked origin: ${origin}`);
-      console.warn(`🔒 [CORS] Allowed origins are: ${allowedOrigins.join(', ')}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
