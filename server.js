@@ -114,8 +114,8 @@ async function ensureAccountManagerAndPicTables() {
     if (dbType === 'sqlite' || dbType === 'sqlite_cloud') {
       await db.query("CREATE TABLE IF NOT EXISTS account_managers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
       await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
-      try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { /* column may exist */ }
-      try { await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER'); } catch (e) { /* column may exist */ }
+      try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
+      try { await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
     } else if (dbType === 'postgresql') {
       await db.query(`CREATE TABLE IF NOT EXISTS account_managers (
         id SERIAL PRIMARY KEY,

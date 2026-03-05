@@ -104,7 +104,9 @@ async function query(sql, params = []) {
             }
             return { rows: [], rowCount: 0 };
         } catch (error) {
-            console.error('SQLite Cloud query error:', error.message);
+            if (!error.message || !error.message.includes('duplicate')) {
+                console.error('SQLite Cloud query error:', error.message);
+            }
             throw error;
         }
     }
