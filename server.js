@@ -70,12 +70,11 @@ app.get('/api/health', (req, res) => {
 
 // CORS test endpoint
 app.get('/api/cors-test', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'CORS is working!', 
+  res.json({
+    success: true,
+    message: 'CORS is working!',
     origin: req.headers.origin || 'no-origin',
-    timestamp: new Date().toISOString(),
-    allowedOrigins: getAllowedOrigins()
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -86,11 +85,7 @@ function startServer() {
     console.log(`🚀 Server listening at http://${host}:${port}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📁 Serving static files from: ${__dirname}`);
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🔒 CORS allowed origins:', getAllowedOrigins());
-    }
     console.log(`🩺 Health check: http://localhost:${port}/api/health`);
-    console.log(`🔒 CORS test: http://localhost:${port}/api/cors-test`);
     console.log(`📊 Win/Loss Dashboard available at http://localhost:${port}/win-loss_dashboard.html`);
     console.log(`📈 Forecast Dashboard available at http://localhost:${port}/forecast_dashboard.html`);
   });
@@ -116,7 +111,7 @@ async function ensureAccountManagerAndPicTables() {
   if (!db.getDB()) return;
   const dbType = db.getDBType();
   try {
-    if (dbType === 'sqlite') {
+    if (dbType === 'sqlite' || dbType === 'sqlite_cloud') {
       await db.query("CREATE TABLE IF NOT EXISTS account_managers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
       await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
       try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { /* column may exist */ }
