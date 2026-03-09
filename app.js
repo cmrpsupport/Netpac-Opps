@@ -63,6 +63,8 @@ let statusFilterButtonsContainer;
 let solutionsFilterDropdown;
 let accountMgrFilterDropdown;
 let picFilterDropdown;
+let createOpportunityModal;
+let createOpportunityModalOverlay;
 let createOpportunityButton;
 let exportExcelButton;
 let toggleColumnsButton;
@@ -411,7 +413,39 @@ async function refreshOpportunitiesData() {
     }
 }
 
+/** Reset status/dropdown filters to "all" so newly created opportunity is visible. */
+function resetFiltersToShowAll() {
+    if (statusFilterButtonsContainer) {
+        statusFilterButtonsContainer.querySelectorAll('.filter-button').forEach(btn => {
+            btn.classList.toggle('active', (btn.dataset.filterValue || '') === 'all');
+        });
+    }
+    if (accountMgrFilterDropdown) accountMgrFilterDropdown.value = 'all';
+    if (picFilterDropdown) picFilterDropdown.value = 'all';
+    if (solutionsFilterDropdown) solutionsFilterDropdown.value = 'all';
+    if (searchInput) searchInput.value = '';
+}
+
 let masterSolutionsList = [];
+let masterClientsList = [];
+
+async function loadClientsForAutocomplete(token) {
+    try {
+        const resp = await fetch(getApiUrl('/api/clients'), {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) return;
+        const clients = await resp.json();
+        masterClientsList = (clients || []).filter(c => c.is_active !== 0).map(c => c.company_name).filter(Boolean).sort();
+        // Populate datalist for client autocomplete
+        const datalist = document.getElementById('clientsDatalist');
+        if (datalist) {
+            datalist.innerHTML = masterClientsList.map(name => `<option value="${name.replace(/"/g, '&quot;')}">`).join('');
+        }
+    } catch (e) {
+        console.warn('Could not load clients list:', e.message);
+    }
+}
 
 async function populateSolutionsDropdown(token) {
     try {
@@ -466,8 +500,11 @@ async function initializeAppWithToken(token) {
         await loadUserPreferences();
         console.log('🚀 [INDEX-DEBUG] User preferences loaded, continuing initialization...');
         
-        // Populate solutions dropdown from API
-        await populateSolutionsDropdown(token);
+        // Populate solutions dropdown and client autocomplete from API
+        await Promise.all([
+            populateSolutionsDropdown(token),
+            loadClientsForAutocomplete(token)
+        ]);
 
         // Initialize the table with the data (this will apply auto-filters)
         await initializeTable();
@@ -606,6 +643,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     solutionsFilterDropdown = document.getElementById('solutionsFilter');
     accountMgrFilterDropdown = document.getElementById('accountMgrFilter');
     picFilterDropdown = document.getElementById('picFilter');
+    createOpportunityModal = document.getElementById('createOpportunityModal');
+    createOpportunityModalOverlay = document.getElementById('createOpportunityModalOverlay');
     createOpportunityButton = document.getElementById('createOpportunityButton');
     exportExcelButton = document.getElementById('exportExcelButton');
     toggleColumnsButton = document.getElementById('toggleColumnsButton');
@@ -1454,10 +1493,12 @@ function createEditFieldContainer(field, rowData, headers) {
         input.className = 'inline-edit-dropdown'; // Apply custom styling
         // Clear any existing options first
         input.innerHTML = '';
-        options.forEach(option => {
+        // If current value isn't in the options list, add it so it's always selectable
+        const allOptions = (value && !options.includes(value)) ? [...options, value] : options;
+        allOptions.forEach(option => {
             const optionEl = document.createElement('option');
             optionEl.value = option;
-            optionEl.textContent = option;
+            optionEl.textContent = option || '-- Select --';
             if (option === value) {
                 optionEl.selected = true;
             }
@@ -1509,21 +1550,26 @@ function createEditFieldContainer(field, rowData, headers) {
         input.addEventListener('input', formatFinalAmountInput);
     } else if (field === 'google_drive_folder') {
         return null; // Google Drive link removed
+    } else if (field === 'client') {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('list', 'clientsDatalist');
     } else {
         input = document.createElement('input');
         input.type = 'text';
     }
-    
+
     input.id = field;
     input.name = field;
     if (input.type !== 'date' && field !== 'margin' && field !== 'final_amt') {
         input.value = value;
     }
-        
+
     // Store original value for change detection
     if (!window.originalFormValues) window.originalFormValues = {};
     window.originalFormValues[field] = value;
-    
+
     fieldContainer.appendChild(label);
     fieldContainer.appendChild(input);
     return fieldContainer;
@@ -1927,12 +1973,21 @@ function showEditRowModal(rowIndex, isDuplicate = false) {
         'ACRUD Fields': ['a', 'c', 'r', 'u', 'd', 'revision']
     };
     
+    // Determine if Lost Analysis section should be visible initially
+    const currentOppStatus = (rowData['opp_status'] || rowData['oppStatus'] || '').toString().toUpperCase();
+    const showLostAnalysis = currentOppStatus === 'LOST';
+
     // Create sectioned form
     Object.entries(fieldSections).forEach(([sectionTitle, fields]) => {
         // Create section container
         const section = document.createElement('div');
         section.className = 'form-section';
-        
+        // Hide Lost Analysis section unless opp_status is LOST
+        if (sectionTitle === 'Lost Analysis') {
+            section.style.display = showLostAnalysis ? '' : 'none';
+            section.id = 'editLostAnalysisSection';
+        }
+
         // Create section title
         const title = document.createElement('div');
         title.className = 'form-section-title';
@@ -1974,10 +2029,19 @@ function showEditRowModal(rowIndex, isDuplicate = false) {
     if (modalTitle) {
         modalTitle.textContent = isDuplicate ? 'Duplicate Opportunity' : 'Edit Opportunity';
     }
-    
+
+    // Wire opp_status change to show/hide Lost Analysis section in edit modal
+    const editOppStatusSelect = form.querySelector('[name="opp_status"]');
+    const editLostSection = document.getElementById('editLostAnalysisSection');
+    if (editOppStatusSelect && editLostSection) {
+        editOppStatusSelect.addEventListener('change', function() {
+            editLostSection.style.display = this.value === 'LOST' ? '' : 'none';
+        });
+    }
+
     // Lock body scroll to prevent background scrolling
     document.body.style.overflow = 'hidden';
-    
+
     // Show the modal
     overlay.classList.remove('hidden');
     modal.classList.remove('hidden');
@@ -2058,11 +2122,25 @@ async function showCreateOpportunityModal(duplicateFromIndex = null) {
     
     // Set up tab functionality
     setupCreateModalTabs();
-    
+
+    // Show/hide Lost Analysis section based on opp_status
+    const oppStatusSelect = document.getElementById('newOppStatus');
+    const lostSection = document.getElementById('lostAnalysisSection');
+    function toggleLostSection() {
+        if (lostSection) {
+            lostSection.style.display = oppStatusSelect && oppStatusSelect.value === 'LOST' ? '' : 'none';
+        }
+    }
+    if (oppStatusSelect) {
+        oppStatusSelect.removeEventListener('change', toggleLostSection);
+        oppStatusSelect.addEventListener('change', toggleLostSection);
+    }
+    toggleLostSection();
+
     // Lock body scroll to prevent background scrolling
     document.body.style.overflow = 'hidden';
     console.log('🔒 Body scroll locked for create opportunity modal');
-    
+
     // Show the modal
     overlay.classList.remove('hidden');
     modal.classList.remove('hidden');
@@ -2712,9 +2790,12 @@ function getFieldOptions(field) {
             const combined = [...new Set([...master, ...fromData])].filter(Boolean).sort();
             return ['', ...combined];
         }
-        case 'bom':
-            // Get values from dropdownOptions if available, otherwise return empty array with blank option
-            return dropdownOptions.bom ? ['', ...dropdownOptions.bom] : [''];
+        case 'bom': {
+            const fromData = dropdownOptions.bom || [];
+            const master = masterPicsList.length ? masterPicsList.map(m => (typeof m === 'string' ? m : m.name)) : CONFIG_PIC;
+            const combined = [...new Set([...master, ...fromData])].filter(Boolean).sort();
+            return ['', ...combined];
+        }
         default:
             return [];
     }
@@ -4004,6 +4085,9 @@ function getDropdownOptions(headersToUse, data) {
         if (normField === 'pic') {
             const master = masterPicsList.length ? masterPicsList.map(m => (typeof m === 'string' ? m : m.name)) : CONFIG_PIC;
             list = [...new Set([...master, ...list])].filter(Boolean).sort();
+        }
+        if (normField === 'solutions') {
+            list = [...new Set([...masterSolutionsList, ...list])].filter(Boolean).sort();
         }
         options[normField] = list;
     });
@@ -6066,7 +6150,7 @@ async function handleEditFormSubmit(e) {
     // Convert FormData to a regular object
     for (const [key, value] of formData.entries()) {
         // Skip fields that are only for frontend logic, not database storage
-        if (key === 'drive_folder_option' || key === 'existingFolderId' || key === 'submitted' || key === 'submitted_ui') {
+        if (key === 'drive_folder_option' || key === 'existingFolderId' || key === 'submitted') {
             continue; // Don't include these in the database submission
         }
         
@@ -6441,6 +6525,8 @@ async function handleEditFormSubmit(e) {
         if (isCreateMode) {
             console.log('🔄 Refreshing data to get auto-created Google Drive folder info...');
             await refreshOpportunitiesData();
+            resetFiltersToShowAll();
+            filterAndSortData();
         } else {
             // For edit mode, just re-render with existing data
             filterAndSortData();
@@ -6499,9 +6585,10 @@ function populateFilterDropdowns() {
         });
     }
     
-    // Add solutions filter options
-    if (solutionsFilterDropdown && dropdownOptions.solutions) {
-        dropdownOptions.solutions.forEach(value => {
+    // Add solutions filter options (merge master list with data-derived values)
+    if (solutionsFilterDropdown) {
+        const allSolutions = [...new Set([...masterSolutionsList, ...(dropdownOptions.solutions || [])])].filter(Boolean).sort();
+        allSolutions.forEach(value => {
             const option = document.createElement('option');
             option.value = value;
             option.textContent = value;
@@ -7020,11 +7107,17 @@ async function loadMasterAccountManagersAndPics() {
     if (!token) return;
     try {
         const [amRes, picRes] = await Promise.all([
-            fetch(getApiUrl('/api/proposal-workbench/proposals/account-managers-list'), { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(getApiUrl('/api/proposal-workbench/proposals/pics-master-list'), { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(getApiUrl('/api/account-managers'), { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(getApiUrl('/api/pics'), { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
-        if (amRes.ok) masterAccountManagersList = await amRes.json();
-        if (picRes.ok) masterPicsList = await picRes.json();
+        if (amRes.ok) {
+            const amData = await amRes.json();
+            masterAccountManagersList = (amData || []).filter(m => m.is_active !== 0).map(m => m.name).filter(Boolean).sort();
+        }
+        if (picRes.ok) {
+            const picData = await picRes.json();
+            masterPicsList = (picData || []).filter(p => p.is_active !== 0).map(p => p.name).filter(Boolean).sort();
+        }
     } catch (e) {
         console.warn('Could not load master Account Managers/PIC lists:', e);
     }

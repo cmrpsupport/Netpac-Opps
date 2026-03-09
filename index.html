@@ -1318,7 +1318,8 @@
                             <div class="form-row">
                                 <div class="enhanced-field">
                                     <label for="newClient">Client <span class="text-red-500">*</span></label>
-                                    <input type="text" id="newClient" name="client" required />
+                                    <input type="text" id="newClient" name="client" required autocomplete="off" list="clientsDatalist" />
+                                    <datalist id="clientsDatalist"></datalist>
                                 </div>
                                 <div class="enhanced-field">
                                     <label for="newRev">Revision</label>
@@ -1447,6 +1448,7 @@
                                         <option value="OP60">OP60</option>
                                         <option value="OP90">OP90</option>
                                         <option value="OP100">OP100</option>
+                                        <option value="LOST">LOST</option>
                                         <option value="Inactive">Inactive</option>
                                     </select>
                                 </div>
@@ -1521,7 +1523,7 @@
                         </div>
 
                         <!-- Lost Analysis Section -->
-                        <div class="form-section" style="display: none;">
+                        <div class="form-section" id="lostAnalysisSection" style="display: none;">
                             <div class="form-section-title">Lost Analysis (if applicable)</div>
                             <div class="form-row">
                                 <div class="enhanced-field">

@@ -274,6 +274,9 @@ function convertSQL(sql) {
     // SQLite doesn't support Postgres row-level locks syntax
     // Strip anywhere to be resilient to formatting (newlines/semicolons/etc.)
     converted = converted.replace(/\s+FOR\s+UPDATE(?:\s+NOWAIT|\s+SKIP\s+LOCKED)?\b/gi, '');
+    converted = converted.replace(/\bILIKE\b/gi, 'LIKE');
+    // Convert PostgreSQL $N placeholders to SQLite ? placeholders
+    converted = converted.replace(/\$\d+/g, '?');
     converted = converted.replace(/RETURNING \*/gi, '');
     converted = converted.replace(/\s*RETURNING\s+[\w*, ]+\s*$/gi, '');
     converted = converted.replace(/gen_random_uuid\(\)/gi, "lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab',abs(random())%4+1,1) || hex(randomblob(2)) || '-' || hex(randomblob(6)))");

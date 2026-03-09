@@ -116,8 +116,19 @@ async function ensureAccountManagerAndPicTables() {
       await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
       await db.query("CREATE TABLE IF NOT EXISTS solutions (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, is_active INTEGER DEFAULT 1, created_at TEXT, updated_at TEXT)");
       await db.query("CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY AUTOINCREMENT, company_name TEXT NOT NULL, contact_person TEXT, email TEXT, contact_number TEXT, company_address TEXT, is_active INTEGER DEFAULT 1, created_at TEXT, updated_at TEXT)");
+      await db.query("CREATE TABLE IF NOT EXISTS opportunity_revisions (id INTEGER PRIMARY KEY AUTOINCREMENT, opportunity_uid TEXT, revision_number INTEGER NOT NULL, changed_by TEXT, changed_at TEXT DEFAULT CURRENT_TIMESTAMP, changed_fields TEXT, full_snapshot TEXT, forecast_date TEXT)");
+      await db.query(`CREATE TABLE IF NOT EXISTS opps_monitoring (
+        encoded_date TEXT, project_name TEXT, project_code TEXT, rev INTEGER, client TEXT, solutions TEXT,
+        sol_particulars TEXT, industries TEXT, ind_particulars TEXT, date_received TEXT, client_deadline TEXT,
+        decision TEXT, account_mgr TEXT, pic TEXT, bom TEXT, status TEXT, submitted_date TEXT, margin REAL, final_amt REAL,
+        opp_status TEXT, date_awarded_lost TEXT, lost_rca TEXT, l_particulars TEXT, a TEXT, c TEXT, r TEXT, u TEXT, d TEXT,
+        remarks_comments TEXT, uid TEXT PRIMARY KEY, forecast_date TEXT, google_drive_folder_id TEXT, google_drive_folder_url TEXT,
+        google_drive_folder_name TEXT, drive_folder_created_at TEXT, drive_folder_created_by TEXT, proposal_status TEXT, revision TEXT
+      )`);
       try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
       try { await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
+      // Ensure UNIQUE constraint exists on opportunity_revisions for ON CONFLICT support
+      try { await db.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_opp_rev_uid_num ON opportunity_revisions(opportunity_uid, revision_number)'); } catch (e) { /* ignore */ }
     } else if (dbType === 'postgresql') {
       await db.query(`CREATE TABLE IF NOT EXISTS account_managers (
         id SERIAL PRIMARY KEY,
@@ -1871,8 +1882,13 @@ app.get('/api/opportunities', authenticateToken, async (req, res) => {
       FROM opps_monitoring
     `);
     console.log(`[DEBUG] Fetched ${result.rows?.length || 0} opportunities from database`);
-    res.json(result.rows);
+    res.json(result.rows || []);
   } catch (error) {
+    const msg = error && error.message ? error.message : '';
+    if (msg.includes('no such table') || msg.includes('opps_monitoring')) {
+      console.warn('[GET /api/opportunities] Table missing or error, returning empty list:', msg);
+      return res.json([]);
+    }
     console.error('[ERROR] Error fetching data from database:', error);
     res.status(500).json({ error: 'Failed to fetch data from database' });
   }
@@ -2583,9 +2599,22 @@ app.post('/api/opportunities', authenticateToken,
       console.log('[SERVER] Auto-generated encoded_date:', newOpp.encoded_date);
     }
     
-    newOpp = Object.fromEntries(Object.entries(newOpp).map(([k, v]) => [k, (typeof v === 'string' && v.trim() === '') ? null : v]));
+    newOpp = Object.fromEntries(Object.entries(newOpp).map(([k, v]) => {
+      if (typeof v === 'string' && v.trim() === '') return [k, null];
+      if (v instanceof Date) return [k, v.toISOString().split('T')[0]];
+      return [k, v];
+    }));
 
-    const keys = Object.keys(newOpp);
+    const oppsMonitoringColumns = new Set([
+      'uid', 'encoded_date', 'project_name', 'project_code', 'rev', 'client', 'solutions',
+      'sol_particulars', 'industries', 'ind_particulars', 'date_received', 'client_deadline',
+      'decision', 'account_mgr', 'pic', 'bom', 'status', 'submitted_date', 'margin', 'final_amt',
+      'opp_status', 'date_awarded_lost', 'lost_rca', 'l_particulars', 'a', 'c', 'r', 'u', 'd',
+      'remarks_comments', 'forecast_date', 'google_drive_folder_id', 'google_drive_folder_url',
+      'google_drive_folder_name', 'drive_folder_created_at', 'drive_folder_created_by',
+      'proposal_status', 'revision'
+    ]);
+    const keys = Object.keys(newOpp).filter(k => oppsMonitoringColumns.has(k));
     const values = keys.map(k => newOpp[k]);
     const columns = keys.map(k => `"${k}"`).join(', ');
     const placeholders = keys.map(() => '?').join(', ');
@@ -2771,13 +2800,18 @@ app.put('/api/opportunities/:uid', authenticateToken,
     const changed_by = updateData.changed_by || null;
     delete updateData.changed_by;
     delete updateData.uid; delete updateData.UID; delete updateData.Uid;
-    updateData = Object.fromEntries(Object.entries(updateData).map(([k, v]) => [k, (typeof v === 'string' && v.trim() === '') ? null : v]));
+    updateData = Object.fromEntries(Object.entries(updateData).map(([k, v]) => {
+      if (typeof v === 'string' && v.trim() === '') return [k, null];
+      if (v instanceof Date) return [k, v.toISOString().split('T')[0]];
+      return [k, v];
+    }));
     console.log(`[PUT /api/opportunities/${uid}] Processed updateData:`, JSON.stringify(updateData, null, 2));
 
     if (!uid) return res.status(400).json({ error: 'UID is required.' });
     const keysToUpdate = Object.keys(updateData);
     if (keysToUpdate.length === 0) return res.status(400).json({ error: 'No data provided for update.' });
 
+    if (!pool) return res.status(503).json({ error: 'Database not connected.' });
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -2837,7 +2871,12 @@ app.put('/api/opportunities/:uid', authenticateToken,
       const updateSql = `UPDATE opps_monitoring SET ${setClause} WHERE uid = $${values.length} RETURNING *`;
       console.log('[PUT] Executing Update SQL:', updateSql); console.log('With Values:', values);
       const updateResult = await client.query(updateSql, values);
-      const updatedOpp = updateResult.rows[0];
+      let updatedOpp = updateResult.rows[0];
+      // For SQLite/SQLite Cloud, RETURNING * is stripped, so rows[0] is undefined — fetch manually
+      if (!updatedOpp) {
+        const fetchResult = await client.query('SELECT * FROM opps_monitoring WHERE uid = ?', [uid]);
+        updatedOpp = fetchResult.rows[0];
+      }
       console.log(`[PUT /api/opportunities/${uid}] Updated Opp Data:`, JSON.stringify(updatedOpp, null, 2));
 
       // 5. Build Snapshot of State *After* Update
@@ -3203,7 +3242,7 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
 });
 
 // --- Account Managers API (master list; tag users to one when they have an account) ---
-app.get('/api/account-managers', authenticateToken, requireAdmin, async (req, res) => {
+app.get('/api/account-managers', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
       'SELECT id, name, email, is_active, created_at, updated_at FROM account_managers ORDER BY name ASC'
@@ -3289,7 +3328,7 @@ app.delete('/api/account-managers/:id', authenticateToken, requireAdmin, async (
 });
 
 // --- PIC (Person in Charge) API ---
-app.get('/api/pics', authenticateToken, requireAdmin, async (req, res) => {
+app.get('/api/pics', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
       'SELECT id, name, email, is_active, created_at, updated_at FROM pics ORDER BY name ASC'
