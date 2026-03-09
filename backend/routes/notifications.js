@@ -21,18 +21,12 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// GET /api/notifications - Get user's notifications
+// GET /api/notifications - Get user's notifications (returns 200 + empty list on DB errors so UI keeps working)
 router.get('/', authenticateToken, async (req, res) => {
     try {
         console.log('[NOTIFICATIONS] GET request received for user:', req.user?.id);
 
-        if (!req.db) {
-            console.error('[NOTIFICATIONS] req.db is not available');
-            return res.status(500).json({ error: 'Database connection not available' });
-        }
-
         // Check if user_notifications table exists first
-        console.log('[NOTIFICATIONS] Checking if user_notifications table exists...');
         const tableExistsQuery = `
             SELECT COUNT(*) as table_exists
             FROM sqlite_master
@@ -41,13 +35,12 @@ router.get('/', authenticateToken, async (req, res) => {
         `;
 
         const tableCheck = await db.query(tableExistsQuery);
+        const row0 = tableCheck.rows && tableCheck.rows[0];
+        const exists = row0 && (row0.table_exists !== 0 && row0.table_exists !== '0');
 
-        if (tableCheck.rows[0].table_exists === 0) {
-            console.error('[NOTIFICATIONS] user_notifications table does not exist');
-            return res.status(500).json({
-                error: 'Notifications table not found',
-                details: 'user_notifications table does not exist in database'
-            });
+        if (!exists) {
+            console.warn('[NOTIFICATIONS] user_notifications table does not exist, returning empty list');
+            return res.json({ notifications: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
         }
         
         const { page = 1, limit = 20, unread_only = false } = req.query;
@@ -96,7 +89,8 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         const countResult = await db.query(countQuery, countParams);
-        const totalCount = parseInt(countResult.rows[0].count);
+        const countRow = countResult.rows && countResult.rows[0];
+        const totalCount = parseInt(countRow && (countRow.count ?? countRow['COUNT(*)']), 10) || 0;
         
         const response = {
             notifications: result.rows,
@@ -111,30 +105,20 @@ router.get('/', authenticateToken, async (req, res) => {
         console.log('[NOTIFICATIONS] Sending response with', response.notifications.length, 'notifications');
         res.json(response);
     } catch (error) {
-        console.error('[NOTIFICATIONS] Error fetching notifications:', error);
-        console.error('[NOTIFICATIONS] Error stack:', error.stack);
-        console.error('[NOTIFICATIONS] Error code:', error.code);
-        console.error('[NOTIFICATIONS] Error detail:', error.detail);
-        res.status(500).json({ 
-            error: 'Failed to fetch notifications', 
-            details: error.message,
-            code: error.code 
+        console.error('[NOTIFICATIONS] Error fetching notifications:', error.message, error.stack);
+        // Return 200 with empty list so nav/UI keeps working (e.g. when DB connection is temporarily unavailable)
+        return res.json({
+            notifications: [],
+            pagination: { page: 1, limit: 20, total: 0, totalPages: 0 }
         });
     }
 });
 
-// GET /api/notifications/unread-count - Get count of unread notifications
+// GET /api/notifications/unread-count - Get count of unread notifications (returns 200 + count 0 on error)
 router.get('/unread-count', authenticateToken, async (req, res) => {
     try {
         console.log('[NOTIFICATIONS] Unread count request for user:', req.user?.id);
         
-        if (!req.db) {
-            console.error('[NOTIFICATIONS] req.db is not available');
-            return res.status(500).json({ error: 'Database connection not available' });
-        }
-        
-        // Check if user_notifications table exists first
-        console.log('[NOTIFICATIONS] Checking if user_notifications table exists...');
         const tableExistsQuery = `
             SELECT COUNT(*) as table_exists
             FROM sqlite_master
@@ -143,32 +127,21 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
         `;
 
         const tableCheck = await db.query(tableExistsQuery);
+        const row0 = tableCheck.rows && tableCheck.rows[0];
+        const exists = row0 && (row0.table_exists !== 0 && row0.table_exists !== '0');
 
-        if (tableCheck.rows[0].table_exists === 0) {
-            console.error('[NOTIFICATIONS] user_notifications table does not exist');
-            return res.status(500).json({
-                error: 'Notifications table not found',
-                details: 'user_notifications table does not exist in database'
-            });
+        if (!exists) {
+            return res.json({ count: 0 });
         }
 
-        const query = 'SELECT COUNT(*) FROM user_notifications WHERE user_id = ? AND is_read = false';
-        console.log('[NOTIFICATIONS] Executing query with user ID:', req.user.id);
+        const query = 'SELECT COUNT(*) as cnt FROM user_notifications WHERE user_id = ? AND is_read = false';
         const result = await db.query(query, [req.user.id]);
-        
-        const count = parseInt(result.rows[0].count);
-        console.log('[NOTIFICATIONS] Unread count for user:', count);
+        const countRow = result.rows && result.rows[0];
+        const count = parseInt(countRow && (countRow.cnt ?? countRow.count ?? countRow['COUNT(*)']), 10) || 0;
         res.json({ count });
     } catch (error) {
-        console.error('[NOTIFICATIONS] Error fetching unread count:', error);
-        console.error('[NOTIFICATIONS] Error stack:', error.stack);
-        console.error('[NOTIFICATIONS] Error code:', error.code);
-        console.error('[NOTIFICATIONS] Error detail:', error.detail);
-        res.status(500).json({ 
-            error: 'Failed to fetch unread count', 
-            details: error.message,
-            code: error.code 
-        });
+        console.error('[NOTIFICATIONS] Error fetching unread count:', error.message);
+        return res.json({ count: 0 });
     }
 });
 

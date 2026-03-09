@@ -86,11 +86,7 @@ class NotificationManager {
                 credentials: 'include'
             });
             
-            if (!response.ok) {
-                throw new Error(`Failed to load notifications: ${response.status}`);
-            }
-            
-            const data = await response.json();
+            const data = response.ok ? await response.json().catch(() => ({})) : {};
             this.notifications = data.notifications || [];
             this.updateUnreadCount();
             this.renderNotifications();

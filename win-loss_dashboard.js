@@ -354,13 +354,20 @@ async function fetchDashboardData() {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!res.ok) throw new Error('Failed to fetch data: ' + res.status);
-        const data = await res.json();
+        const raw = await res.json();
+        const data = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.opportunities) ? raw.opportunities : []);
         dashboardDataCache = data;
-        console.log('[DEBUG] Dashboard data fetched:', data);
+        console.log('[DEBUG] Dashboard data fetched:', data.length, 'opportunities');
         renderDashboard(data);
-        if (!data || (Array.isArray(data) && data.length === 0)) {
+        if (data.length === 0) {
             const main = document.querySelector('.main-content');
-            if (main) main.innerHTML = '<div style="color:#dc2626;padding:2rem;text-align:center;">No dashboard data available.</div>';
+            if (main) {
+                const emptyMsg = main.querySelector('.win-loss-empty-msg') || document.createElement('div');
+                emptyMsg.className = 'win-loss-empty-msg';
+                emptyMsg.style.cssText = 'color:#dc2626;padding:1rem 2rem;text-align:center;';
+                emptyMsg.textContent = 'No dashboard data available.';
+                if (!emptyMsg.parentNode) main.insertBefore(emptyMsg, main.firstChild);
+            }
         }
         populateDropdowns(data);
         setupTableFilterButtons();

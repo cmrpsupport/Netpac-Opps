@@ -11,6 +11,62 @@ const fs = require('fs');
 
 let db = null;
 let dbType = null;
+let reconnectPromise = null; // serializes reconnection attempts
+
+function isConnectionError(err) {
+    if (!err || !err.message) return false;
+    const msg = String(err.message).toLowerCase();
+    const code = (err.errorCode || err.code || '').toString();
+    return (
+        msg.includes('connection unavailable') ||
+        msg.includes('disconnected') ||
+        msg.includes('connection not established') ||
+        msg.includes('econnreset') ||
+        msg.includes('econnrefused') ||
+        msg.includes('connection refused') ||
+        code === 'ERR_CONNECTION_NOT_ESTABLISHED'
+    );
+}
+
+/**
+ * Reconnect SQLite Cloud (closes stale connection, creates new one).
+ * Caller should hold env URL; we read SQLITECLOUD_URL.
+ */
+async function reconnectSqliteCloud() {
+    if (reconnectPromise) return reconnectPromise;
+    const cloudUrl = (process.env.SQLITECLOUD_URL || '').trim();
+    if (!cloudUrl || !cloudUrl.startsWith('sqlitecloud://')) {
+        reconnectPromise = Promise.resolve(false);
+        return reconnectPromise;
+    }
+    reconnectPromise = (async () => {
+        try {
+            if (db && typeof db.close === 'function') {
+                try { db.close(); } catch (e) { /* ignore */ }
+                db = null;
+            }
+            const { Database } = require('@sqlitecloud/drivers');
+            await new Promise((resolve, reject) => {
+                const t = setTimeout(() => reject(new Error('SQLite Cloud reconnect timeout')), 15000);
+                db = new Database(cloudUrl, (err) => {
+                    clearTimeout(t);
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+            dbType = 'sqlite_cloud';
+            console.log('SQLite Cloud reconnected');
+            return true;
+        } catch (e) {
+            console.error('SQLite Cloud reconnect failed:', e.message);
+            db = null;
+            return false;
+        } finally {
+            reconnectPromise = null;
+        }
+    })();
+    return reconnectPromise;
+}
 
 /**
  * Initialize database connection.
@@ -87,7 +143,7 @@ async function query(sql, params = []) {
     }
 
     if (dbType === 'sqlite_cloud') {
-        try {
+        const runQuery = async () => {
             const runSql = convertSQL(sql);
             const result = await db.sql(runSql, ...(params || []));
             if (Array.isArray(result) || (result && typeof result.length === 'number')) {
@@ -103,7 +159,24 @@ async function query(sql, params = []) {
                 };
             }
             return { rows: [], rowCount: 0 };
+        };
+        try {
+            return await runQuery();
         } catch (error) {
+            if (isConnectionError(error)) {
+                console.warn('SQLite Cloud connection lost, attempting reconnect...', error.message);
+                const reconnected = await reconnectSqliteCloud();
+                if (reconnected) {
+                    try {
+                        return await runQuery();
+                    } catch (retryErr) {
+                        if (!retryErr.message || !retryErr.message.includes('duplicate')) {
+                            console.error('SQLite Cloud query error after reconnect:', retryErr.message);
+                        }
+                        throw retryErr;
+                    }
+                }
+            }
             if (!error.message || !error.message.includes('duplicate')) {
                 console.error('SQLite Cloud query error:', error.message);
             }

@@ -398,10 +398,12 @@ async function refreshOpportunitiesData() {
             }
         }
         if (!response.ok) {
-            throw new Error('Failed to fetch opportunities');
+            console.warn('Failed to refresh opportunities:', response.status, '- keeping current data');
+            return;
         }
 
-        opportunities = await response.json();
+        const raw = await response.json().catch(() => []);
+        opportunities = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.opportunities) ? raw.opportunities : []);
         
         // Re-render the table with updated data
         filterAndSortData();
@@ -409,7 +411,6 @@ async function refreshOpportunitiesData() {
         console.log('✅ Opportunities data refreshed successfully');
     } catch (error) {
         console.error('❌ Failed to refresh opportunities data:', error);
-        throw error;
     }
 }
 
@@ -489,10 +490,12 @@ async function initializeAppWithToken(token) {
             }
         }
         if (!response.ok) {
-            throw new Error('Failed to fetch opportunities');
+            console.warn('Failed to fetch opportunities:', response.status, '- continuing with empty list');
+            opportunities = [];
+        } else {
+            const raw = await response.json().catch(() => []);
+            opportunities = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.opportunities) ? raw.opportunities : []);
         }
-
-        opportunities = await response.json();
         console.log(`✅ [INDEX-DEBUG] Fetched ${opportunities?.length || 0} opportunities from API`);
 
         // Load user preferences BEFORE table initialization
