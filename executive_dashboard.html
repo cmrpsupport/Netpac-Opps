@@ -473,6 +473,8 @@
                 </div>
             </div>
 
+            <div id="executiveDashboardEmptyMessage" class="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-200 text-center" style="display: none;"></div>
+
             <!-- Main Metrics Grid - Organized by Category -->
             <div class="dashboard-metrics-container mb-8">
                 <!-- Row 1: Overview Cards -->
@@ -632,84 +634,11 @@
                 </div>
             </div>
 
-            <!-- Solution Breakdown Section -->
+            <!-- Solution Breakdown Section (dynamic from Solutions page) -->
             <div class="mb-8">
                 <h3 class="text-lg font-semibold mb-4">Solution Breakdown</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="dashboard-card category-card border-l-4 border-yellow-500">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="dashboard-title">⚡ Electrification</div>
-                            <span class="text-xs bg-yellow-500 text-black px-2 py-1 rounded font-medium">ELECTRIC</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
-                                <div id="electrificationCount" class="dashboard-value text-lg">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
-                                <div id="electrificationValue" class="dashboard-value text-lg">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
-                                <div id="electrificationActive" class="text-sm font-semibold text-green-600 dark:text-green-400">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
-                                <div id="electrificationSubmitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">--</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-card category-card border-l-4 border-blue-500">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="dashboard-title">⚙️ Automation</div>
-                            <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded font-medium">AUTO</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
-                                <div id="automationCount" class="dashboard-value text-lg">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
-                                <div id="automationValue" class="dashboard-value text-lg">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
-                                <div id="automationActive" class="text-sm font-semibold text-green-600 dark:text-green-400">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
-                                <div id="automationSubmitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">--</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-card category-card border-l-4 border-green-500">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="dashboard-title">💻 Digitalization</div>
-                            <span class="text-xs bg-green-500 text-white px-2 py-1 rounded font-medium">DIGITAL</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
-                                <div id="digitalizationCount" class="dashboard-value text-lg">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
-                                <div id="digitalizationValue" class="dashboard-value text-lg">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
-                                <div id="digitalizationActive" class="text-sm font-semibold text-green-600 dark:text-green-400">--</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
-                                <div id="digitalizationSubmitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">--</div>
-                            </div>
-                        </div>
-                    </div>
+                <div id="solutionBreakdownContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Cards are injected by executive_dashboard.js from /api/solutions -->
                 </div>
             </div>
 

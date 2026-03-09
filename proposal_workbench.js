@@ -460,7 +460,7 @@ function setupEventListeners() {
         console.warn('[SEARCH] proposalSearch element not found');
     }
     
-    picFilterSelect.addEventListener('change', async () => {
+    if (picFilterSelect) picFilterSelect.addEventListener('change', async () => {
         console.log('[PIC-FILTER-EVENT] PIC filter changed from', currentPicFilter, 'to', picFilterSelect.value);
         currentPicFilter = picFilterSelect.value;
         
@@ -473,21 +473,20 @@ function setupEventListeners() {
         renderNoDecisionProposals(); // Keep no decision count in sync
     });
 
-    clientFilter.addEventListener('change', () => {
+    if (clientFilter) clientFilter.addEventListener('change', () => {
         console.log('[FILTER-EVENT] Client filter changed from', currentClientFilter, 'to', clientFilter.value);
         currentClientFilter = clientFilter.value;
         renderProposals();
         renderNoDecisionProposals(); // Keep no decision count in sync
     });
-
-    accountManagerFilterSelect.addEventListener('change', () => {
+    if (accountManagerFilterSelect) accountManagerFilterSelect.addEventListener('change', () => {
         console.log('[FILTER-EVENT] Account Manager filter changed from', accountManagerFilter, 'to', accountManagerFilterSelect.value);
         accountManagerFilter = accountManagerFilterSelect.value;
         renderProposals();
         renderNoDecisionProposals(); // Keep no decision count in sync
     });
     
-    solutionFilterSelect.addEventListener('change', () => {
+    if (solutionFilterSelect) solutionFilterSelect.addEventListener('change', () => {
         console.log('[FILTER-EVENT] Solution filter changed from', solutionFilter, 'to', solutionFilterSelect.value);
         solutionFilter = solutionFilterSelect.value;
         renderProposals();
@@ -903,15 +902,15 @@ async function loadProposals() {
         
         // Auto-select Account Manager filter for sales users
         if (user && !user.isAdmin) {
-            const accountMgrFilter = document.getElementById('accountMgrFilter');
-            if (accountMgrFilter) {
+            const accountManagerFilterEl = document.getElementById('accountManagerFilter');
+            if (accountManagerFilterEl) {
                 // Find the option that matches the user's name
-                const userOption = Array.from(accountMgrFilter.options).find(option => 
-                    option.value.toLowerCase() === user.name.toLowerCase()
+                const userOption = Array.from(accountManagerFilterEl.options).find(option => 
+                    option.value && option.value.toLowerCase() === (user.name || '').toLowerCase()
                 );
                 
                 if (userOption) {
-                    accountMgrFilter.value = userOption.value;
+                    accountManagerFilterEl.value = userOption.value;
                     accountManagerFilter = userOption.value; // Update the global variable
                     console.log('[FILTER] Auto-selected Account Manager filter:', userOption.value);
                 }
@@ -937,8 +936,11 @@ async function loadProposals() {
         // Apply auto-filters for DS/SE users after filters are populated
         applyAutoFiltersForUser();
         
-        renderProposals();
-        renderNoDecisionProposals(); // Update no decision count and prepare modal content
+        // Defer render so DOM (e.g. kanban columns) is definitely ready
+        requestAnimationFrame(() => {
+            renderProposals();
+            renderNoDecisionProposals(); // Update no decision count and prepare modal content
+        });
     } catch (error) {
         console.error('Error loading proposals:', error);
         showProposalLoadError();
@@ -1475,8 +1477,23 @@ function populateFilters(data, masterAccountManagers = []) {
     }
 }
 
-function renderProposals(data = proposals, limitSubmitted = document.getElementById('hideOldSubmitted').checked) {
+function renderProposals(data = proposals, limitSubmitted = (document.getElementById('hideOldSubmitted') || {}).checked) {
     try {
+        // Re-resolve column bodies in case DOM wasn't ready when initializeElements ran
+        const n = document.getElementById('notStartedBody');
+        const o = document.getElementById('ongoingBody');
+        const r = document.getElementById('forRevisionBody');
+        const a = document.getElementById('forApprovalBody');
+        const s = document.getElementById('submittedBody');
+        if (!n || !o || !r || !a || !s) {
+            console.warn('[RENDER] Kanban column elements not found. IDs: notStartedBody, ongoingBody, forRevisionBody, forApprovalBody, submittedBody.');
+            return;
+        }
+        notStartedBody = n;
+        ongoingBody = o;
+        forRevisionBody = r;
+        forApprovalBody = a;
+        submittedBody = s;
         console.log('[RENDER] Rendering proposals with search text:', currentSearchText);
         console.log('[RENDER] Data length:', data.length);
         console.log('[RENDER] Current filters:', {
@@ -1515,10 +1532,11 @@ function renderProposals(data = proposals, limitSubmitted = document.getElementB
                                 proposal.client === currentClientFilter || 
                                 proposal.client_name === currentClientFilter;
             
-            // Account Manager filter - only apply if not empty
+            // Account Manager filter (same as opportunity account_mgr)
+            const am = proposal.account_manager || proposal.account_mgr;
             const matchesAccountManager = !accountManagerFilter || 
                                        accountManagerFilter === 'All Account Managers' || 
-                                       proposal.account_manager === accountManagerFilter;
+                                       am === accountManagerFilter;
             
             // Solution filter
             const matchesSolution = !solutionFilter || 
@@ -1552,6 +1570,7 @@ function renderProposals(data = proposals, limitSubmitted = document.getElementB
                 proposal.client,
                 proposal.client_name,
                 proposal.account_manager,
+                proposal.account_mgr,
                 proposal.pic,
                 proposal.bom,
                 proposal.solution,
@@ -2326,9 +2345,14 @@ function applyColumnSorting() {
 
 async function updateProposalStatus(proposalId, newStatus) {
     try {
-        console.log('[API-UPDATE] Starting status update with:', newStatus);
+        const uid = (proposalId != null && proposalId !== '') ? String(proposalId).trim() : '';
+        if (!uid) {
+            console.error('[API-UPDATE] Missing proposal uid, cannot update status');
+            throw new Error('Proposal ID is required to update status');
+        }
+        console.log('[API-UPDATE] Starting status update for uid:', uid, 'status:', newStatus);
         
-        const response = await fetchWithAuth(getApiUrl(`/api/proposal-workbench/proposals/${proposalId}/status`), {
+        const response = await fetchWithAuth(getApiUrl(`/api/proposal-workbench/proposals/${encodeURIComponent(uid)}/status`), {
             method: 'PUT',
             body: JSON.stringify({ status: newStatus })
         });
@@ -2348,14 +2372,14 @@ async function updateProposalStatus(proposalId, newStatus) {
         
         // Record status change in history
         try {
-            await recordProposalStatusChange(proposalId, newStatus, 'Status changed via drag and drop');
+            await recordProposalStatusChange(uid, newStatus, 'Status changed via drag and drop');
         } catch (historyError) {
             console.warn('[API-UPDATE] Failed to record status change in history:', historyError);
             // Don't fail the whole operation if history recording fails
         }
 
         // Update local data - find proposal and update its status to match backend format
-        const proposal = allProposals.find(p => p.uid === proposalId);
+        const proposal = allProposals.find(p => p.uid === uid || p.uid === proposalId);
         if (proposal) {
             console.log('[API-UPDATE] Before update - local proposal status:', proposal.status);
             
@@ -2372,13 +2396,13 @@ async function updateProposalStatus(proposalId, newStatus) {
             proposal.status = statusMap[newStatus] || newStatus.toLowerCase().replace(/ /g, '_');
             console.log('[API-UPDATE] After update - local proposal status:', proposal.status);
         } else {
-            console.error('[API-UPDATE] Could not find proposal in local data:', proposalId);
+            console.error('[API-UPDATE] Could not find proposal in local data:', uid);
         }
         
         // If moved to submitted, automatically open edit modal with today's date
         if (newStatus.toLowerCase().includes('submit')) {
             setTimeout(() => {
-                openProposalEditModalForSubmission(proposalId);
+                openProposalEditModalForSubmission(uid);
             }, 300);
         }
         
@@ -2934,7 +2958,7 @@ function renderNoDecisionProposals() {
         noDecisionProposals = noDecisionProposals.filter(p => p.client_name === currentClientFilter);
     }
     if (accountManagerFilter !== 'All Account Managers') {
-        noDecisionProposals = noDecisionProposals.filter(p => p.account_manager === accountManagerFilter);
+        noDecisionProposals = noDecisionProposals.filter(p => (p.account_manager || p.account_mgr) === accountManagerFilter);
     }
     if (solutionFilter !== 'All Solutions' && solutionFilter !== '') {
         noDecisionProposals = noDecisionProposals.filter(p => {
@@ -3109,7 +3133,7 @@ function filterProposalSelection() {
                               (proposal.project_name && proposal.project_name.toLowerCase().includes(searchTerm)) || 
                               (proposal.client_name && proposal.client_name.toLowerCase().includes(searchTerm)) ||
                               (proposal.pic && proposal.pic.toLowerCase().includes(searchTerm)) ||
-                              (proposal.account_manager && proposal.account_manager.toLowerCase().includes(searchTerm)) ||
+                              ((proposal.account_manager || proposal.account_mgr) && (proposal.account_manager || proposal.account_mgr).toLowerCase().includes(searchTerm)) ||
                               (proposal.uid && proposal.uid.toString().toLowerCase().includes(searchTerm));
                               
         const matchesStatus = !statusFilter || proposal.status === statusFilter;
@@ -3367,7 +3391,7 @@ function openProposalEditModal(proposalId) {
     // Assignment Information
     document.getElementById('editPic').value = proposal.pic || '';
     document.getElementById('editBom').value = proposal.bom || '';
-    document.getElementById('editAccountManager').value = proposal.account_manager || '';
+    document.getElementById('editAccountManager').value = proposal.account_manager || proposal.account_mgr || '';
     document.getElementById('editStatus').value = proposal.status || 'not_yet_started';
     
     // Financial Information  
@@ -4140,15 +4164,14 @@ async function initializeWorkbench() {
         
         // Auto-select Account Manager filter if user is not admin
         if (!user.isAdmin) {
-            const accountMgrFilter = document.getElementById('accountMgrFilter');
-            if (accountMgrFilter) {
-                // Find the option that matches the user's name
-                const userOption = Array.from(accountMgrFilter.options).find(option => 
-                    option.value.toLowerCase() === user.name.toLowerCase()
+            const accountManagerFilterEl = document.getElementById('accountManagerFilter');
+            if (accountManagerFilterEl) {
+                const userOption = Array.from(accountManagerFilterEl.options).find(option => 
+                    option.value && option.value.toLowerCase() === (user.name || '').toLowerCase()
                 );
-                
                 if (userOption) {
-                    accountMgrFilter.value = userOption.value;
+                    accountManagerFilterEl.value = userOption.value;
+                    accountManagerFilter = userOption.value;
                     console.log('[FILTER] Auto-selected Account Manager filter:', userOption.value);
                 }
             }
@@ -4166,44 +4189,50 @@ async function initializeWorkbench() {
 // Filter and render proposals
 function filterAndRenderProposals() {
     try {
-        // Get current filter values
-        const accountMgrFilter = document.getElementById('accountMgrFilter')?.value || '';
-        const picFilter = document.getElementById('picFilter')?.value || '';
-        const clientFilter = document.getElementById('clientFilter')?.value || '';
-        const statusFilter = document.getElementById('statusFilter')?.value || '';
+        // Get current filter values (use correct element id: accountManagerFilter)
+        const accountMgrVal = document.getElementById('accountManagerFilter')?.value || '';
+        const picVal = document.getElementById('picFilter')?.value || '';
+        const clientVal = document.getElementById('clientFilter')?.value || '';
+        const statusVal = document.getElementById('statusFilter')?.value || '';
         
         console.log('[FILTER] Applying filters:', {
-            accountMgr: accountMgrFilter,
-            pic: picFilter,
-            client: clientFilter,
-            status: statusFilter
+            accountMgr: accountMgrVal,
+            pic: picVal,
+            client: clientVal,
+            status: statusVal
         });
         
-        // Apply filters
+        // Sync globals so renderProposals uses them
+        if (accountMgrVal) accountManagerFilter = accountMgrVal;
+        if (picVal) currentPicFilter = picVal;
+        if (clientVal) currentClientFilter = clientVal;
+        
+        // Apply filters only when user selected a specific value (not "All")
         let filteredProposals = proposals;
         
-        if (accountMgrFilter) {
+        if (accountMgrVal && accountMgrVal !== 'All Account Managers') {
+            const am = p => p.account_manager || p.account_mgr;
             filteredProposals = filteredProposals.filter(p => 
-                p.account_manager?.toLowerCase() === accountMgrFilter.toLowerCase()
+                am(p)?.toLowerCase() === accountMgrVal.toLowerCase()
             );
         }
         
-        if (picFilter) {
+        if (picVal && picVal !== '') {
             filteredProposals = filteredProposals.filter(p => 
-                p.pic?.toLowerCase() === picFilter.toLowerCase() ||
-                p.bom?.toLowerCase() === picFilter.toLowerCase()
+                p.pic?.toLowerCase() === picVal.toLowerCase() ||
+                p.bom?.toLowerCase() === picVal.toLowerCase()
             );
         }
         
-        if (clientFilter) {
+        if (clientVal && clientVal !== 'All Clients') {
             filteredProposals = filteredProposals.filter(p => 
-                p.client_name?.toLowerCase() === clientFilter.toLowerCase()
+                (p.client_name || p.client)?.toLowerCase() === clientVal.toLowerCase()
             );
         }
         
-        if (statusFilter) {
+        if (statusVal && statusVal !== '') {
             filteredProposals = filteredProposals.filter(p => 
-                p.status?.toLowerCase() === statusFilter.toLowerCase()
+                p.status?.toLowerCase() === statusVal.toLowerCase()
             );
         }
         

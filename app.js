@@ -2060,6 +2060,10 @@ async function showCreateOpportunityModal(duplicateFromIndex = null) {
     // Populate dynamic dropdowns in create modal
     populateCreateModalDropdowns();
     
+    // Refresh client list from Client Database so user can type or select
+    const token = localStorage.getItem('authToken');
+    if (token) loadClientsForAutocomplete(token);
+    
     // Clear form values for new opportunity
     form.reset();
     

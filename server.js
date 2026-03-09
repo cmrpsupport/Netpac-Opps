@@ -112,8 +112,9 @@ async function ensureAccountManagerAndPicTables() {
   const dbType = db.getDBType();
   try {
     if (dbType === 'sqlite' || dbType === 'sqlite_cloud') {
-      await db.query("CREATE TABLE IF NOT EXISTS account_managers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
-      await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))");
+      // Use CURRENT_TIMESTAMP so convertSQL yields datetime('now') without parentheses (SQLite Cloud "near '('" fix)
+      await db.query("CREATE TABLE IF NOT EXISTS account_managers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)");
+      await db.query("CREATE TABLE IF NOT EXISTS pics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)");
       await db.query("CREATE TABLE IF NOT EXISTS solutions (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, is_active INTEGER DEFAULT 1, created_at TEXT, updated_at TEXT)");
       await db.query("CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY AUTOINCREMENT, company_name TEXT NOT NULL, contact_person TEXT, email TEXT, contact_number TEXT, company_address TEXT, is_active INTEGER DEFAULT 1, created_at TEXT, updated_at TEXT)");
       await db.query("CREATE TABLE IF NOT EXISTS opportunity_revisions (id INTEGER PRIMARY KEY AUTOINCREMENT, opportunity_uid TEXT, revision_number INTEGER NOT NULL, changed_by TEXT, changed_at TEXT DEFAULT CURRENT_TIMESTAMP, changed_fields TEXT, full_snapshot TEXT, forecast_date TEXT)");
@@ -2605,6 +2606,23 @@ app.post('/api/opportunities', authenticateToken,
       return [k, v];
     }));
 
+    // If client name is provided and not in Client Database, add it automatically
+    const clientName = (newOpp.client || '').trim();
+    if (clientName.length >= 2) {
+      try {
+        const exist = await db.query('SELECT id FROM clients WHERE LOWER(TRIM(company_name)) = LOWER(?)', [clientName]);
+        if (!exist.rows || exist.rows.length === 0) {
+          await db.query(
+            "INSERT INTO clients (company_name, contact_person, email, contact_number, company_address, created_at, updated_at) VALUES (?, NULL, NULL, NULL, NULL, datetime('now'), datetime('now'))",
+            [clientName]
+          );
+          console.log('[SERVER] Auto-added client to Client Database:', clientName);
+        }
+      } catch (e) {
+        console.warn('[SERVER] Could not auto-add client to Client Database:', e.message);
+      }
+    }
+
     const oppsMonitoringColumns = new Set([
       'uid', 'encoded_date', 'project_name', 'project_code', 'rev', 'client', 'solutions',
       'sol_particulars', 'industries', 'ind_particulars', 'date_received', 'client_deadline',
@@ -3612,7 +3630,31 @@ app.post('/api/clients/import/csv', authenticateToken, requireAdmin, express.tex
     const csvText = typeof req.body === 'string' ? req.body : '';
     if (!csvText.trim()) return res.status(400).json({ error: 'Empty CSV data.' });
 
-    const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+    // Split into rows respecting quoted fields (RFC 4180): newlines inside "..." are part of the field
+    function splitCSVRows(text) {
+      const rows = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuotes) {
+          if (ch === '"' && text[i + 1] === '"') { current += '"'; i++; }
+          else if (ch === '"') inQuotes = false;
+          else current += ch;
+        } else {
+          if (ch === '"') inQuotes = true;
+          else if (ch === '\n' || ch === '\r') {
+            if (current.trim()) rows.push(current);
+            current = '';
+            if (ch === '\r' && text[i + 1] === '\n') i++;
+          } else current += ch;
+        }
+      }
+      if (current.trim()) rows.push(current);
+      return rows;
+    }
+
+    const lines = splitCSVRows(csvText).map(l => l.trim()).filter(Boolean);
     if (lines.length < 2) return res.status(400).json({ error: 'CSV must have a header row and at least one data row.' });
 
     const headerLine = lines[0].toLowerCase();
@@ -3735,6 +3777,7 @@ app.get('/api/user-column-preferences/:pageName', authenticateToken, async (req,
 });
 
 // POST/PUT user's column preferences for a specific page
+// Uses SELECT then INSERT/UPDATE to avoid ON CONFLICT (SQLite Cloud may not have UNIQUE on user_id, page_name)
 app.post('/api/user-column-preferences/:pageName', authenticateToken, [
   body('columnSettings').isObject().withMessage('Column settings must be an object')
 ], async (req, res) => {
@@ -3747,23 +3790,34 @@ app.post('/api/user-column-preferences/:pageName', authenticateToken, [
     const userId = req.user.id;
     const pageName = req.params.pageName;
     const { columnSettings } = req.body;
+    const columnSettingsJson = JSON.stringify(columnSettings);
     
-    // Upsert operation - update if exists, insert if not
-    const result = await db.query(
-      db.convertSQL(`
-      INSERT INTO user_column_preferences (user_id, page_name, column_settings, updated_at)
-      VALUES (?, ?, ?, NOW())
-      ON CONFLICT (user_id, page_name)
-      DO UPDATE SET
-        column_settings = EXCLUDED.column_settings,
-        updated_at = NOW()
-      RETURNING id
-    `), [userId, pageName, JSON.stringify(columnSettings)]);
+    const existing = await db.query(
+      'SELECT id FROM user_column_preferences WHERE user_id = ? AND page_name = ?',
+      [userId, pageName]
+    );
     
-    res.json({ 
-      success: true, 
+    if (existing.rows && existing.rows.length > 0) {
+      await db.query(
+        'UPDATE user_column_preferences SET column_settings = ?, updated_at = datetime(\'now\') WHERE user_id = ? AND page_name = ?',
+        [columnSettingsJson, userId, pageName]
+      );
+      return res.json({
+        success: true,
+        message: 'Column preferences saved successfully',
+        id: existing.rows[0].id
+      });
+    }
+    
+    const id = require('crypto').randomUUID();
+    await db.query(
+      'INSERT INTO user_column_preferences (id, user_id, page_name, column_settings, created_at, updated_at) VALUES (?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+      [id, userId, pageName, columnSettingsJson]
+    );
+    res.json({
+      success: true,
       message: 'Column preferences saved successfully',
-      id: result.rows[0].id 
+      id
     });
   } catch (err) {
     console.error('Error saving user column preferences:', err);

@@ -11,6 +11,7 @@ function getApiUrl(endpoint) {
 
 // --- Global Variables ---
 let dashboardDataCache = null;
+let dashboardSolutionsList = []; // Solutions from Solutions page (API)
 let pipelineChartInstance = null;
 let statusChartInstance = null;
 let historicalChartInstance = null;
@@ -71,18 +72,38 @@ async function fetchDashboardData() {
         
         if (!res.ok) throw new Error('Failed to fetch data: ' + res.status);
         
-        const data = await res.json();
+        const raw = await res.json();
+        // Normalize: API may return array or { opportunities: [...] }
+        const data = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.opportunities) ? raw.opportunities : []);
         dashboardDataCache = data;
-        console.log('[DEBUG] Executive dashboard data fetched:', data);
+        console.log('[DEBUG] Executive dashboard data fetched:', data?.length ?? 0, 'opportunities');
+
+        // Fetch solutions from Solutions page for dynamic Solution Breakdown
+        try {
+            const solRes = await fetch(getApiUrl('/api/solutions'), { headers: { 'Authorization': 'Bearer ' + token } });
+            if (solRes.ok) {
+                const solutions = await solRes.json();
+                dashboardSolutionsList = (solutions || []).filter(s => s.is_active !== 0).map(s => ({ id: s.id, name: (s.name || '').trim() })).filter(s => s.name);
+                console.log('[DEBUG] Solutions loaded for breakdown:', dashboardSolutionsList.length);
+            }
+        } catch (e) {
+            console.warn('[DEBUG] Could not load solutions list:', e);
+            dashboardSolutionsList = [];
+        }
         
         // Populate filter dropdowns with all data
         populateFilterDropdowns(data);
         
         renderExecutiveDashboard(data);
         
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-            const main = document.querySelector('.main-content');
-            if (main) main.innerHTML = '<div style="color:#dc2626;padding:2rem;text-align:center;">No dashboard data available.</div>';
+        const emptyMsg = document.getElementById('executiveDashboardEmptyMessage');
+        if (emptyMsg) {
+            if (data.length === 0) {
+                emptyMsg.textContent = 'No opportunities in the system. Create opportunities to see metrics here.';
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+            }
         }
         
     } catch (err) {
@@ -94,6 +115,10 @@ async function fetchDashboardData() {
 
 // --- Dashboard Metrics Calculation ---
 function calculateMetrics(data) {
+    if (!data || !Array.isArray(data)) {
+        console.warn('[DEBUG] calculateMetrics received non-array:', typeof data);
+        data = [];
+    }
     console.log('[DEBUG] Total records:', data.length);
     
     const metrics = {
@@ -138,8 +163,8 @@ function calculateMetrics(data) {
         // Revised: sum of all revision numbers (rev > 0, original proposal is rev 0)
         revisedCount: data.reduce((sum, d) => sum + (Number(d.rev) || 0), 0),
         
-        // Solution breakdown metrics
-        solutionMetrics: calculateSolutionMetrics(data)
+        // Solution breakdown metrics (dynamic from Solutions page)
+        solutionMetrics: calculateSolutionMetrics(data, dashboardSolutionsList)
     };
     
     // Debug: Log calculated metrics
@@ -155,52 +180,27 @@ function getChartLabelColor() {
     return '#ffffff';
 }
 
-// --- Solution Breakdown Metrics ---
-function calculateSolutionMetrics(data) {
-    // Filter data by solution categories
-    const electrificationOpps = data.filter(opp => {
-        const solution = (opp.solutions || '').toLowerCase();
-        return solution.includes('electrification') || solution.includes('electric');
-    });
-    
-    const automationOpps = data.filter(opp => {
-        const solution = (opp.solutions || '').toLowerCase();
-        return solution.includes('automation') || solution.includes('auto');
-    });
-    
-    const digitalizationOpps = data.filter(opp => {
-        const solution = (opp.solutions || '').toLowerCase();
-        return solution.includes('digitalization') || solution.includes('digital') || 
-               solution.includes('digitalisation') || solution.includes('it');
-    });
-    
-    // Calculate metrics for each category
-    return {
-        electrification: {
-            count: electrificationOpps.length,
-            value: electrificationOpps.reduce((sum, opp) => sum + (parseFloat(opp.final_amt) || 0), 0),
-            active: electrificationOpps.filter(opp => 
+// --- Solution Breakdown Metrics (dynamic from Solutions page) ---
+function calculateSolutionMetrics(data, solutionList) {
+    const list = Array.isArray(solutionList) && solutionList.length > 0
+        ? solutionList
+        : [];
+    const result = {};
+    const oppSolution = (opp) => (opp.solutions || '').trim();
+    for (const sol of list) {
+        const name = typeof sol === 'string' ? sol : (sol && sol.name) ? sol.name : '';
+        if (!name) continue;
+        const opps = data.filter(opp => oppSolution(opp).toLowerCase() === name.toLowerCase());
+        result[name] = {
+            count: opps.length,
+            value: opps.reduce((sum, opp) => sum + (parseFloat(opp.final_amt) || 0), 0),
+            active: opps.filter(opp =>
                 opp.opp_status?.toLowerCase() === 'op100' || opp.opp_status?.toLowerCase() === 'op90'
             ).length,
-            submitted: electrificationOpps.filter(opp => opp.status?.toLowerCase() === 'submitted').length
-        },
-        automation: {
-            count: automationOpps.length,
-            value: automationOpps.reduce((sum, opp) => sum + (parseFloat(opp.final_amt) || 0), 0),
-            active: automationOpps.filter(opp => 
-                opp.opp_status?.toLowerCase() === 'op100' || opp.opp_status?.toLowerCase() === 'op90'
-            ).length,
-            submitted: automationOpps.filter(opp => opp.status?.toLowerCase() === 'submitted').length
-        },
-        digitalization: {
-            count: digitalizationOpps.length,
-            value: digitalizationOpps.reduce((sum, opp) => sum + (parseFloat(opp.final_amt) || 0), 0),
-            active: digitalizationOpps.filter(opp => 
-                opp.opp_status?.toLowerCase() === 'op100' || opp.opp_status?.toLowerCase() === 'op90'
-            ).length,
-            submitted: digitalizationOpps.filter(opp => opp.status?.toLowerCase() === 'submitted').length
-        }
-    };
+            submitted: opps.filter(opp => opp.status?.toLowerCase() === 'submitted').length
+        };
+    }
+    return result;
 }
 
 // --- Period Comparison Functions ---
@@ -649,12 +649,14 @@ async function createCustomSnapshot() {
 
 // --- Dashboard Rendering ---
 async function renderExecutiveDashboard(data) {
-    // Apply filters to the data first
-    const filteredData = filterData(data);
-    const currentMetrics = calculateMetrics(filteredData);
+    // Ensure we have an array (API may return object or null)
+    const raw = Array.isArray(data) ? data : (data && Array.isArray(data.opportunities) ? data.opportunities : []);
+    const filteredData = filterData(raw);
+    const safeData = Array.isArray(filteredData) ? filteredData : [];
+    const currentMetrics = calculateMetrics(safeData);
     
-    // Check if any filters are applied (account manager or solution)
-    const hasAccountMgrFilter = currentFilters.accountMgr && currentFilters.accountMgr !== '';
+    // Check if any filters are applied (account manager or solution); dashboard loads even when no account manager selected
+    const hasAccountMgrFilter = isAccountManagerFilterActive();
     const hasSolutionFilter = currentFilters.solution && currentFilters.solution !== '';
     const hasFiltersApplied = hasAccountMgrFilter || hasSolutionFilter;
     
@@ -671,7 +673,7 @@ async function renderExecutiveDashboard(data) {
         if (hasAccountMgrFilter) {
             // For specific account manager filter, get account manager-specific baseline
             console.log(`[BASELINE] Calculating baseline for account manager: ${currentFilters.accountMgr}`);
-            comparisonData = await getAccountManagerBaseline(data, currentFilters.accountMgr);
+            comparisonData = await getAccountManagerBaseline(raw, currentFilters.accountMgr);
             console.log(`[BASELINE] Current metrics for ${currentFilters.accountMgr}:`, currentMetrics);
             console.log(`[BASELINE] Baseline metrics for ${currentFilters.accountMgr}:`, comparisonData);
         } else {
@@ -742,29 +744,60 @@ async function renderExecutiveDashboard(data) {
     renderSummaryTable(currentMetrics, hasComparisonData ? comparisonData : {});
     renderDetailedTable(filteredData);
     
-    // Update solution breakdown cards
-    updateSolutionBreakdownCards(currentMetrics.solutionMetrics);
+    // Update solution breakdown cards (dynamic from Solutions page)
+    updateSolutionBreakdownCards(currentMetrics.solutionMetrics, dashboardSolutionsList);
 }
 
-// Update solution breakdown cards with metrics
-function updateSolutionBreakdownCards(solutionMetrics) {
-    // Update Electrification card
-    setDashboardValue('electrificationCount', formatMetricValue(solutionMetrics.electrification.count));
-    setDashboardValue('electrificationValue', formatMetricValue(solutionMetrics.electrification.value));
-    setDashboardValue('electrificationActive', formatMetricValue(solutionMetrics.electrification.active));
-    setDashboardValue('electrificationSubmitted', formatMetricValue(solutionMetrics.electrification.submitted));
-    
-    // Update Automation card
-    setDashboardValue('automationCount', formatMetricValue(solutionMetrics.automation.count));
-    setDashboardValue('automationValue', formatMetricValue(solutionMetrics.automation.value));
-    setDashboardValue('automationActive', formatMetricValue(solutionMetrics.automation.active));
-    setDashboardValue('automationSubmitted', formatMetricValue(solutionMetrics.automation.submitted));
-    
-    // Update Digitalization card
-    setDashboardValue('digitalizationCount', formatMetricValue(solutionMetrics.digitalization.count));
-    setDashboardValue('digitalizationValue', formatMetricValue(solutionMetrics.digitalization.value));
-    setDashboardValue('digitalizationActive', formatMetricValue(solutionMetrics.digitalization.active));
-    setDashboardValue('digitalizationSubmitted', formatMetricValue(solutionMetrics.digitalization.submitted));
+// Update solution breakdown cards with metrics (dynamic from Solutions page)
+function updateSolutionBreakdownCards(solutionMetrics, solutionList) {
+    const container = document.getElementById('solutionBreakdownContainer');
+    if (!container) return;
+    const list = Array.isArray(solutionList) && solutionList.length > 0 ? solutionList : [];
+    const colors = ['border-yellow-500', 'border-blue-500', 'border-green-500', 'border-purple-500', 'border-orange-500', 'border-indigo-500', 'border-pink-500', 'border-teal-500'];
+    const badges = ['bg-yellow-500 text-black', 'bg-blue-500 text-white', 'bg-green-500 text-white', 'bg-purple-500 text-white', 'bg-orange-500 text-black', 'bg-indigo-500 text-white', 'bg-pink-500 text-white', 'bg-teal-500 text-white'];
+    const escapeHtml = (s) => {
+        if (s == null) return '';
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    };
+    if (list.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 col-span-full">No solutions defined. Add solutions in the Solutions page to see breakdown here.</p>';
+        return;
+    }
+    container.innerHTML = list.map((sol, i) => {
+        const name = typeof sol === 'string' ? sol : (sol && sol.name) ? sol.name : '';
+        if (!name) return '';
+        const m = solutionMetrics[name] || { count: 0, value: 0, active: 0, submitted: 0 };
+        const borderCls = colors[i % colors.length];
+        const badgeCls = badges[i % badges.length];
+        const idPrefix = 'sol_' + name.replace(/\W+/g, '_').slice(0, 20);
+        return `
+            <div class="dashboard-card category-card border-l-4 ${borderCls}">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="dashboard-title">${escapeHtml(name)}</div>
+                    <span class="text-xs ${badgeCls} px-2 py-1 rounded font-medium">${escapeHtml(name.slice(0, 8))}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Count</div>
+                        <div id="${idPrefix}_count" class="dashboard-value text-lg">${formatMetricValue(m.count)}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Value</div>
+                        <div id="${idPrefix}_value" class="dashboard-value text-lg">${formatMetricValue(m.value)}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Active</div>
+                        <div id="${idPrefix}_active" class="text-sm font-semibold text-green-600 dark:text-green-400">${formatMetricValue(m.active)}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Submitted</div>
+                        <div id="${idPrefix}_submitted" class="text-sm font-semibold text-blue-600 dark:text-blue-400">${formatMetricValue(m.submitted)}</div>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
 }
 
 function setDashboardValue(elementId, value) {
@@ -1264,6 +1297,12 @@ function sanitizeHTML(str) {
 }
 
 // --- Filter Functions ---
+// Treat as "no filter" so dashboard loads and shows all data when nothing is selected
+function isAccountManagerFilterActive() {
+    const v = (currentFilters.accountMgr || '').trim();
+    return v !== '' && v.toLowerCase() !== 'all account managers';
+}
+
 function filterData(data) {
     if (!data || !Array.isArray(data)) return data;
     
@@ -1273,8 +1312,8 @@ function filterData(data) {
             return false;
         }
         
-        // Account Manager filter - only if not empty string (which means "All Account Managers")
-        if (currentFilters.accountMgr && currentFilters.accountMgr !== '' && item.account_mgr !== currentFilters.accountMgr) {
+        // Account Manager filter - only when a specific manager is selected (dashboard loads even when none selected)
+        if (isAccountManagerFilterActive() && item.account_mgr !== currentFilters.accountMgr) {
             return false;
         }
         
@@ -1555,9 +1594,12 @@ function populateFilterDropdowns(data) {
             }
             accountMgrSelect.appendChild(option);
         });
+        // Sync filter from dropdown so "All" is respected and dashboard loads with full data when nothing selected
+        const selectedMgr = (accountMgrSelect.value || '').trim();
+        currentFilters.accountMgr = (selectedMgr.toLowerCase() === 'all account managers') ? '' : selectedMgr;
     }
     
-    // Apply auto-filtering after dropdowns are populated
+    // Apply auto-filtering after dropdowns are populated (optional; dashboard still loads if no match)
     applyAutoFiltersForUser();
 }
 
@@ -1578,7 +1620,8 @@ function setupFilters() {
     const accountMgrFilter = document.getElementById('accountMgrFilter');
     if (accountMgrFilter) {
         accountMgrFilter.addEventListener('change', function() {
-            currentFilters.accountMgr = this.value;
+            const v = (this.value || '').trim();
+            currentFilters.accountMgr = (v === '' || v.toLowerCase() === 'all account managers') ? '' : v;
             if (dashboardDataCache) {
                 renderExecutiveDashboard(dashboardDataCache);
             }
@@ -1819,10 +1862,10 @@ function setupEventHandlers() {
     
     if (accountMgrFilter) {
         accountMgrFilter.addEventListener('change', async () => {
-            currentFilters.accountMgr = accountMgrFilter.value;
+            const v = (accountMgrFilter.value || '').trim();
+            currentFilters.accountMgr = (v === '' || v.toLowerCase() === 'all account managers') ? '' : v;
             if (dashboardDataCache) {
-                const filteredData = filterData(dashboardDataCache);
-                renderExecutiveDashboard(filteredData);
+                renderExecutiveDashboard(dashboardDataCache);
             }
         });
     }

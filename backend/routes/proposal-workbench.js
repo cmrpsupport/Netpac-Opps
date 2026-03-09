@@ -12,20 +12,23 @@ router.use(express.json());
 // Database-backed schedule storage (replaces MOCK_SCHEDULE)
 // Note: Custom tasks are still stored in localStorage (frontend)
 
-// Map database status to proposal workbench status
+// Map database status to proposal workbench status (case-insensitive, trim)
 function mapDatabaseStatusToWorkbenchStatus(dbStatus) {
+    if (dbStatus == null || String(dbStatus).trim() === '') return 'not_yet_started';
+    const normalized = String(dbStatus).trim();
     const statusMap = {
-        'Submitted': 'submitted',
-        'On-Going': 'ongoing', 
-        'For Approval': 'for_approval',
-        'For Revision': 'for_revision',
-        'Not Yet Started': 'not_yet_started',
-        'No Decision Yet': 'no_decision_yet',
-        'Declined': 'declined',
-        'Awarded': 'awarded',
-        'Lost': 'lost'
+        'submitted': 'submitted',
+        'on-going': 'ongoing',
+        'ongoing': 'ongoing',
+        'for approval': 'for_approval',
+        'for revision': 'for_revision',
+        'not yet started': 'not_yet_started',
+        'no decision yet': 'no_decision_yet',
+        'declined': 'declined',
+        'awarded': 'awarded',
+        'lost': 'lost'
     };
-    return statusMap[dbStatus] || 'unknown';
+    return statusMap[normalized.toLowerCase()] || 'not_yet_started';
 }
 
 // Map workbench status back to database status
@@ -66,7 +69,7 @@ router.get('/proposals/workbench', async (req, res) => {
         
         console.log(`[ACCOUNT-FILTER] User: ${userName} (${userId}), Roles: ${userRoles.join(', ')}`);
         
-        // Always fetch all proposals - filtering will be done on frontend
+        // Fetch all proposals (no status filter so workbench always has data; status mapped in JS)
         const query = `
             SELECT 
                 uid,
@@ -83,19 +86,7 @@ router.get('/proposals/workbench', async (req, res) => {
                 bom,
                 solutions
             FROM opps_monitoring 
-            WHERE status IN ('Submitted', 'On-Going', 'For Approval', 'For Revision', 'Not Yet Started', 'No Decision Yet')
-            ORDER BY
-                CASE status
-                    WHEN 'For Revision' THEN 1
-                    WHEN 'On-Going' THEN 2
-                    WHEN 'For Approval' THEN 3
-                    WHEN 'Submitted' THEN 4
-                    WHEN 'Not Yet Started' THEN 5
-                    WHEN 'No Decision Yet' THEN 6
-                    ELSE 7
-                END,
-                submitted_date DESC NULLS LAST,
-                project_name
+            ORDER BY submitted_date DESC, project_name
         `;
 
         const result = await db.query(query);
@@ -226,29 +217,36 @@ router.get('/proposals/pics', async (req, res) => {
 // Update proposal status
 router.put('/proposals/:id/status', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = (req.params.id || '').trim();
         const { status } = req.body;
+        
+        if (!id) {
+            return res.status(400).json({ error: 'Proposal ID (uid) is required' });
+        }
         
         console.log(`[DATABASE] Updating proposal ${id} status to ${status}`);
         
-        // Map workbench status to database status
-        const dbStatus = mapWorkbenchStatusToDatabase(status);
-        
-        const query = `
-            UPDATE opps_monitoring
-            SET status = ?
-            WHERE uid = ?
-            RETURNING uid, project_name, client, status, final_amt, account_mgr, remarks_comments, pic
-        `;
-
-        const result = await db.query(query, [dbStatus, id]);
-        
-        if (result.rows.length === 0) {
+        // Check proposal exists first (some drivers don't return rowCount for UPDATE)
+        const exist = await db.query(
+            'SELECT uid FROM opps_monitoring WHERE uid = ?',
+            [id]
+        );
+        if (!exist.rows || exist.rows.length === 0) {
             return res.status(404).json({ error: 'Proposal not found' });
         }
         
-        const updatedRow = result.rows[0];
-        const proposal = {
+        const dbStatus = mapWorkbenchStatusToDatabase(status);
+        await db.query(
+            'UPDATE opps_monitoring SET status = ? WHERE uid = ?',
+            [dbStatus, id]
+        );
+        
+        const sel = await db.query(
+            'SELECT uid, project_name, client, status, final_amt, account_mgr, remarks_comments, pic FROM opps_monitoring WHERE uid = ?',
+            [id]
+        );
+        const updatedRow = (sel.rows && sel.rows[0]) || null;
+        const proposal = updatedRow ? {
             uid: updatedRow.uid,
             project_name: updatedRow.project_name,
             client_name: updatedRow.client,
@@ -257,7 +255,7 @@ router.put('/proposals/:id/status', async (req, res) => {
             account_manager: updatedRow.account_mgr,
             comment: updatedRow.remarks_comments,
             pic: updatedRow.pic
-        };
+        } : { uid: id, status: mapDatabaseStatusToWorkbenchStatus(dbStatus) };
         
         console.log(`[DATABASE] Successfully updated proposal ${id} status`);
         res.json({ success: true, proposal });
@@ -276,21 +274,21 @@ router.put('/proposals/:id/comment', async (req, res) => {
         
         console.log(`[DATABASE] Updating proposal ${id} comment`);
         
-        const query = `
-            UPDATE opps_monitoring
-            SET remarks_comments = ?
-            WHERE uid = ?
-            RETURNING uid, project_name, client, status, final_amt, account_mgr, remarks_comments, pic
-        `;
-
-        const result = await db.query(query, [comment, id]);
-        
-        if (result.rows.length === 0) {
+        const updateResult = await db.query(
+            'UPDATE opps_monitoring SET remarks_comments = ? WHERE uid = ?',
+            [comment, id]
+        );
+        const updated = (updateResult.rowCount != null && updateResult.rowCount > 0) || (updateResult.rows && updateResult.rows.length > 0);
+        if (!updated) {
             return res.status(404).json({ error: 'Proposal not found' });
         }
         
-        const updatedRow = result.rows[0];
-        const proposal = {
+        const sel = await db.query(
+            'SELECT uid, project_name, client, status, final_amt, account_mgr, remarks_comments, pic FROM opps_monitoring WHERE uid = ?',
+            [id]
+        );
+        const updatedRow = (sel.rows && sel.rows[0]) || null;
+        const proposal = updatedRow ? {
             uid: updatedRow.uid,
             project_name: updatedRow.project_name,
             client_name: updatedRow.client,
@@ -299,7 +297,7 @@ router.put('/proposals/:id/comment', async (req, res) => {
             account_manager: updatedRow.account_mgr,
             comment: updatedRow.remarks_comments,
             pic: updatedRow.pic
-        };
+        } : { uid: id };
         
         console.log(`[DATABASE] Successfully updated proposal ${id} comment`);
         res.json({ success: true, proposal });
@@ -355,20 +353,23 @@ router.put('/proposals/:id/fields', async (req, res) => {
         // Add the proposal ID as the last parameter
         values.push(id);
 
-        const query = `
-            UPDATE opps_monitoring
-            SET ${updateFields.join(', ')}
-            WHERE uid = ?
-            RETURNING uid, project_name, client, status, final_amt, account_mgr, remarks_comments, pic, bom, rev, margin, opp_status, submitted_date
-        `;
-
-        const result = await db.query(query, values);
-        
-        if (result.rows.length === 0) {
+        const updateResult = await db.query(
+            `UPDATE opps_monitoring SET ${updateFields.join(', ')} WHERE uid = ?`,
+            values
+        );
+        const updated = (updateResult.rowCount != null && updateResult.rowCount > 0) || (updateResult.rows && updateResult.rows.length > 0);
+        if (!updated) {
             return res.status(404).json({ error: 'Proposal not found' });
         }
-        
-        const updatedRow = result.rows[0];
+
+        const sel = await db.query(
+            'SELECT uid, project_name, client, status, final_amt, account_mgr, remarks_comments, pic, bom, rev, margin, opp_status, submitted_date FROM opps_monitoring WHERE uid = ?',
+            [id]
+        );
+        const updatedRow = (sel.rows && sel.rows[0]) || null;
+        if (!updatedRow) {
+            return res.json({ success: true });
+        }
         const proposal = {
             uid: updatedRow.uid,
             project_name: updatedRow.project_name,
