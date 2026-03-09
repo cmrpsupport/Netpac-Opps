@@ -2559,6 +2559,18 @@ app.post('/api/opportunities', authenticateToken,
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     console.log('Request body keys:', Object.keys(req.body));
     let newOpp = { ...req.body };
+
+    // Normalize legacy/UX-only fields that are not actual DB columns
+    // `opps_monitoring` has `submitted_date` but not `submitted` / `submitted_ui`
+    if (Object.prototype.hasOwnProperty.call(newOpp, 'submitted') || Object.prototype.hasOwnProperty.call(newOpp, 'submitted_ui')) {
+      const submittedVal = Object.prototype.hasOwnProperty.call(newOpp, 'submitted_ui') ? newOpp.submitted_ui : newOpp.submitted;
+      // If UI sends submitted=Yes and status is empty, set status to Submitted
+      if ((submittedVal === 'Yes' || submittedVal === true || submittedVal === 1 || submittedVal === '1') && !newOpp.status) {
+        newOpp.status = 'Submitted';
+      }
+      delete newOpp.submitted;
+      delete newOpp.submitted_ui;
+    }
     const changed_by = newOpp.changed_by || null;
     delete newOpp.changed_by;
     delete newOpp.uid; delete newOpp.UID; delete newOpp.Uid;
@@ -2746,6 +2758,16 @@ app.put('/api/opportunities/:uid', authenticateToken,
     const { uid } = req.params;
     console.log(`[PUT /api/opportunities/${uid}] Received raw body:`, JSON.stringify(req.body, null, 2));
     let updateData = { ...req.body };
+
+    // Normalize legacy/UX-only fields that are not actual DB columns
+    if (Object.prototype.hasOwnProperty.call(updateData, 'submitted') || Object.prototype.hasOwnProperty.call(updateData, 'submitted_ui')) {
+      const submittedVal = Object.prototype.hasOwnProperty.call(updateData, 'submitted_ui') ? updateData.submitted_ui : updateData.submitted;
+      if ((submittedVal === 'Yes' || submittedVal === true || submittedVal === 1 || submittedVal === '1') && !updateData.status) {
+        updateData.status = 'Submitted';
+      }
+      delete updateData.submitted;
+      delete updateData.submitted_ui;
+    }
     const changed_by = updateData.changed_by || null;
     delete updateData.changed_by;
     delete updateData.uid; delete updateData.UID; delete updateData.Uid;

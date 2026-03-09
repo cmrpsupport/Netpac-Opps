@@ -6066,7 +6066,7 @@ async function handleEditFormSubmit(e) {
     // Convert FormData to a regular object
     for (const [key, value] of formData.entries()) {
         // Skip fields that are only for frontend logic, not database storage
-        if (key === 'drive_folder_option' || key === 'existingFolderId') {
+        if (key === 'drive_folder_option' || key === 'existingFolderId' || key === 'submitted' || key === 'submitted_ui') {
             continue; // Don't include these in the database submission
         }
         
@@ -6079,6 +6079,13 @@ async function handleEditFormSubmit(e) {
     }
     
     // Google Drive folder handling moved to separate import modal
+
+    // If UI submitted flag is "Yes" and status is empty, infer status=Submitted
+    if ((opportunityData.submitted_ui === 'Yes' || opportunityData.submitted_ui === true) && (!opportunityData.status || opportunityData.status.trim() === '')) {
+        opportunityData.status = 'Submitted';
+    }
+    delete opportunityData.submitted;
+    delete opportunityData.submitted_ui;
     
     // Form submission data collected
     console.log('📋 Opportunity data being submitted:', Object.keys(opportunityData));

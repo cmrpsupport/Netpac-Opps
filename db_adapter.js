@@ -271,6 +271,8 @@ function convertSQL(sql) {
     }
 
     let converted = sql;
+    // SQLite doesn't support Postgres row-level locks syntax
+    converted = converted.replace(/\s+FOR\s+UPDATE\s*$/i, '');
     converted = converted.replace(/RETURNING \*/gi, '');
     converted = converted.replace(/\s*RETURNING\s+[\w*, ]+\s*$/gi, '');
     converted = converted.replace(/gen_random_uuid\(\)/gi, "lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab',abs(random())%4+1,1) || hex(randomblob(2)) || '-' || hex(randomblob(6)))");
