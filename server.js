@@ -208,6 +208,11 @@ app.post('/api/login', express.json(), async (req, res) => {
                 return res.status(401).json({ error: 'User not found in database' });
             }
 
+            // Require superadmin approval before login (is_verified = 1)
+            if (!user.is_verified) {
+                return res.status(403).json({ error: 'Your account is pending approval by an administrator. You will be able to log in once approved.' });
+            }
+
             // Update last login time in database
             await db.query(
                 db.convertSQL(`UPDATE users SET last_login_at = NOW() WHERE id = ?`),
@@ -254,6 +259,11 @@ app.post('/api/login', express.json(), async (req, res) => {
 
             if (!isPasswordValid) {
                 return res.status(401).json({ error: 'Invalid credentials' });
+            }
+
+            // Require superadmin approval before login (is_verified = 1)
+            if (!user.is_verified) {
+                return res.status(403).json({ error: 'Your account is pending approval by an administrator. You will be able to log in once approved.' });
             }
 
             // Update last login time in database with Manila timezone
@@ -1683,9 +1693,10 @@ app.post('/api/signup', authLimiter, [
         const id = uuidv4();
         const rolesJson = JSON.stringify([DEFAULT_SIGNUP_ROLE]);
 
+        // New signups require superadmin approval: create as pending (is_verified = 0)
         await db.query(
             'INSERT INTO users (id, tenant_id, email, password_hash, name, is_verified, roles, account_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [id, tenantId, emailLower, password_hash, (name || '').trim() || null, 1, rolesJson, 'User']
+            [id, tenantId, emailLower, password_hash, (name || '').trim() || null, 0, rolesJson, 'User']
         );
 
         // Link default role in user_roles if roles table has it
@@ -1695,22 +1706,11 @@ app.post('/api/signup', authLimiter, [
         }
 
         const now = new Date().toISOString();
-        console.log(`[${now}] New signup: ${emailLower} (ID: ${id})`);
+        console.log(`[${now}] New signup (pending approval): ${emailLower} (ID: ${id})`);
 
-        const token = jwt.sign({
-            id,
-            email: emailLower,
-            name: (name || '').trim() || null,
-            tenantId,
-            tenantCode: orgCode,
-            roles: [DEFAULT_SIGNUP_ROLE],
-            accountType: 'User'
-        }, JWT_SECRET, { expiresIn: '24h' });
-
+        // Do not issue token; user must wait for superadmin approval before logging in
         res.status(201).json({
-            message: 'Account created successfully',
-            token,
-            user: { id, email: emailLower, name: (name || '').trim() || null, tenantId, tenantCode: orgCode, roles: [DEFAULT_SIGNUP_ROLE], accountType: 'User' }
+            message: 'Registration successful. Your account is pending approval by an administrator. You will be able to log in once approved.'
         });
     } catch (error) {
         console.error('Error during signup:', error);
@@ -3095,6 +3095,42 @@ app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error fetching users:', err);
     res.status(500).json({ error: 'Failed to fetch users.' });
+  }
+});
+
+// GET users pending superadmin approval (is_verified = 0)
+app.get('/api/users/pending', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT id, email, name, account_type FROM users WHERE (is_verified = 0 OR is_verified IS NULL) ORDER BY email ASC'
+    );
+    const pending = (result.rows || []).map(u => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      accountType: u.account_type || 'User'
+    }));
+    res.json(pending);
+  } catch (err) {
+    console.error('Error fetching pending users:', err);
+    res.status(500).json({ error: 'Failed to fetch pending users.' });
+  }
+});
+
+// POST approve a pending user (superadmin only)
+app.post('/api/users/:id/approve', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await db.query('UPDATE users SET is_verified = 1 WHERE id = ? AND (is_verified = 0 OR is_verified IS NULL)', [id]);
+    const updated = (result.rowsAffected != null && result.rowsAffected > 0) || (result.rowCount != null && result.rowCount > 0);
+    if (!updated) {
+      return res.status(404).json({ error: 'User not found or already approved.' });
+    }
+    console.log(`[Admin] User approved: ${id}`);
+    res.json({ success: true, message: 'User approved. They can now log in.' });
+  } catch (err) {
+    console.error('Error approving user:', err);
+    res.status(500).json({ error: 'Failed to approve user.' });
   }
 });
 

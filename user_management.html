@@ -106,6 +106,12 @@
                 </button>
             </div>
 
+            <!-- Pending signups (require superadmin approval) -->
+            <div id="pendingSignupsSection" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4" style="display: none;">
+                <h2 class="text-lg font-semibold text-amber-800 mb-3">Pending signups — approve to allow login</h2>
+                <div id="pendingSignupsList" class="overflow-x-auto"></div>
+            </div>
+
             <!-- Users Table Section - Following the same pattern as other pages -->
             <div class="table-responsive-wrapper">
             <div class="table-container">
@@ -304,8 +310,9 @@
     // Initialize user management functionality
     async function initializeUserManagement() {
         try {
-            // Get user list
+            // Get user list and pending signups
             await fetchUsers();
+            await fetchPendingUsers();
             
             // Setup event listeners
             setupEventListeners();
@@ -365,6 +372,48 @@
         const div = document.createElement('div');
         div.textContent = s;
         return div.innerHTML;
+    }
+
+    // Fetch and render pending signups (superadmin approval)
+    async function fetchPendingUsers() {
+        const section = document.getElementById('pendingSignupsSection');
+        const listEl = document.getElementById('pendingSignupsList');
+        if (!section || !listEl) return;
+        try {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) return;
+            const response = await fetch(getApiUrl('/api/users/pending'), {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            if (!response.ok) return;
+            const pending = await response.json();
+            if (!pending || pending.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+            listEl.innerHTML = `
+                <table class="min-w-full text-sm">
+                    <thead><tr><th class="text-left py-1 pr-4 text-amber-800">Email</th><th class="text-left py-1 pr-4 text-amber-800">Name</th><th class="text-left py-1">Action</th></tr></thead>
+                    <tbody>
+                        ${pending.map(p => `
+                            <tr>
+                                <td class="py-1 pr-4">${escapeHtml(p.email)}</td>
+                                <td class="py-1 pr-4">${escapeHtml(p.name || '—')}</td>
+                                <td class="py-1">
+                                    <button type="button" class="approve-pending-btn action-button" data-user-id="${escapeHtml(p.id)}" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">Approve</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (e) {
+            console.warn('Could not load pending signups:', e);
+            section.style.display = 'none';
+        }
     }
 
     // Fetch users from API
@@ -634,9 +683,42 @@
 
     // Setup event listeners
     function setupEventListeners() {
+        // Pending signups: Approve button (delegated)
+        const pendingList = document.getElementById('pendingSignupsList');
+        if (pendingList) {
+            pendingList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.approve-pending-btn');
+                if (!btn) return;
+                const userId = btn.getAttribute('data-user-id');
+                if (!userId) return;
+                btn.disabled = true;
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) { btn.disabled = false; return; }
+                try {
+                    const response = await fetch(getApiUrl(`/api/users/${userId}/approve`), {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        alert(data.error || 'Failed to approve user.');
+                        btn.disabled = false;
+                        return;
+                    }
+                    await fetchPendingUsers();
+                    await fetchUsers();
+                } catch (err) {
+                    console.error(err);
+                    alert('Failed to approve user.');
+                    btn.disabled = false;
+                }
+            });
+        }
+
         // Setup resizable columns
         setupResizableColumns();
-        
+
         // Add user button
         const addUserButton = document.getElementById('addUserButton');
         if (addUserButton) {

@@ -298,8 +298,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }, 1500);
                 } else {
+                    // No token: account is pending superadmin approval
+                    var successText = signupSuccess && signupSuccess.querySelector('span:last-child');
+                    if (successText) successText.textContent = data.message || 'Registration successful. Your account is pending approval by an administrator. You will be able to log in once approved.';
                     if (signupSuccess) signupSuccess.classList.remove('hidden');
-                    setTimeout(function() { showLogin(); }, 2000);
+                    setTimeout(function() { showLogin(); }, 3500);
                 }
             } catch (err) {
                 if (loadingScreen) loadingScreen.classList.remove('visible');
