@@ -156,9 +156,6 @@ async function ensureAccountManagerAndPicTables() {
   }
 }
 
-// Google Calendar OAuth Service Integration
-const GoogleCalendarOAuthService = require('./google_calendar_oauth_service');
-
 // Import NotificationService from the notifications router
 const { NotificationService } = require('./backend/routes/notifications');
 
@@ -4174,235 +4171,31 @@ app.post('/api/opportunities/bulk-update-excel', authenticateToken, upload.singl
   }
 });
 
-// === GOOGLE CALENDAR OAUTH ENDPOINTS ===
-const calendarService = new GoogleCalendarOAuthService();
-const calendarServiceInitialized = calendarService.initialize();
-
-// Start OAuth flow for Google Calendar
-app.get('/auth/google/calendar', authenticateToken, (req, res) => {
-  try {
-    console.log(`[OAUTH] Starting calendar authorization for user: ${req.user.username}`);
-    
-    if (!calendarServiceInitialized) {
-      return res.status(503).json({
-        error: 'Google Calendar service not configured',
-        message: 'Google OAuth credentials not set up. Please configure GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in environment variables.',
-        setupRequired: true
-      });
-    }
-    
-    // Include user ID in state for callback processing
-    const state = JSON.stringify({ 
-      userId: req.user.id, 
-      username: req.user.username || req.user.name || req.user.email
-    });
-    
-    const authUrl = calendarService.generateAuthUrl(state);
-    
-    res.json({
-      success: true,
-      authUrl: authUrl,
-      message: 'Redirect user to this URL to authorize calendar access'
-    });
-
-  } catch (error) {
-    console.error('[OAUTH] Failed to generate auth URL:', error.message);
-    res.status(500).json({
-      error: 'Failed to start OAuth flow',
-      message: error.message,
-      setupRequired: !calendarServiceInitialized
-    });
-  }
+// Google Calendar / Google connection removed - stub responses so existing UI does not break
+app.get('/auth/google/calendar', authenticateToken, (_req, res) => {
+  res.status(410).json({ error: 'Google connection removed', setupRequired: false });
 });
-
-// Handle OAuth callback from Google
-app.get('/auth/google/calendar/callback', async (req, res) => {
-  try {
-    const { code, state, error } = req.query;
-    
-    if (error) {
-      console.error('[OAUTH] Authorization denied:', error);
-      return res.redirect('/?calendar_auth=denied');
-    }
-
-    if (!code) {
-      console.error('[OAUTH] No authorization code received');
-      return res.redirect('/?calendar_auth=error');
-    }
-
-    // Parse state to get user info
-    let userInfo;
-    try {
-      userInfo = JSON.parse(state);
-    } catch (parseError) {
-      console.error('[OAUTH] Invalid state parameter:', parseError.message);
-      return res.redirect('/?calendar_auth=error');
-    }
-
-    console.log(`[OAUTH] Processing callback for user: ${userInfo.username}`);
-
-    // Handle the OAuth callback with extra error protection
-    let result;
-    try {
-      result = await calendarService.handleOAuthCallback(
-        code, 
-        userInfo.userId, 
-        userInfo.username
-      );
-    } catch (callbackError) {
-      console.error('[OAUTH] OAuth callback threw error:', callbackError.message);
-      return res.redirect('/?calendar_auth=error');
-    }
-
-    if (result && result.success) {
-      console.log(`[OAUTH] Successfully connected calendar for: ${userInfo.username}`);
-      res.redirect('/?calendar_auth=success&email=' + encodeURIComponent(result.googleEmail));
-    } else {
-      console.error('[OAUTH] Failed to connect calendar:', result?.error || 'Unknown error');
-      res.redirect('/?calendar_auth=error');
-    }
-
-  } catch (error) {
-    console.error('[OAUTH] OAuth callback failed:', error.message);
-    res.redirect('/?calendar_auth=error');
-  }
+app.get('/auth/google/calendar/callback', (_req, res) => {
+  res.redirect('/?calendar_auth=disabled');
 });
-
-// Get user's calendar connection status
-app.get('/api/calendar/status', authenticateToken, async (req, res) => {
-  try {
-    console.log(`[API] Getting calendar status for user: ${req.user.username}`);
-    
-    if (!calendarServiceInitialized) {
-      return res.json({
-        success: true,
-        connected: false,
-        message: 'Google Calendar service not configured',
-        setupRequired: true
-      });
-    }
-    
-    const status = await calendarService.getUserCalendarStatus(req.user.id);
-    
-    res.json({
-      success: true,
-      ...status
-    });
-
-  } catch (error) {
-    console.error('[API] Failed to get calendar status:', error.message);
-    res.status(500).json({
-      error: 'Failed to get calendar status',
-      message: error.message
-    });
-  }
+app.get('/api/calendar/status', authenticateToken, (_req, res) => {
+  res.json({ success: true, connected: false, message: 'Google Calendar integration has been removed.' });
 });
-
-// Manually trigger calendar sync for current user
-app.post('/api/calendar/sync', authenticateToken, async (req, res) => {
-  try {
-    const { timeMin, timeMax } = req.body;
-    
-    console.log(`[API] Manual calendar sync requested by user: ${req.user.username}`);
-    
-    const syncResults = await calendarService.syncUserCalendarEvents(
-      req.user.id, 
-      timeMin, 
-      timeMax
-    );
-    
-    res.json({
-      success: true,
-      message: 'Calendar sync completed',
-      results: syncResults
-    });
-
-  } catch (error) {
-    console.error('[API] Calendar sync failed:', error.message);
-    res.status(500).json({
-      error: 'Calendar sync failed',
-      message: error.message
-    });
-  }
+app.post('/api/calendar/sync', authenticateToken, (_req, res) => {
+  res.status(410).json({ error: 'Google Calendar integration has been removed.' });
 });
-
-// Disconnect user's calendar
-app.delete('/api/calendar/connection', authenticateToken, async (req, res) => {
-  try {
-    console.log(`[API] Disconnecting calendar for user: ${req.user.username}`);
-    
-    const result = await calendarService.disconnectUserCalendar(req.user.id);
-    
-    res.json({
-      success: true,
-      message: 'Calendar disconnected successfully'
-    });
-
-  } catch (error) {
-    console.error('[API] Failed to disconnect calendar:', error.message);
-    res.status(500).json({
-      error: 'Failed to disconnect calendar',
-      message: error.message
-    });
-  }
+app.delete('/api/calendar/connection', authenticateToken, (_req, res) => {
+  res.json({ success: true, message: 'Calendar disconnected.' });
 });
-
-// Get weekly schedule including calendar events
-app.get('/api/schedule/combined', authenticateToken, async (req, res) => {
-  try {
-    const { week_start } = req.query;
-    
-    if (!week_start) {
-      return res.status(400).json({
-        error: 'week_start parameter is required',
-        message: 'Provide week_start in YYYY-MM-DD format'
-      });
-    }
-
-    console.log(`[API] Getting combined schedule for week: ${week_start}, user: ${req.user.username}`);
-    
-    const scheduleData = await calendarService.getWeeklyScheduleWithCalendar(
-      week_start, 
-      req.user.id
-    );
-    
-    res.json({
-      success: true,
-      ...scheduleData
-    });
-
-  } catch (error) {
-    console.error('[API] Failed to get combined schedule:', error.message);
-    res.status(500).json({
-      error: 'Failed to get combined schedule',
-      message: error.message
-    });
+app.get('/api/schedule/combined', authenticateToken, (req, res) => {
+  if (!req.query.week_start) {
+    return res.status(400).json({ error: 'week_start parameter is required' });
   }
+  res.json({ success: true, events: [], schedule: [], message: 'Google Calendar integration has been removed.' });
 });
-
-// Admin endpoint: Bulk sync all users (optional)
-app.post('/api/admin/calendar/bulk-sync', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    console.log(`[ADMIN] Bulk calendar sync initiated by: ${req.user.username}`);
-    
-    const syncResults = await calendarService.bulkSyncAllUsers();
-    
-    res.json({
-      success: true,
-      message: 'Bulk calendar sync completed',
-      results: syncResults
-    });
-
-  } catch (error) {
-    console.error('[ADMIN] Bulk calendar sync failed:', error.message);
-    res.status(500).json({
-      error: 'Bulk calendar sync failed',
-      message: error.message
-    });
-  }
+app.post('/api/admin/calendar/bulk-sync', authenticateToken, requireAdmin, (_req, res) => {
+  res.status(410).json({ error: 'Google Calendar integration has been removed.' });
 });
-
-// === END GOOGLE CALENDAR OAUTH ENDPOINTS ===
 
 // --- PRODUCTION MIGRATION ENDPOINT ---
 app.post('/api/admin/run-last-excel-sync-migration', authenticateToken, async (req, res) => {

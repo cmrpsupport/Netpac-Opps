@@ -87,6 +87,25 @@
 
 ---
 
+## What to add in Render Environment
+
+In **Render Dashboard → your service → Environment**, add:
+
+| Variable | Required | Example / notes |
+|----------|----------|------------------|
+| **NODE_ENV** | Yes | `production` (Blueprint may set this) |
+| **SQLITECLOUD_URL** | Yes | `sqlitecloud://xxx.g4.sqlite.cloud:8860/auth.sqlitecloud?apikey=...` from SQLite Cloud dashboard |
+| **JWT_SECRET** | Yes | Long random string (e.g. `openssl rand -hex 32`) |
+| **FRONTEND_URL** | Yes (if CORS needed) | `https://netpac-opps.onrender.com` (your app URL, no trailing slash) |
+| **PORT** | No | Do **not** set; Render sets it automatically |
+| **NETPACIFIC_TENANT_CODE** | No | `default` (or your tenant code) |
+| **PROJECT_CODE_PREFIX** | No | `CMRP` (project code prefix) |
+| **ENABLE_AUTO_SNAPSHOTS** | No | `true` to enable snapshot automation |
+
+Minimum for a working deploy: **NODE_ENV**, **SQLITECLOUD_URL**, **JWT_SECRET**, and **FRONTEND_URL** (if the frontend is on a different origin or you use CORS).
+
+---
+
 ## Quick reference
 
 | Item | Value |
