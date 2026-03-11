@@ -11,7 +11,7 @@
 <body class="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
     <div class="simple-header">
         <div class="title-group">
-            <img id="cmrpLogo" src="assets/netpacific-logo.jpg" alt="NET PACIFIC" style="height:2.2rem;width:auto;"/>
+            <img id="cmrpLogo" src="assets/netpacific-logo.png" alt="NET PACIFIC" style="height:2.2rem;width:auto;"/>
             <span class="subtitle">Theme Toggle Test - CORRECTED REQUIREMENTS</span>
         </div>
         <nav class="flex gap-2">
@@ -129,7 +129,7 @@
             // CORRECTED: Always use light logo (header is always dark)
             const logo = document.getElementById('cmrpLogo');
             if (logo) {
-                logo.src = 'assets/netpacific-logo.jpg';
+                logo.src = 'assets/netpacific-logo.png';
             }
             
             updateStatus();
@@ -153,7 +153,7 @@
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const savedTheme = localStorage.getItem('theme') || 'light';
             applyTheme(savedTheme);
             
             // Theme toggle button
@@ -177,7 +177,7 @@
         // Sync theme changes across tabs/pages
         window.addEventListener('storage', function(e) {
             if (e.key === 'theme') {
-                const newTheme = e.newValue || 'dark';
+                const newTheme = e.newValue || 'light';
                 applyTheme(newTheme);
             }
         });

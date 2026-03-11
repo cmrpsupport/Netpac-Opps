@@ -126,8 +126,21 @@ async function ensureAccountManagerAndPicTables() {
         remarks_comments TEXT, uid TEXT PRIMARY KEY, forecast_date TEXT, google_drive_folder_id TEXT, google_drive_folder_url TEXT,
         google_drive_folder_name TEXT, drive_folder_created_at TEXT, drive_folder_created_by TEXT, proposal_status TEXT, revision TEXT
       )`);
-      try { await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
-      try { await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER'); } catch (e) { if (!e.message.includes('duplicate')) throw e; }
+      await db.query("CREATE TABLE IF NOT EXISTS audit_trail (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, user_name TEXT, user_email TEXT, action TEXT NOT NULL, category TEXT NOT NULL, target_type TEXT, target_id TEXT, details TEXT, ip_address TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
+      try { await db.query('CREATE INDEX IF NOT EXISTS idx_audit_trail_created ON audit_trail(created_at)'); } catch (e) { /* ignore */ }
+      try { await db.query('CREATE INDEX IF NOT EXISTS idx_audit_trail_user ON audit_trail(user_id)'); } catch (e) { /* ignore */ }
+      try { await db.query('CREATE INDEX IF NOT EXISTS idx_audit_trail_category ON audit_trail(category)'); } catch (e) { /* ignore */ }
+      // Only add columns if they don't already exist (avoids noisy SQLite Cloud driver-level error logs)
+      try {
+        const tableInfo = await db.query("PRAGMA table_info(users)");
+        const existingCols = (tableInfo.rows || []).map(r => r.name);
+        if (!existingCols.includes('account_manager_id')) {
+          await db.query('ALTER TABLE users ADD COLUMN account_manager_id INTEGER');
+        }
+        if (!existingCols.includes('pic_id')) {
+          await db.query('ALTER TABLE users ADD COLUMN pic_id INTEGER');
+        }
+      } catch (e) { /* ignore - columns may already exist */ }
       // Ensure UNIQUE constraint exists on opportunity_revisions for ON CONFLICT support
       try { await db.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_opp_rev_uid_num ON opportunity_revisions(opportunity_uid, revision_number)'); } catch (e) { /* ignore */ }
     } else if (dbType === 'postgresql') {
@@ -149,10 +162,28 @@ async function ensureAccountManagerAndPicTables() {
       )`);
       try { await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS account_manager_id INTEGER'); } catch (e) { /* ignore */ }
       try { await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS pic_id INTEGER'); } catch (e) { /* ignore */ }
+      await db.query("CREATE TABLE IF NOT EXISTS audit_trail (id SERIAL PRIMARY KEY, user_id TEXT, user_name TEXT, user_email TEXT, action TEXT NOT NULL, category TEXT NOT NULL, target_type TEXT, target_id TEXT, details TEXT, ip_address TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+      try { await db.query('CREATE INDEX IF NOT EXISTS idx_audit_trail_created ON audit_trail(created_at)'); } catch (e) { /* ignore */ }
+      try { await db.query('CREATE INDEX IF NOT EXISTS idx_audit_trail_user ON audit_trail(user_id)'); } catch (e) { /* ignore */ }
+      try { await db.query('CREATE INDEX IF NOT EXISTS idx_audit_trail_category ON audit_trail(category)'); } catch (e) { /* ignore */ }
     }
   } catch (err) {
     console.warn('Account managers/PIC tables migration warning:', err.message);
     console.warn('Migration stack:', err.stack);
+  }
+}
+
+// --- Audit Trail Helper ---
+async function logAudit(req, { action, category, targetType, targetId, details }) {
+  try {
+    const user = req.user || {};
+    const ip = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '';
+    await db.query(
+      'INSERT INTO audit_trail (user_id, user_name, user_email, action, category, target_type, target_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [user.id || null, user.name || null, user.email || null, action, category, targetType || null, targetId || null, typeof details === 'string' ? details : JSON.stringify(details || {}), ip]
+    );
+  } catch (e) {
+    console.warn('[AUDIT] Failed to log:', e.message);
   }
 }
 
@@ -229,6 +260,7 @@ app.post('/api/login', express.json(), async (req, res) => {
             }, JWT_SECRET, { expiresIn: '24h' });
 
             console.log(`[DEV MODE] Token created with accountType: ${user.account_type}`);
+            logAudit(req, { action: 'Login', category: 'AUTH', targetType: 'user', targetId: user.id, details: { email: user.email, mode: 'dev' } });
 
             return res.json({ success: true, token });
         } else {
@@ -283,8 +315,8 @@ app.post('/api/login', express.json(), async (req, res) => {
 
             // Log successful login
             const now = new Date().toISOString();
-            const logMsg = `[${now}] User logged in: ${user.email} (ID: ${user.id})`;
-            console.log(logMsg);
+            console.log(`[${now}] User logged in: ${user.email} (ID: ${user.id})`);
+            logAudit(req, { action: 'Login', category: 'AUTH', targetType: 'user', targetId: user.id, details: { email: user.email } });
 
             res.json({ success: true, token });
         }
@@ -2662,7 +2694,8 @@ app.post('/api/opportunities', authenticateToken,
         [createdOpp.uid, revNumber, changed_by, JSON.stringify(snapshotFields), JSON.stringify(snapshotFields)]
       );
       console.log(`Revision ${revNumber} created for new opportunity ${createdOpp.uid}`);
-      
+      logAudit(req, { action: 'Create Opportunity', category: 'OPPORTUNITY', targetType: 'opportunity', targetId: createdOpp.uid, details: { projectName: createdOpp.project_name, client: createdOpp.client, status: createdOpp.status } });
+
       // Create notifications for assignments in new opportunities (only when pool has .query, e.g. pg)
       try {
         const assignmentFields = ['pic', 'bom', 'account_mgr'];
@@ -2753,6 +2786,17 @@ app.put('/api/opportunities/:uid', authenticateToken,
       if (value.length > 0) return value.length >= 2 && value.length <= 200;
       return true;
     }).escape(),
+    body('project_code').optional().custom(async (value, { req }) => {
+      if (value == null || (typeof value !== 'string') || value.trim() === '') return true;
+      const existingProject = await db.query(
+        'SELECT uid FROM opps_monitoring WHERE project_code = ? AND uid != ?',
+        [value.trim(), req.params.uid]
+      );
+      if (existingProject && Array.isArray(existingProject.rows) && existingProject.rows.length > 0) {
+        throw new Error(`Project code "${value}" already exists`);
+      }
+      return true;
+    }),
     body('client').optional().custom(value => {
       if (value == null || typeof value !== 'string') return true;
       if (value.length > 0) return value.length >= 2 && value.length <= 200;
@@ -2998,6 +3042,8 @@ app.put('/api/opportunities/:uid', authenticateToken,
         console.error('Error creating assignment notifications:', notificationError);
       }
       
+      logAudit(req, { action: 'Update Opportunity', category: 'OPPORTUNITY', targetType: 'opportunity', targetId: uid, details: { projectName: updatedOpp.project_name, changedFields: actualChangedFields } });
+
       // Return success response with updated data
       res.json({
           success: true,
@@ -3089,7 +3135,7 @@ app.get('/update_password.html', (req, res) => {
 app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT u.id, u.email, u.name, u.is_verified, u.roles, u.account_type, u.last_login_at, u.account_manager_id, am.name AS account_manager_name, u.pic_id, p.name AS pic_name FROM users u LEFT JOIN account_managers am ON am.id = u.account_manager_id LEFT JOIN pics p ON p.id = u.pic_id ORDER BY u.email ASC'
+      'SELECT u.id, u.email, u.name, u.is_verified, u.roles, u.account_type, u.last_login_at, u.account_manager_id, am.name AS account_manager_name, u.pic_id, p.name AS pic_name FROM users u LEFT JOIN users am ON am.id = u.account_manager_id LEFT JOIN users p ON p.id = u.pic_id ORDER BY u.email ASC'
     );
     const users = (result.rows || []).map(u => ({
       _id: u.id,
@@ -3142,6 +3188,7 @@ app.post('/api/users/:id/approve', authenticateToken, requireAdmin, async (req, 
       return res.status(404).json({ error: 'User not found or already approved.' });
     }
     console.log(`[Admin] User approved: ${id}`);
+    logAudit(req, { action: 'Approve User', category: 'USER_MGMT', targetType: 'user', targetId: id });
     res.json({ success: true, message: 'User approved. They can now log in.' });
   } catch (err) {
     console.error('Error approving user:', err);
@@ -3153,7 +3200,7 @@ app.post('/api/users/:id/approve', authenticateToken, requireAdmin, async (req, 
 app.get('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT u.id, u.email, u.name, u.is_verified, u.roles, u.account_type, u.account_manager_id, am.name AS account_manager_name, u.pic_id, p.name AS pic_name FROM users u LEFT JOIN account_managers am ON am.id = u.account_manager_id LEFT JOIN pics p ON p.id = u.pic_id WHERE u.id = ?',
+      'SELECT u.id, u.email, u.name, u.is_verified, u.roles, u.account_type, u.account_manager_id, am.name AS account_manager_name, u.pic_id, p.name AS pic_name FROM users u LEFT JOIN users am ON am.id = u.account_manager_id LEFT JOIN users p ON p.id = u.pic_id WHERE u.id = ?',
       [req.params.id]
     );
     if (!result.rows || result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
@@ -3164,7 +3211,7 @@ app.get('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
       username: u.name,
       name: u.name,
       email: u.email,
-      roles: Array.isArray(u.roles) ? u.roles : [],
+      roles: (() => { try { const r = typeof u.roles === 'string' ? JSON.parse(u.roles) : u.roles; return Array.isArray(r) ? r : (r ? [r] : []); } catch { return u.roles ? [u.roles] : []; } })(),
       accountType: u.account_type || 'User',
       is_verified: u.is_verified,
       accountManagerId: u.account_manager_id,
@@ -3185,9 +3232,7 @@ app.post('/api/users', authenticateToken, requireAdmin,
     body('password').isLength({ min: 8, max: 100 }).withMessage('Password must be 8-100 characters'), // Required for new users
     body('roles').isArray({ min: 1 }).withMessage('At least one role is required'),
     body('roles.*').isString().trim().escape().withMessage('Role must be a valid string'),
-    body('accountType').optional().isIn(['Admin', 'User', 'System Admin']).withMessage('Account type must be Admin, User, or System Admin'),
-    body('accountManagerId').optional({ checkFalsy: true }).isInt().toInt(),
-    body('picId').optional({ checkFalsy: true }).isInt().toInt()
+    body('accountType').optional().isIn(['Admin', 'User', 'System Admin']).withMessage('Account type must be Admin, User, or System Admin')
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -3195,29 +3240,38 @@ app.post('/api/users', authenticateToken, requireAdmin,
       return res.status(400).json({ error: 'Invalid input', details: errors.array() });
     }
     try {
-      const { username, name, email, password, roles, accountType, accountManagerId, picId } = req.body;
+      const { username, name, email, password, roles, accountType } = req.body;
+      const accountManagerId = req.body.accountManagerId || null;
+      const picId = req.body.picId || null;
       if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required.' });
       }
-      // Check for duplicate email
-      const check = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+      // Check for duplicate email (case-insensitive)
+      const emailLower = email.toLowerCase().trim();
+      const check = await db.query('SELECT id FROM users WHERE LOWER(email) = ?', [emailLower]);
       if (check.rows.length > 0) {
-        return res.status(409).json({ message: 'Email already registered.' });
+        return res.status(409).json({ error: 'Email already registered.' });
       }
       const password_hash = await bcrypt.hash(password, 10);
       const id = uuidv4();
       const finalName = name || username || null;
+      // Serialize roles as JSON string for SQLite compatibility
+      const rolesArr = Array.isArray(roles) ? roles : (roles ? [roles] : []);
+      const rolesJson = JSON.stringify(rolesArr);
+      // Get tenant_id from the authenticated user's token
+      const tenantId = req.user?.tenantId || 'default';
       await db.query(
-        'INSERT INTO users (id, email, password_hash, name, is_verified, roles, account_type, account_manager_id, pic_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [id, email, password_hash, finalName, true, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', accountManagerId || null, picId || null]
+        'INSERT INTO users (id, tenant_id, email, password_hash, name, is_verified, roles, account_type, account_manager_id, pic_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [id, tenantId, emailLower, password_hash, finalName, 1, rolesJson, accountType || 'User', accountManagerId || null, picId || null]
       );
+      logAudit(req, { action: 'Create User', category: 'USER_MGMT', targetType: 'user', targetId: id, details: { name: finalName, email: emailLower, roles: rolesArr, accountType: accountType || 'User' } });
       res.status(201).json({
         _id: id,
         id: id,
         username: finalName,
         name: finalName,
-        email,
-        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []),
+        email: emailLower,
+        roles: rolesArr,
         accountType: accountType || 'User',
         accountManagerId: accountManagerId || null,
         picId: picId || null,
@@ -3225,7 +3279,7 @@ app.post('/api/users', authenticateToken, requireAdmin,
       });
     } catch (err) {
       console.error('Error creating user:', err);
-      res.status(500).json({ error: 'Failed to create user.' });
+      res.status(500).json({ error: 'Failed to create user: ' + (err.message || 'Unknown error') });
     }
   }
 );
@@ -3237,9 +3291,7 @@ app.put('/api/users/:id', authenticateToken, requireAdmin,
     body('password').optional().isLength({ min: 8, max: 100 }),
     body('roles').isArray({ min: 1 }),
     body('roles.*').isString().trim().escape(),
-    body('accountType').optional().isIn(['Admin', 'User', 'System Admin']),
-    body('accountManagerId').optional({ checkFalsy: true }).isInt().toInt(),
-    body('picId').optional({ checkFalsy: true }).isInt().toInt()
+    body('accountType').optional().isIn(['Admin', 'User', 'System Admin'])
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -3247,34 +3299,44 @@ app.put('/api/users/:id', authenticateToken, requireAdmin,
       return res.status(400).json({ error: 'Invalid input', details: errors.array() });
     }
     try {
-      const { username, name, email, password, roles, accountType, accountManagerId, picId } = req.body;
+      const { username, name, email, password, roles, accountType } = req.body;
+      const accountManagerId = req.body.accountManagerId || null;
+      const picId = req.body.picId || null;
       const id = req.params.id;
       const finalName = name || username || null;
+      // Serialize roles as JSON string for SQLite compatibility
+      const rolesArr = Array.isArray(roles) ? roles : (roles ? [roles] : []);
+      const rolesJson = JSON.stringify(rolesArr);
       let updateSql = 'UPDATE users SET name=?, email=?, roles=?, account_type=?, account_manager_id=?, pic_id=?';
-      let params = [finalName, email, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', accountManagerId || null, picId || null, id];
+      let params = [finalName, email, rolesJson, accountType || 'User', accountManagerId, picId, id];
       if (password) {
         const password_hash = await bcrypt.hash(password, 10);
         updateSql = 'UPDATE users SET name=?, email=?, password_hash=?, roles=?, account_type=?, account_manager_id=?, pic_id=? WHERE id=?';
-        params = [finalName, email, password_hash, Array.isArray(roles) ? roles : (roles ? [roles] : []), accountType || 'User', accountManagerId || null, picId || null, id];
+        params = [finalName, email, password_hash, rolesJson, accountType || 'User', accountManagerId, picId, id];
       } else {
         updateSql += ' WHERE id=?';
       }
+      console.log('[PUT /api/users] Updating user', id, 'SQL:', updateSql, 'params:', params);
       const result = await db.query(updateSql, params);
-      if (result.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+      console.log('[PUT /api/users] Result:', JSON.stringify(result));
+      // Verify user exists by re-fetching (rowCount can be unreliable with some SQLite drivers)
+      const verify = await db.query('SELECT id FROM users WHERE id = ?', [id]);
+      if (!verify.rows || verify.rows.length === 0) return res.status(404).json({ message: 'User not found' });
+      logAudit(req, { action: 'Update User', category: 'USER_MGMT', targetType: 'user', targetId: id, details: { name: finalName, email, roles: rolesArr, accountType: accountType || 'User' } });
       res.json({
         _id: id,
         id: id,
         username: finalName,
         name: finalName,
         email,
-        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []),
+        roles: rolesArr,
         accountType: accountType || 'User',
-        accountManagerId: accountManagerId || null,
-        picId: picId || null
+        accountManagerId: accountManagerId != null ? accountManagerId : null,
+        picId: picId != null ? picId : null
       });
     } catch (err) {
       console.error('Error updating user:', err);
-      res.status(500).json({ error: 'Failed to update user.' });
+      res.status(500).json({ error: 'Failed to update user: ' + (err.message || 'Unknown error') });
     }
   }
 );
@@ -3283,8 +3345,10 @@ app.put('/api/users/:id', authenticateToken, requireAdmin,
 app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
+    const userInfo = await db.query('SELECT name, email FROM users WHERE id = ?', [id]);
     const result = await db.query('DELETE FROM users WHERE id = ?', [id]);
     if (result.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+    logAudit(req, { action: 'Delete User', category: 'USER_MGMT', targetType: 'user', targetId: id, details: { name: userInfo.rows?.[0]?.name, email: userInfo.rows?.[0]?.email } });
     res.status(204).send();
   } catch (err) {
     console.error('Error deleting user:', err);
@@ -3292,16 +3356,23 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
   }
 });
 
-// --- Account Managers API (master list; tag users to one when they have an account) ---
+// --- Account Managers API (populated from users with Account Manager role) ---
 app.get('/api/account-managers', authenticateToken, async (req, res) => {
   try {
+    // Pull Account Managers from users table: users whose roles include "Account Manager"
     const result = await db.query(
-      'SELECT id, name, email, is_active, created_at, updated_at FROM account_managers ORDER BY name ASC'
+      "SELECT id, name, email, 1 as is_active FROM users WHERE roles LIKE '%Account Manager%' AND is_verified = 1 ORDER BY name ASC"
     );
     res.json(result.rows || []);
   } catch (err) {
-    console.error('Error fetching account managers:', err);
-    res.json([]);
+    console.error('Error fetching account managers from users:', err);
+    // Fallback to legacy account_managers table
+    try {
+      const fallback = await db.query('SELECT id, name, email, is_active FROM account_managers ORDER BY name ASC');
+      res.json(fallback.rows || []);
+    } catch (e) {
+      res.json([]);
+    }
   }
 });
 
@@ -3378,16 +3449,23 @@ app.delete('/api/account-managers/:id', authenticateToken, requireAdmin, async (
   }
 });
 
-// --- PIC (Person in Charge) API ---
+// --- PIC (Person in Charge) API (populated from users with PIC role) ---
 app.get('/api/pics', authenticateToken, async (req, res) => {
   try {
+    // Pull PICs from users table: users whose roles include "PIC"
     const result = await db.query(
-      'SELECT id, name, email, is_active, created_at, updated_at FROM pics ORDER BY name ASC'
+      "SELECT id, name, email, 1 as is_active FROM users WHERE roles LIKE '%PIC%' AND is_verified = 1 AND name IS NOT NULL AND name != '' ORDER BY name ASC"
     );
     res.json(result.rows || []);
   } catch (err) {
-    console.error('Error fetching pics:', err);
-    res.json([]);
+    console.error('Error fetching PICs from users:', err);
+    // Fallback to legacy pics table
+    try {
+      const fallback = await db.query('SELECT id, name, email, is_active FROM pics ORDER BY name ASC');
+      res.json(fallback.rows || []);
+    } catch (e) {
+      res.json([]);
+    }
   }
 });
 
@@ -3858,6 +3936,45 @@ app.post('/api/audit-log-page-access', authenticateToken, requireAdmin, (req, re
     console.error('Failed to write to audit.log:', err);
   }
   res.json({ success: true });
+});
+
+// --- Audit Trail API (superadmin only) ---
+app.get('/api/audit-trail', authenticateToken, (req, res, next) => {
+  if (!req.user || req.user.accountType !== 'System Admin') {
+    return res.status(403).json({ error: 'Superadmin access required.' });
+  }
+  next();
+}, async (req, res) => {
+  try {
+    const { category, userId, startDate, endDate, search, limit: lim, offset: off } = req.query;
+    let sql = 'SELECT * FROM audit_trail WHERE 1=1';
+    const params = [];
+    if (category) { sql += ' AND category = ?'; params.push(category); }
+    if (userId) { sql += ' AND user_id = ?'; params.push(userId); }
+    if (startDate) { sql += ' AND created_at >= ?'; params.push(startDate); }
+    if (endDate) { sql += ' AND created_at <= ?'; params.push(endDate + 'T23:59:59'); }
+    if (search) { sql += ' AND (action LIKE ? OR details LIKE ? OR user_name LIKE ?)'; const s = '%' + search + '%'; params.push(s, s, s); }
+    sql += ' ORDER BY created_at DESC';
+    const pageLimit = Math.min(parseInt(lim) || 100, 500);
+    const pageOffset = parseInt(off) || 0;
+    sql += ' LIMIT ? OFFSET ?';
+    params.push(pageLimit, pageOffset);
+    const result = await db.query(sql, params);
+    // Get total count for pagination
+    let countSql = 'SELECT COUNT(*) as total FROM audit_trail WHERE 1=1';
+    const countParams = [];
+    if (category) { countSql += ' AND category = ?'; countParams.push(category); }
+    if (userId) { countSql += ' AND user_id = ?'; countParams.push(userId); }
+    if (startDate) { countSql += ' AND created_at >= ?'; countParams.push(startDate); }
+    if (endDate) { countSql += ' AND created_at <= ?'; countParams.push(endDate + 'T23:59:59'); }
+    if (search) { countSql += ' AND (action LIKE ? OR details LIKE ? OR user_name LIKE ?)'; const s = '%' + search + '%'; countParams.push(s, s, s); }
+    const countResult = await db.query(countSql, countParams);
+    const total = countResult.rows?.[0]?.total || countResult.rows?.[0]?.['COUNT(*)'] || 0;
+    res.json({ logs: result.rows || [], total, limit: pageLimit, offset: pageOffset });
+  } catch (err) {
+    console.error('Error fetching audit trail:', err);
+    res.status(500).json({ error: 'Failed to fetch audit trail.' });
+  }
 });
 
 // --- Opps Monitoring Import/Export API ---
@@ -4425,6 +4542,7 @@ app.delete('/api/opportunities/:uid', authenticateToken, async (req, res) => {
       await query('DELETE FROM opps_monitoring WHERE uid = ?', [uid]);
     });
 
+    logAudit(req, { action: 'Delete Opportunity', category: 'OPPORTUNITY', targetType: 'opportunity', targetId: uid });
     res.json({ success: true, message: 'Opportunity deleted successfully' });
 
   } catch (error) {

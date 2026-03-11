@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Trail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/netpacific-logo.png">
+    <link rel="alternate icon" href="assets/netpacific-logo.png">
+    <link rel="stylesheet" href="styles.css?v=1750741234">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <script src="config.js"></script>
+    <style>
+        .audit-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .audit-table th { position: sticky; top: 0; z-index: 2; background: var(--bg-card, #fff); border-bottom: 2px solid var(--border-table, #e5e7eb); padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--text-secondary, #6b7280); }
+        .audit-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border-table, #e5e7eb); vertical-align: top; }
+        .audit-table tr:hover { background: var(--bg-hover, #f9fafb); }
+        .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .badge-auth { background: #dbeafe; color: #1e40af; }
+        .badge-user { background: #fef3c7; color: #92400e; }
+        .badge-opp { background: #d1fae5; color: #065f46; }
+        .badge-data { background: #ede9fe; color: #5b21b6; }
+        .dark .badge-auth { background: #1e3a5f; color: #93c5fd; }
+        .dark .badge-user { background: #78350f; color: #fde68a; }
+        .dark .badge-opp { background: #064e3b; color: #6ee7b7; }
+        .dark .badge-data { background: #4c1d95; color: #c4b5fd; }
+        .filter-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .filter-bar select, .filter-bar input { font-size: 0.85rem; padding: 0.375rem 0.5rem; border: 1px solid var(--border-table, #d1d5db); border-radius: 0.375rem; background: var(--bg-card, #fff); color: var(--text-primary, #111); }
+        .pagination { display: flex; gap: 0.5rem; align-items: center; justify-content: center; margin-top: 1rem; }
+        .pagination button { padding: 0.375rem 0.75rem; border: 1px solid var(--border-table, #d1d5db); border-radius: 0.375rem; background: var(--bg-card, #fff); color: var(--text-primary, #111); cursor: pointer; font-size: 0.85rem; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination button:hover:not(:disabled) { background: var(--bg-hover, #f3f4f6); }
+        .details-json { max-width: 300px; word-break: break-word; font-size: 0.75rem; color: var(--text-secondary, #6b7280); }
+    </style>
+</head>
+<body>
+    <div id="topbar-container"></div>
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+        <main class="main-content" style="padding: 1.5rem;">
+            <!-- Access Denied Banner -->
+            <div id="accessDenied" style="display:none;" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <strong>Access Denied.</strong> Superadmin privileges required.
+            </div>
+
+            <div id="auditContent">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <h1 class="text-xl font-bold flex items-center gap-2">
+                        <span class="material-icons">history</span> Audit Trail
+                    </h1>
+                    <span id="rowCount" class="text-sm text-gray-500"></span>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-bar">
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="AUTH">Auth</option>
+                        <option value="USER_MGMT">User Management</option>
+                        <option value="OPPORTUNITY">Opportunity</option>
+                        <option value="DATA">Data</option>
+                    </select>
+                    <select id="userFilter">
+                        <option value="">All Users</option>
+                    </select>
+                    <input type="date" id="startDate" title="From date">
+                    <input type="date" id="endDate" title="To date">
+                    <input type="text" id="searchInput" placeholder="Search actions..." style="min-width:180px;">
+                    <button id="applyFilters" class="action-button" style="padding:0.375rem 0.75rem; font-size:0.85rem;">
+                        <span class="material-icons" style="font-size:1rem;">filter_list</span> Filter
+                    </button>
+                    <button id="clearFilters" style="padding:0.375rem 0.75rem; font-size:0.85rem; border:1px solid #d1d5db; border-radius:0.375rem; cursor:pointer;">
+                        Clear
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div style="overflow-x:auto; max-height:calc(100vh - 260px); overflow-y:auto; border:1px solid var(--border-table, #e5e7eb); border-radius:0.5rem;">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Category</th>
+                                <th>Action</th>
+                                <th>Target</th>
+                                <th>Details</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <tr><td colspan="7" class="text-center p-8 text-gray-500">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button id="prevPage" disabled><span class="material-icons" style="font-size:1rem;">chevron_left</span> Prev</button>
+                    <span id="pageInfo" class="text-sm text-gray-500">Page 1</span>
+                    <button id="nextPage">Next <span class="material-icons" style="font-size:1rem;">chevron_right</span></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="shared-navigation.js?v=1750741456"></script>
+    <script>
+    const PAGE_SIZE = 50;
+    let currentPage = 0;
+    let totalRecords = 0;
+
+    function getApiUrl(path) {
+        return (window.APP_CONFIG?.API_BASE_URL || '') + path;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function categoryBadge(cat) {
+        const map = { AUTH: 'badge-auth', USER_MGMT: 'badge-user', OPPORTUNITY: 'badge-opp', DATA: 'badge-data' };
+        const label = { AUTH: 'Auth', USER_MGMT: 'User Mgmt', OPPORTUNITY: 'Opportunity', DATA: 'Data' };
+        return `<span class="badge ${map[cat] || 'badge-data'}">${escapeHtml(label[cat] || cat)}</span>`;
+    }
+
+    function formatTime(iso) {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            const now = new Date();
+            const diffMs = now - d;
+            const diffMin = Math.floor(diffMs / 60000);
+            const diffHr = Math.floor(diffMs / 3600000);
+            const diffDay = Math.floor(diffMs / 86400000);
+            let relative;
+            if (diffMin < 1) relative = 'Just now';
+            else if (diffMin < 60) relative = `${diffMin}m ago`;
+            else if (diffHr < 24) relative = `${diffHr}h ago`;
+            else if (diffDay < 7) relative = `${diffDay}d ago`;
+            else relative = d.toLocaleDateString();
+            return `<div>${relative}</div><div style="font-size:0.7rem;color:var(--text-secondary,#9ca3af)">${d.toLocaleString()}</div>`;
+        } catch { return iso; }
+    }
+
+    function formatDetails(detailsStr) {
+        if (!detailsStr || detailsStr === '{}') return '';
+        try {
+            const obj = typeof detailsStr === 'string' ? JSON.parse(detailsStr) : detailsStr;
+            return Object.entries(obj).map(([k, v]) => {
+                const val = typeof v === 'object' ? JSON.stringify(v) : v;
+                return `<strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(val))}`;
+            }).join('<br>');
+        } catch { return escapeHtml(detailsStr); }
+    }
+
+    async function fetchAuditLogs() {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+        const params = new URLSearchParams();
+        const cat = document.getElementById('categoryFilter').value;
+        const usr = document.getElementById('userFilter').value;
+        const sd = document.getElementById('startDate').value;
+        const ed = document.getElementById('endDate').value;
+        const q = document.getElementById('searchInput').value.trim();
+        if (cat) params.set('category', cat);
+        if (usr) params.set('userId', usr);
+        if (sd) params.set('startDate', sd);
+        if (ed) params.set('endDate', ed);
+        if (q) params.set('search', q);
+        params.set('limit', PAGE_SIZE);
+        params.set('offset', currentPage * PAGE_SIZE);
+
+        try {
+            const res = await fetch(getApiUrl('/api/audit-trail?' + params.toString()), {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.status === 403) {
+                document.getElementById('accessDenied').style.display = '';
+                document.getElementById('auditContent').style.display = 'none';
+                return;
+            }
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            totalRecords = data.total || 0;
+            renderTable(data.logs || []);
+            updatePagination();
+        } catch (e) {
+            console.error('Audit trail fetch error:', e);
+            document.getElementById('auditTableBody').innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-500">Error loading audit trail</td></tr>';
+        }
+    }
+
+    function renderTable(logs) {
+        const tbody = document.getElementById('auditTableBody');
+        if (!logs.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-gray-500">No audit logs found</td></tr>';
+            document.getElementById('rowCount').textContent = '0 records';
+            return;
+        }
+        document.getElementById('rowCount').textContent = `${totalRecords} record${totalRecords !== 1 ? 's' : ''}`;
+        tbody.innerHTML = logs.map(log => `
+            <tr>
+                <td style="white-space:nowrap;">${formatTime(log.created_at)}</td>
+                <td>
+                    <div class="font-medium">${escapeHtml(log.user_name || 'System')}</div>
+                    <div style="font-size:0.7rem;color:var(--text-secondary,#9ca3af)">${escapeHtml(log.user_email || '')}</div>
+                </td>
+                <td>${categoryBadge(log.category)}</td>
+                <td class="font-medium">${escapeHtml(log.action)}</td>
+                <td>
+                    ${log.target_type ? `<span style="font-size:0.75rem;color:var(--text-secondary,#9ca3af)">${escapeHtml(log.target_type)}</span>` : ''}
+                    ${log.target_id ? `<div style="font-size:0.7rem;font-family:monospace;color:var(--text-secondary,#9ca3af)">${escapeHtml(String(log.target_id).substring(0, 12))}...</div>` : ''}
+                </td>
+                <td class="details-json">${formatDetails(log.details)}</td>
+                <td style="font-size:0.75rem;color:var(--text-secondary,#9ca3af)">${escapeHtml(log.ip_address || '')}</td>
+            </tr>
+        `).join('');
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(totalRecords / PAGE_SIZE) || 1;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+        document.getElementById('prevPage').disabled = currentPage === 0;
+        document.getElementById('nextPage').disabled = (currentPage + 1) >= totalPages;
+    }
+
+    async function loadUserFilter() {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+        try {
+            const res = await fetch(getApiUrl('/api/users'), { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) return;
+            const users = await res.json();
+            const sel = document.getElementById('userFilter');
+            users.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = u.name || u.email;
+                sel.appendChild(opt);
+            });
+        } catch (e) { console.warn('Could not load users for filter:', e); }
+    }
+
+    // Check auth
+    function checkAuth() {
+        const token = localStorage.getItem('authToken');
+        if (!token) { window.location.href = '/login.html'; return false; }
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            // Superadmin only (System Admin account type)
+            if (payload.accountType !== 'System Admin') {
+                document.getElementById('accessDenied').style.display = '';
+                document.getElementById('auditContent').style.display = 'none';
+                return false;
+            }
+            return true;
+        } catch { return false; }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Load sidebar and topbar
+        try {
+            const [sidebarRes, topbarRes] = await Promise.all([
+                fetch('shared-sidebar.html'), fetch('shared-topbar.html')
+            ]);
+            document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+            document.getElementById('topbar-container').innerHTML = await topbarRes.text();
+            // Highlight active nav
+            const activeLink = document.querySelector('[data-page="audit_trail"]');
+            if (activeLink) activeLink.classList.add('active');
+        } catch (e) { console.warn('Could not load nav:', e); }
+
+        if (!checkAuth()) return;
+
+        // Event listeners
+        document.getElementById('applyFilters').addEventListener('click', () => { currentPage = 0; fetchAuditLogs(); });
+        document.getElementById('clearFilters').addEventListener('click', () => {
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('userFilter').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('searchInput').value = '';
+            currentPage = 0;
+            fetchAuditLogs();
+        });
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { currentPage = 0; fetchAuditLogs(); }
+        });
+        document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 0) { currentPage--; fetchAuditLogs(); } });
+        document.getElementById('nextPage').addEventListener('click', () => { currentPage++; fetchAuditLogs(); });
+
+        await loadUserFilter();
+        await fetchAuditLogs();
+    });
+    </script>
+</body>
+</html>

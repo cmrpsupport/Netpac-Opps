@@ -139,28 +139,42 @@ router.post('/sync-from-drive/:proposalUid', async (req, res) => {
 // Get master list of account managers (for filter dropdown - all authenticated users)
 router.get('/proposals/account-managers-list', async (req, res) => {
     try {
+        // Primary: users with "Account Manager" role
         const result = await db.query(
-            'SELECT id, name FROM account_managers WHERE is_active = 1 ORDER BY name ASC'
+            "SELECT id, name FROM users WHERE roles LIKE '%Account Manager%' AND is_verified = 1 AND name IS NOT NULL AND name != '' ORDER BY name ASC"
         );
         const list = (result.rows || []).map(row => ({ id: row.id, name: row.name }));
         res.json(list);
     } catch (err) {
         console.error('[ERROR] Failed to fetch account managers list:', err);
-        res.json([]);
+        // Fallback to legacy table
+        try {
+            const fallback = await db.query('SELECT id, name FROM account_managers WHERE is_active = 1 ORDER BY name ASC');
+            res.json((fallback.rows || []).map(row => ({ id: row.id, name: row.name })));
+        } catch (e) {
+            res.json([]);
+        }
     }
 });
 
 // Get master list of PICs (for filter dropdown - all authenticated users)
 router.get('/proposals/pics-master-list', async (req, res) => {
     try {
+        // Primary: users with "PIC" role
         const result = await db.query(
-            'SELECT id, name FROM pics WHERE is_active = 1 ORDER BY name ASC'
+            "SELECT id, name FROM users WHERE roles LIKE '%PIC%' AND is_verified = 1 AND name IS NOT NULL AND name != '' ORDER BY name ASC"
         );
         const list = (result.rows || []).map(row => ({ id: row.id, name: row.name }));
         res.json(list);
     } catch (err) {
         console.error('[ERROR] Failed to fetch PICs master list:', err);
-        res.json([]);
+        // Fallback to legacy table
+        try {
+            const fallback = await db.query('SELECT id, name FROM pics WHERE is_active = 1 ORDER BY name ASC');
+            res.json((fallback.rows || []).map(row => ({ id: row.id, name: row.name })));
+        } catch (e) {
+            res.json([]);
+        }
     }
 });
 

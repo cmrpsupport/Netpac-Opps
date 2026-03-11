@@ -195,14 +195,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Navigation should be loaded already
             setTimeout(() => {
                 setupEventListeners();
-                applyTheme(localStorage.getItem('theme') || 'dark');
+                applyTheme(localStorage.getItem('theme') || 'light');
             }, 100);
         } else {
             // Wait for navigation loaded event
             document.addEventListener('navigationLoaded', () => {
                 setTimeout(() => {
                     setupEventListeners();
-                    applyTheme(localStorage.getItem('theme') || 'dark');
+                    applyTheme(localStorage.getItem('theme') || 'light');
                 }, 100);
             });
             
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 if (!window.navigationListenersSetup) {
                     setupEventListeners();
-                    applyTheme(localStorage.getItem('theme') || 'dark');
+                    applyTheme(localStorage.getItem('theme') || 'light');
                 }
             }, 2000);
         }
@@ -711,7 +711,7 @@ function applyTheme(theme) {
 
     // Per style guide, header is always dark, so always use light logo
     if (logo) {
-        logo.src = 'assets/netpacific-logo.jpg';
+        logo.src = 'assets/netpacific-logo.png';
     }
     
     // Always show sun icon per user request - check if themeToggle exists
@@ -726,7 +726,7 @@ function applyTheme(theme) {
 }
 
 function toggleTheme() {
-    const currentTheme = localStorage.getItem('theme') || 'dark';
+    const currentTheme = localStorage.getItem('theme') || 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     applyTheme(newTheme);
 }
@@ -4297,70 +4297,62 @@ function mapUserRolesToFilters(userRoles, availableData) {
     
     // Role-based filtering logic
     userRoles.forEach(role => {
-        switch(role.toUpperCase()) {
-            case 'DS':
-                // DS (Data Solutions) - filter by PIC (username) and solutions containing data-related terms
-                const userName = getCurrentUserName();
-                console.log('[ROLE-FILTER] DS role - checking for PIC filter for user:', userName);
-                
-                if (userName && userName !== 'Unknown User') {
-                    // Try to match PIC by username
-                    const picMatch = pics.find(pic => 
-                        pic && pic.toLowerCase().includes(userName.toLowerCase())
+        const normalizedRole = role.toUpperCase();
+        switch(normalizedRole) {
+            case 'ENGINEERING':
+                // Engineering role - filter by PIC (username)
+                const userNameEng = getCurrentUserName();
+                console.log('[ROLE-FILTER] Engineering role - checking for PIC filter for user:', userNameEng);
+
+                if (userNameEng && userNameEng !== 'Unknown User') {
+                    const picMatch = pics.find(pic =>
+                        pic && pic.toLowerCase().includes(userNameEng.toLowerCase())
                     );
                     if (picMatch) {
                         filters.pic = picMatch;
-                        console.log('[ROLE-FILTER] DS role mapped to PIC filter:', filters.pic);
+                        console.log('[ROLE-FILTER] Engineering role mapped to PIC filter:', filters.pic);
                     }
                 }
-                
-                // Also try to filter by data-related solutions
-                const dsFilters = solutions.filter(sol => 
-                    sol.toLowerCase().includes('data') || 
-                    sol.toLowerCase().includes('analytics') ||
-                    sol.toLowerCase().includes('intelligence') ||
-                    sol.toLowerCase().includes('ds')
-                );
-                if (dsFilters.length > 0) {
-                    filters.solutions = dsFilters[0];
-                    console.log('[ROLE-FILTER] DS role mapped to solutions filter:', filters.solutions);
-                }
                 break;
-                
-            case 'SE':
-                // SE (Systems Engineer) - filter by PIC (username) and engineering solutions
-                const userNameSE = getCurrentUserName();
-                console.log('[ROLE-FILTER] SE role - checking for PIC filter for user:', userNameSE);
-                
-                if (userNameSE && userNameSE !== 'Unknown User') {
-                    // Try to match PIC by username
-                    const picMatchSE = pics.find(pic => 
-                        pic && pic.toLowerCase().includes(userNameSE.toLowerCase())
+
+            case 'ACCOUNT MANAGER':
+                // Account Manager role - filter by account manager matching current user
+                const userNameAM = getCurrentUserName();
+                console.log('[ROLE-FILTER] Account Manager role - checking filter for user:', userNameAM);
+
+                if (userNameAM && userNameAM !== 'Unknown User') {
+                    const accountMgrs = [...new Set(availableData.map(p => p.account_manager).filter(Boolean))];
+                    const amMatch = accountMgrs.find(am =>
+                        am && am.toLowerCase().includes(userNameAM.toLowerCase())
                     );
-                    if (picMatchSE) {
-                        filters.pic = picMatchSE;
-                        console.log('[ROLE-FILTER] SE role mapped to PIC filter:', filters.pic);
+                    if (amMatch) {
+                        filters.accountManager = amMatch;
+                        console.log('[ROLE-FILTER] Account Manager role mapped to AM filter:', filters.accountManager);
                     }
                 }
-                
-                // Also try to filter by engineering solutions
-                const seFilters = solutions.filter(sol => 
-                    sol.toLowerCase().includes('engineering') || 
-                    sol.toLowerCase().includes('technical') ||
-                    sol.toLowerCase().includes('se')
-                );
-                if (seFilters.length > 0) {
-                    filters.solutions = seFilters[0];
-                    console.log('[ROLE-FILTER] SE role mapped to solutions filter:', filters.solutions);
+                break;
+
+            case 'PIC':
+                // PIC role - filter PIC by username
+                const userNamePIC = getCurrentUserName();
+                console.log('[ROLE-FILTER] PIC role - checking filter for user:', userNamePIC);
+
+                if (userNamePIC && userNamePIC !== 'Unknown User') {
+                    const picMatchPIC = pics.find(pic =>
+                        pic && pic.toLowerCase().includes(userNamePIC.toLowerCase())
+                    );
+                    if (picMatchPIC) {
+                        filters.pic = picMatchPIC;
+                        console.log('[ROLE-FILTER] PIC role mapped to PIC filter:', filters.pic);
+                    }
                 }
                 break;
-                
-            case 'SALES':
+
             case 'ADMIN':
-                // No automatic filtering for Sales and Admin roles
-                console.log('[ROLE-FILTER] Sales/Admin role - no automatic filtering');
+                // Admin - full access, no automatic filtering
+                console.log('[ROLE-FILTER] Admin role - no automatic filtering');
                 break;
-                
+
             default:
                 console.log('[ROLE-FILTER] Unknown role:', role);
         }

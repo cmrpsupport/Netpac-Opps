@@ -739,7 +739,7 @@ function toggleTheme() {
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', function() {
     // Set initial theme
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
     
     // Check authentication

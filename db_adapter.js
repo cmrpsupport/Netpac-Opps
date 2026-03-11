@@ -354,7 +354,11 @@ function convertSQL(sql) {
     converted = converted.replace(/\s*RETURNING\s+[\w*, ]+\s*$/gi, '');
     converted = converted.replace(/gen_random_uuid\(\)/gi, "lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab',abs(random())%4+1,1) || hex(randomblob(2)) || '-' || hex(randomblob(6)))");
     converted = converted.replace(/NOW\(\)/gi, "datetime('now')");
+    // Only replace CURRENT_TIMESTAMP in DML (INSERT/UPDATE/SELECT) context, NOT in DDL (CREATE TABLE DEFAULT).
+    // "DEFAULT CURRENT_TIMESTAMP" is valid SQLite syntax; "DEFAULT datetime('now')" is NOT.
+    converted = converted.replace(/DEFAULT\s+CURRENT_TIMESTAMP/gi, 'DEFAULT__CT_PLACEHOLDER__');
     converted = converted.replace(/CURRENT_TIMESTAMP/gi, "datetime('now')");
+    converted = converted.replace(/DEFAULT__CT_PLACEHOLDER__/g, 'DEFAULT CURRENT_TIMESTAMP');
     converted = converted.replace(/SERIAL PRIMARY KEY/gi, 'INTEGER PRIMARY KEY AUTOINCREMENT');
     converted = converted.replace(/BOOLEAN/gi, 'INTEGER');
     converted = converted.replace(/UUID/gi, 'TEXT');

@@ -10,7 +10,7 @@
     --text-primary: #202124; /* Primary text color for light mode */
     --text-label: #5f6368; /* Dark text for labels in white container */
     --border-table: #dadce0; /* Light gray for tables in white containers */
-    --bg-header: #0C2135; /* Navy blue darker than #0F2847 but lighter than #0A1A2E */
+    --bg-header: #1a4fa0; /* Net Pacific blue */
     --text-header: #ffffff; /* White text on navy header */
     --bg-row: #ffffff; /* White rows in white container */
     --text-row: #202124; /* Dark text for rows in white container */
@@ -118,7 +118,7 @@
     --text-primary: #ffffff; /* Primary text color for dark mode */
     --text-label: #c0c0c0;
     --border-table: #4a4a4a;
-    --bg-header: #1a1a1a; /* Keep dark header background */
+    --bg-header: #1a1a1a; /* Black navigation in dark mode */
     --text-header: #ffffff; /* Ensure header text is white in dark mode */
     --bg-row: #2d2d2d;
     --text-row: #e0e0e0;
@@ -237,7 +237,7 @@
 }
 
 .top-bar-logo {
-    height: 1.8rem; /* Smaller logo */
+    height: 2.5rem;
     width: auto;
     margin-right: 0.75rem;
     transition: filter 0.2s ease;
@@ -1125,10 +1125,10 @@ body {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Filter Label Styles - Fix visibility in light theme */
+/* Filter Label Styles - Use title color for labels inside containers */
 #statusFilterButtons span.text-sm.font-medium,
 .filter-label {
-    color: var(--text-body) !important;
+    color: var(--text-title) !important;
 }
 
 .filter-button:hover {
@@ -1478,13 +1478,46 @@ label {
 /* Dark mode support for sticky columns */
 .dark .table-container th.sticky-col,
 .dark #opportunitiesTable th.sticky-col {
-    background-color: #2d2d2d !important; /* Match other column headers shade */
+    background-color: var(--bg-header) !important; /* Match navigation bar */
     color: var(--text-header) !important;
     border-color: var(--border-table) !important;
 }
 
 .dark .table-container td.sticky-col,
 .dark #opportunitiesTable td.sticky-col {
+    background: var(--bg-container) !important;
+}
+
+/* Sticky Actions column (freeze pane on right side) */
+.table-container th.sticky-actions-col,
+#opportunitiesTable th.sticky-actions-col {
+    position: sticky !important;
+    top: 0 !important;
+    right: 0 !important;
+    z-index: 15 !important;
+    background: var(--bg-header) !important;
+    box-shadow: -2px 0 4px -2px rgba(0,0,0,0.1);
+}
+
+.table-container td.sticky-actions-col,
+#opportunitiesTable td.sticky-actions-col {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 5 !important;
+    background: var(--bg-container) !important;
+    box-shadow: -2px 0 4px -2px rgba(0,0,0,0.1);
+    border-left: 1px solid var(--border-container);
+}
+
+.dark .table-container th.sticky-actions-col,
+.dark #opportunitiesTable th.sticky-actions-col {
+    background-color: var(--bg-header) !important;
+    color: var(--text-header) !important;
+    border-color: var(--border-table) !important;
+}
+
+.dark .table-container td.sticky-actions-col,
+.dark #opportunitiesTable td.sticky-actions-col {
     background: var(--bg-container) !important;
 }
 
@@ -2458,7 +2491,7 @@ body.login-page {
 }
 
 .login-logo {
-    height: 2.5rem; /* Made smaller, matching main app logo */
+    height: 3.5rem;
     width: auto;
     margin: 0 auto 1rem auto;
     transition: filter 0.2s ease;
@@ -2704,12 +2737,12 @@ body:not(.dark) .status-declined {
     color: var(--text-label);
 }
 
-/* Custom comparison period label styling - GUARANTEED FIX */
+/* Custom comparison period label styling */
 .comparison-period-label {
-    font-size: 0.875rem; /* text-sm equivalent */
-    font-weight: 500; /* font-medium equivalent */
-    margin-right: 0.5rem; /* mr-2 equivalent */
-    color: var(--text-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    color: var(--text-title);
 }
 
 /* Light theme */
@@ -4593,6 +4626,39 @@ html.dark .inline-edit-dropdown option:focus {
 
 .notification-item:has(.material-icons[class*="update"]) .notification-icon .material-icons {
     color: #f57c00;
+}
+
+/* Dark mode notification icon overrides */
+.dark .notification-item[data-notification-id] .notification-icon {
+    background-color: #3a3a3a;
+}
+
+.dark .notification-item .notification-icon .material-icons {
+    color: #a0a0a0;
+}
+
+.dark .notification-item:has(.material-icons:is([class*="person_add"], [class*="engineering"], [class*="manage_accounts"])) .notification-icon {
+    background-color: #14532d;
+}
+
+.dark .notification-item:has(.material-icons:is([class*="person_add"], [class*="engineering"], [class*="manage_accounts"])) .notification-icon .material-icons {
+    color: #4ade80;
+}
+
+.dark .notification-item:has(.material-icons[class*="alternate_email"]) .notification-icon {
+    background-color: #1e3a5f;
+}
+
+.dark .notification-item:has(.material-icons[class*="alternate_email"]) .notification-icon .material-icons {
+    color: #60a5fa;
+}
+
+.dark .notification-item:has(.material-icons[class*="update"]) .notification-icon {
+    background-color: #431407;
+}
+
+.dark .notification-item:has(.material-icons[class*="update"]) .notification-icon .material-icons {
+    color: #fb923c;
 }
 
 .notification-body {

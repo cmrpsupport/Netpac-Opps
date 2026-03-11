@@ -52,6 +52,27 @@ const config = {
 // Make config available globally
 window.APP_CONFIG = config;
 
+// --- Session-based token expiry ---
+// If the user did not check "Remember me", clear the auth token when the browser is reopened.
+// sessionStorage is cleared when the browser closes; localStorage persists.
+// On login, we set sessionStorage.authSessionActive = '1'. If it's gone on page load
+// and rememberMe was not checked, the token is expired.
+(function checkSessionToken() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    const rememberMe = localStorage.getItem('authRememberMe') === '1';
+    const sessionActive = sessionStorage.getItem('authSessionActive') === '1';
+    if (!rememberMe && !sessionActive) {
+        // Browser was closed and reopened without "Remember me" — expire the token
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authRememberMe');
+        // Redirect to login if not already on login page
+        if (!window.location.pathname.endsWith('login.html') && !window.location.pathname.endsWith('/')) {
+            window.location.href = 'login.html';
+        }
+    }
+})();
+
 // Log current environment for debugging
 console.log(`🚀 Running in ${config.ENVIRONMENT} mode`);
 console.log(`📡 API Base URL: ${config.API_BASE_URL}`);

@@ -52,16 +52,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateLogo(theme) {
         if (loginLogo) {
             if (theme === 'light') {
-                loginLogo.src = 'assets/netpacific-logo.jpg';
+                loginLogo.src = 'assets/netpacific-logo.png';
             } else {
-                loginLogo.src = 'assets/netpacific-logo.jpg';
+                loginLogo.src = 'assets/netpacific-logo.png';
             }
         }
         if (loadingLogo) {
             if (theme === 'light') {
-                loadingLogo.src = 'assets/netpacific-logo.jpg';
+                loadingLogo.src = 'assets/netpacific-logo.png';
             } else {
-                loadingLogo.src = 'assets/netpacific-logo.jpg';
+                loadingLogo.src = 'assets/netpacific-logo.png';
             }
         }
     }
@@ -78,9 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     function initializeTheme() {
         const savedTheme = localStorage.getItem('theme');
-        const theme = savedTheme || 'dark';
+        const theme = savedTheme || 'light';
         if (savedTheme === null) {
-            localStorage.setItem('theme', 'dark');
+            localStorage.setItem('theme', 'light');
         }
         htmlElement.classList.toggle('dark', theme === 'dark');
         updateThemeToggleIcon(theme);
@@ -191,24 +191,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(data.error || 'Login failed');
                 }
                 localStorage.setItem('authToken', data.token);
-                console.log('[LOGIN DEBUG] Token stored in localStorage');
+                // Track session: set a sessionStorage flag so we know the browser session is active
+                // When the browser is closed, sessionStorage is cleared. On next open,
+                // if "Remember me" was not checked, the token will be cleared.
+                sessionStorage.setItem('authSessionActive', '1');
+                const useRemember = loginRemember && loginRemember.checked;
+                localStorage.setItem('authRememberMe', useRemember ? '1' : '0');
+                console.log('[LOGIN DEBUG] Token stored in localStorage, rememberMe:', useRemember);
                 console.log('[LOGIN DEBUG] Token preview:', data.token.substring(0, 50) + '...');
                 loginSuccess.classList.remove('hidden');
-                
+
                 // Decode token to check roles
                 const payload = JSON.parse(atob(data.token.split('.')[1]));
                 const userRoles = payload.roles || [];
-                
+
                 // Longer delay and ensure token is properly stored before redirect
                 setTimeout(() => {
                     // Double-check token was stored successfully
                     const storedToken = localStorage.getItem('authToken');
                     console.log('[LOGIN DEBUG] Verifying stored token:', !!storedToken);
-                    
+
                     if (storedToken) {
-                        // Check if user has DS or SE role and redirect accordingly
-                        if (userRoles.includes('DS') || userRoles.includes('SE')) {
-                            console.log('[LOGIN DEBUG] DS/SE role detected, redirecting to proposal workbench');
+                        // Check if user has Engineering role and redirect accordingly
+                        if (userRoles.includes('Engineering')) {
+                            console.log('[LOGIN DEBUG] Engineering role detected, redirecting to proposal workbench');
                             window.location.href = 'proposal_workbench.html';
                         } else {
                             console.log('[LOGIN DEBUG] Standard role, redirecting to index.html');
@@ -219,8 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         localStorage.setItem('authToken', data.token);
                         setTimeout(() => {
                             // Check roles again in retry
-                            if (userRoles.includes('DS') || userRoles.includes('SE')) {
-                                console.log('[LOGIN DEBUG] DS/SE role detected (retry), redirecting to proposal workbench');
+                            if (userRoles.includes('Engineering')) {
+                                console.log('[LOGIN DEBUG] Engineering role detected (retry), redirecting to proposal workbench');
                                 window.location.href = 'proposal_workbench.html';
                             } else {
                                 console.log('[LOGIN DEBUG] Standard role (retry), redirecting to index.html');
@@ -287,11 +293,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.token) {
                     localStorage.setItem('authToken', data.token);
+                    sessionStorage.setItem('authSessionActive', '1');
+                    localStorage.setItem('authRememberMe', '0'); // Signups default to session-only
                     if (signupSuccess) signupSuccess.classList.remove('hidden');
                     const payload = JSON.parse(atob(data.token.split('.')[1]));
                     const userRoles = payload.roles || [];
                     setTimeout(function() {
-                        if (userRoles.includes('DS') || userRoles.includes('SE')) {
+                        if (userRoles.includes('Engineering')) {
                             window.location.href = 'proposal_workbench.html';
                         } else {
                             window.location.href = 'index.html';

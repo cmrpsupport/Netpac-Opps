@@ -1332,17 +1332,17 @@ function handleLogout() {
 // --- Theme Management ---
 function initializeTheme() {
     const savedTheme = localStorage.getItem('theme');
-    // Default to dark theme if no saved preference
-    const theme = savedTheme || 'dark';
+    // Default to light theme if no saved preference
+    const theme = savedTheme || 'light';
     if (savedTheme === null) {
-        localStorage.setItem('theme', 'dark');
+        localStorage.setItem('theme', 'light');
     }
     
     applyTheme(theme);
     
     const logo = document.getElementById('cmrpLogo');
     if (logo) {
-        logo.src = 'assets/netpacific-logo.jpg';
+        logo.src = 'assets/netpacific-logo.png';
     }
     
     // Theme initialized
@@ -1362,7 +1362,7 @@ function applyTheme(theme) {
     // Update logo for theme - always use light logo (header is always dark)
     const logo = document.getElementById('cmrpLogo');
     if (logo) {
-        logo.src = 'assets/netpacific-logo.jpg';
+        logo.src = 'assets/netpacific-logo.png';
     }
     
     // Force refresh of table styling if table exists
@@ -4279,9 +4279,9 @@ function populateTableBody(data) {
             visibleColumnIndex++; // Increment visible column counter
         });
 
-        // Add action buttons
+        // Add action buttons (sticky freeze pane on right side)
         const actionsTd = document.createElement('td');
-        actionsTd.className = 'center-align-cell';
+        actionsTd.className = 'center-align-cell sticky-actions-col';
         
         const btnContainer = document.createElement('div');
         btnContainer.className = 'flex justify-center items-center gap-2';
@@ -5643,7 +5643,7 @@ function showRemarksModal(currentValue, header, uid, td) {
 function makeEditable(td, originalFullRow, header, originalIndex) {
     const normHeader = normalizeField(header);
     // Don't make certain columns editable
-    const nonEditableColumns = ['uid', 'encodeddate', 'google_drive_folder_id', 'google_drive_folder_url', 'google_drive_folder_name', 'drive_folder_created_at', 'drive_folder_created_by'];
+    const nonEditableColumns = ['uid', 'encodeddate', 'projectcode', 'datereceived', 'google_drive_folder_id', 'google_drive_folder_url', 'google_drive_folder_name', 'drive_folder_created_at', 'drive_folder_created_by'];
     if (nonEditableColumns.includes(normHeader) || nonEditableColumns.includes(header)) return;
 
     td.classList.add('editable-cell');
@@ -5794,13 +5794,20 @@ function createEditInput(normHeader, currentValue) {
     if (DROPDOWN_FIELDS_NORM.includes(normHeader)) {
         input = document.createElement('select');
         input.className = 'inline-edit-dropdown'; // Apply custom styling
-        const options = dropdownOptions[normHeader] || [];
+        // Use getFieldOptions to get the full list of available options (not just values in current data)
+        const originalField = DROPDOWN_FIELDS.find(f => normalizeField(f) === normHeader) || normHeader;
+        const fullOptions = getFieldOptions(originalField);
+        const dataOptions = dropdownOptions[normHeader] || [];
+        // Merge full options with any data-only values, preserving order from getFieldOptions
+        const mergedOptions = fullOptions.length > 0
+            ? [...new Set([...fullOptions.filter(o => o !== ''), ...dataOptions])].filter(Boolean)
+            : dataOptions;
         // Add default empty option for better UX
         const defaultOpt = document.createElement('option');
         defaultOpt.value = '';
         defaultOpt.textContent = '-- Select --';
         input.appendChild(defaultOpt);
-        options.forEach(option => {
+        mergedOptions.forEach(option => {
             const opt = document.createElement('option');
             opt.value = option;
             opt.textContent = option;
@@ -7315,10 +7322,10 @@ function initializeTableHeader() {
         visibleColumnIndex++; // Increment visible column counter
     });
 
-    // Add Actions column header with consistent styling
+    // Add Actions column header with consistent styling and sticky positioning (freeze pane)
     const actionsHeader = document.createElement('th');
     actionsHeader.textContent = 'Actions';
-    actionsHeader.className = 'px-3 py-2 bg-header text-left center-align-cell';
+    actionsHeader.className = 'px-3 py-2 bg-header text-left center-align-cell sticky-actions-col';
     actionsHeader.style.minWidth = '120px'; // Ensure enough space for the action buttons
     headerRow.appendChild(actionsHeader);
 
@@ -7343,54 +7350,63 @@ function formatShortCurrency(num) {
 /** Clear token and redirect to login when server returns invalid/expired token (403). */
 function handleAuthFailure() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('authRememberMe');
+    sessionStorage.removeItem('authSessionActive');
     window.location.href = 'login.html';
 }
 
 function getAuthToken() {
-    // Getting auth token
+    // Session expiry: if "Remember Me" was NOT checked and browser was reopened
+    // (sessionStorage flag is gone), clear the token
     const token = localStorage.getItem('authToken');
-    // Raw token retrieved
-    
+    if (token) {
+        const rememberMe = localStorage.getItem('authRememberMe') === '1';
+        const sessionActive = sessionStorage.getItem('authSessionActive') === '1';
+        if (!rememberMe && !sessionActive) {
+            // Browser was closed and reopened without "Remember me" — expire token
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authRememberMe');
+            return null;
+        }
+    }
+
     if (!token) {
-        // No token found
         return null;
     }
-    
+
     try {
         // Check if token is expired
         const parts = token.split('.');
-        // Token parts checked
-        
         const payload = JSON.parse(atob(parts[1]));
         const now = Date.now() / 1000;
-        // Token payload checked
-        
+
         if (payload.exp && payload.exp < now) {
             // Token expired
             localStorage.removeItem('authToken');
+            localStorage.removeItem('authRememberMe');
+            sessionStorage.removeItem('authSessionActive');
             return null;
         }
-        // Token is valid
         return token;
     } catch (error) {
         // Invalid token format
         localStorage.removeItem('authToken');
+        localStorage.removeItem('authRememberMe');
+        sessionStorage.removeItem('authSessionActive');
         return null;
     }
 }
 
 function getCurrentUserName() {
     try {
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         if (!token) {
-            // No token for username
             return 'Unknown User';
         }
-        
+
         const payload = JSON.parse(atob(token.split('.')[1]));
         return payload.name || payload.username || payload.email || 'Unknown User';
     } catch (error) {
-        // Error parsing token
         return 'Unknown User';
     }
 }
@@ -7542,8 +7558,8 @@ function resetTable() {
 async function initializeColumnVisibility() {
     // Default hidden columns (specific columns that should be hidden on initial load for new users)
     const defaultHiddenColumns = [
-        'description', 'comments', 'uid', 'created_at', 'updated_at', 
-        'encoded_date', 'a', 'c', 'r', 'u', 'd', 'rev', 'project_code',
+        'description', 'comments', 'uid', 'created_at', 'updated_at',
+        'encoded_date', 'rev', 'project_code',
         'sol_particulars', 'ind_particulars', 'lost_rca', 'l_particulars',
         'client_deadline', 'submitted_date', 'date_awarded_lost', 'forecast_date'
     ];
@@ -7611,8 +7627,8 @@ async function initializeColumnVisibility() {
 async function resetColumnVisibilityToDefaults() {
     // Default hidden columns (specific columns that should be hidden on initial load for new users)
     const defaultHiddenColumns = [
-        'description', 'comments', 'uid', 'created_at', 'updated_at', 
-        'encoded_date', 'a', 'c', 'r', 'u', 'd', 'rev', 'project_code',
+        'description', 'comments', 'uid', 'created_at', 'updated_at',
+        'encoded_date', 'rev', 'project_code',
         'sol_particulars', 'ind_particulars', 'lost_rca', 'l_particulars',
         'client_deadline', 'submitted_date', 'date_awarded_lost', 'forecast_date'
     ];
@@ -7908,47 +7924,49 @@ function mapUserRolesToFilters(userRoles, availableData) {
     
     // Role-based filtering logic
     userRoles.forEach(role => {
-        switch(role.toUpperCase()) {
-            case 'DS':
-            case 'SE':
-                // DS/SE roles - filter PIC by username, but dashboard remains "all"
-                const userNameDSSE = getCurrentUserName();
-                // DS/SE role - checking PIC filter
-                
-                if (userNameDSSE && userNameDSSE !== 'Unknown User') {
-                    const picMatch = mapUserNameToFilterValue(userNameDSSE, pics);
+        const normalizedRole = role.toUpperCase();
+        switch(normalizedRole) {
+            case 'ENGINEERING':
+                // Engineering role - filter PIC by username, but dashboard remains "all"
+                const userNameEng = getCurrentUserName();
+
+                if (userNameEng && userNameEng !== 'Unknown User') {
+                    const picMatch = mapUserNameToFilterValue(userNameEng, pics);
                     if (picMatch) {
                         filters.pic = picMatch;
                         filters.dashboardIgnorePic = true; // Dashboard should ignore PIC filter
-                        // DS/SE mapped to PIC filter
                     }
                 }
                 break;
-                
-            case 'SALES':
-                // Sales role - filter by account manager matching current user
-                const userNameSales = getCurrentUserName();
-                // SALES role - checking account manager
-                
-                if (userNameSales && userNameSales !== 'Unknown User') {
-                    // Try to match current user to an account manager
-                    const accountMgrMatch = mapUserNameToFilterValue(userNameSales, accountMgrs);
+
+            case 'ACCOUNT MANAGER':
+                // Account Manager role - filter by account manager matching current user
+                const userNameAM = getCurrentUserName();
+
+                if (userNameAM && userNameAM !== 'Unknown User') {
+                    const accountMgrMatch = mapUserNameToFilterValue(userNameAM, accountMgrs);
                     if (accountMgrMatch) {
                         filters.accountManager = accountMgrMatch;
-                        // SALES mapped to account manager
-                    } else {
-                        // SALES - no account manager match
                     }
-                } else {
-                    // SALES - no valid username
                 }
                 break;
-                
+
+            case 'PIC':
+                // PIC role - filter PIC by username
+                const userNamePIC = getCurrentUserName();
+
+                if (userNamePIC && userNamePIC !== 'Unknown User') {
+                    const picMatchPIC = mapUserNameToFilterValue(userNamePIC, pics);
+                    if (picMatchPIC) {
+                        filters.pic = picMatchPIC;
+                    }
+                }
+                break;
+
             case 'ADMIN':
                 // Admin - full access, no filtering
-                // ADMIN role - no filtering
                 break;
-                
+
             default:
                 // Unknown role
         }

@@ -552,7 +552,7 @@ function applyTheme(theme) {
     // Update logo for theme - always use light logo (header is always dark)
     const logo = document.getElementById('cmrpLogo');
     if (logo) {
-        logo.src = 'assets/netpacific-logo.jpg';
+        logo.src = 'assets/netpacific-logo.png';
     }
 }
 
@@ -1021,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize theme
     const savedTheme = localStorage.getItem('theme');
-    const initialTheme = savedTheme || 'dark';
+    const initialTheme = savedTheme || 'light';
     if (savedTheme === null) {
         localStorage.setItem('theme', 'dark');
     }

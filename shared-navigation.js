@@ -29,7 +29,6 @@ class SharedNavigation {
             'proposal_workbench.html': 'proposal_workbench',
             'win-loss_dashboard.html': 'win-loss_dashboard',
             'user_management.html': 'user_management',
-            'account-manager-list.html': 'account_manager_list',
             'csv_formatter.html': 'csv_formatter',
             'opps_monitoring_import_export.html': 'opps_monitoring_import_export',
             'project-detail.html': 'index' // Project detail pages should highlight opportunities
@@ -297,12 +296,12 @@ class SharedNavigation {
     updateThemeToggleState() {
         const sidebarThemeToggle = document.querySelector('.sidebar #themeToggle');
         if (sidebarThemeToggle) {
-            // Always keep sun icon as per user preference
+            const isDark = document.documentElement.classList.contains('dark');
             const icon = sidebarThemeToggle.querySelector('.material-icons');
             if (icon) {
-                icon.textContent = 'wb_sunny';
+                icon.textContent = isDark ? 'wb_sunny' : 'dark_mode';
             }
-            
+
             // Remove active state as per user preference
             sidebarThemeToggle.classList.remove('active');
         }
@@ -312,7 +311,7 @@ class SharedNavigation {
         const logo = document.getElementById('cmrpLogo');
         if (logo) {
             // Always use light logo since topbar is dark in both themes
-            logo.src = 'assets/netpacific-logo.jpg';
+            logo.src = 'assets/netpacific-logo.png';
         }
     }
     
@@ -589,7 +588,6 @@ class SharedNavigation {
             '/executive_dashboard.html': 'Executive',
             '/proposal_workbench.html': 'Proposals',
             '/user_management.html': 'Users',
-            '/account-manager-list.html': 'Account Mgrs List',
             '/csv_formatter.html': 'CSV Formatter',
             '/opps_monitoring_import_export.html': 'Import/Export'
         };
@@ -631,8 +629,6 @@ class SharedNavigation {
         
         // Update User Management visibility
         this.updateUserMgmtNavVisibility();
-        // Update Account Managers List visibility (same as Users - Admin only)
-        this.updateAccountManagersListNavVisibility();
         
         // Update Proposal Workbench visibility
         this.updateProposalWorkbenchNavVisibility();
@@ -640,6 +636,9 @@ class SharedNavigation {
         // Update CSV Formatter visibility
         this.updateCsvFormatterNavVisibility();
         
+        // Update Audit Trail visibility
+        this.updateAuditTrailNavVisibility();
+
         // Update Import/Export visibility
         this.updateImportExportNavVisibility();
     }
@@ -662,24 +661,6 @@ class SharedNavigation {
             userMgmtBtn.style.display = (accountType === 'Admin' || name === 'RJR') ? '' : 'none';
         } catch {
             userMgmtBtn.style.display = 'none';
-        }
-    }
-
-    updateAccountManagersListNavVisibility() {
-        const btn = document.getElementById('accountManagersListNavBtn');
-        if (!btn) return;
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            btn.style.display = 'none';
-            return;
-        }
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const accountType = payload.accountType || payload.account_type || null;
-            const name = payload.name || '';
-            btn.style.display = (accountType === 'Admin' || name === 'RJR') ? '' : 'none';
-        } catch {
-            btn.style.display = 'none';
         }
     }
 
@@ -715,6 +696,23 @@ class SharedNavigation {
             csvFormatterBtn.style.display = (name === 'RJR') ? '' : 'none';
         } catch {
             csvFormatterBtn.style.display = 'none';
+        }
+    }
+
+    updateAuditTrailNavVisibility() {
+        const btn = document.getElementById('auditTrailNavBtn');
+        if (!btn) return;
+
+        const token = localStorage.getItem('authToken');
+        if (!token) { btn.style.display = 'none'; return; }
+
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const accountType = payload.accountType || payload.account_type || '';
+            // Only show for System Admin (superadmin)
+            btn.style.display = (accountType === 'System Admin') ? '' : 'none';
+        } catch {
+            btn.style.display = 'none';
         }
     }
 

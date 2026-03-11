@@ -6,8 +6,8 @@
     <title>User Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="assets/netpacific-logo.jpg">
-    <link rel="alternate icon" href="assets/netpacific-logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="assets/netpacific-logo.png">
+    <link rel="alternate icon" href="assets/netpacific-logo.png">
     <link rel="stylesheet" href="styles.css?v=1750741234">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -26,7 +26,7 @@
         
         .resizable-table th {
             position: relative;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid var(--border-table, #e5e7eb);
         }
         
         .resizable-table th:last-child {
@@ -72,7 +72,7 @@
         }
         
         .resizable-table td {
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid var(--border-table, #e5e7eb);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -107,8 +107,8 @@
             </div>
 
             <!-- Pending signups (require superadmin approval) -->
-            <div id="pendingSignupsSection" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4" style="display: none;">
-                <h2 class="text-lg font-semibold text-amber-800 mb-3">Pending signups — approve to allow login</h2>
+            <div id="pendingSignupsSection" class="mb-6 rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 p-4" style="display: none;">
+                <h2 class="text-lg font-semibold text-amber-800 dark:text-amber-300 mb-3">Pending signups — approve to allow login</h2>
                 <div id="pendingSignupsList" class="overflow-x-auto"></div>
             </div>
 
@@ -197,56 +197,49 @@
                     </div>
                 </div>
                 
-                <!-- Access Information Section -->
-                <div class="form-section">
+                <!-- Access Information Section (hidden when editing - only Add New User) -->
+                <div id="accessInformationSection" class="form-section">
                     <div class="form-section-title">Access Information</div>
                     <div class="form-row">
                         <div class="enhanced-field">
-                            <label>Roles <span class="text-red-500">*</span></label>
-                            <div id="roleCheckboxes" class="space-y-2 mt-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="roles" value="DS" class="mr-2">
-                                    <span>Digital Solutions (DS)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="roles" value="SE" class="mr-2">
-                                    <span>Smart Energy (SE)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="roles" value="AM" class="mr-2">
-                                    <span>Account Manager (AM)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="roles" value="TM" class="mr-2">
-                                    <span>Technical Manager (TM)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="roles" value="Office Admin" class="mr-2">
-                                    <span>Office Admin</span>
-                                </label>
-                            </div>
+                            <label for="roleSelect">Role <span class="text-red-500">*</span></label>
+                            <select id="roleSelect" name="roleSelect" required class="w-full border rounded px-3 py-2">
+                                <option value="User" selected>User</option>
+                                <option value="Admin">Admin</option>
+                                <option value="System Admin">System Admin</option>
+                            </select>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block mt-1">Automatically sets User, Admin, or System Admin. Technical role removed.</span>
                         </div>
                         <div class="enhanced-field">
                             <label for="accountType">Account Type <span class="text-red-500">*</span></label>
                             <select id="accountType" name="accountType" required>
-                                <option value="">-- Select --</option>
+                                <option value="">Select…</option>
                                 <option value="User">User</option>
+                                <option value="Admin">Admin</option>
                                 <option value="System Admin">System Admin</option>
                             </select>
                         </div>
                         <div class="enhanced-field">
-                            <label for="accountManagerId">Tag to Account Manager</label>
-                            <select id="accountManagerId" name="accountManagerId">
-                                <option value="">— None —</option>
+                            <label class="block mb-1">ACCNT MGR</label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="userIsAccountMgr" name="userIsAccountMgr" class="rounded border-gray-300">
+                                <span class="text-sm">User is Account Manager</span>
+                            </label>
+                            <select id="accountManagerId" name="accountManagerId" class="mt-2 w-full">
+                                <option value="">Select…</option>
                             </select>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Optional: link this user once they have an account.</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block mt-1">Tick the box and select which account manager to link.</span>
                         </div>
                         <div class="enhanced-field">
-                            <label for="picId">Tag to PIC (Person in Charge)</label>
-                            <select id="picId" name="picId">
-                                <option value="">— None —</option>
+                            <label class="block mb-1">PIC</label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="userIsPic" name="userIsPic" class="rounded border-gray-300">
+                                <span class="text-sm">User is PIC (Person in Charge)</span>
+                            </label>
+                            <select id="picId" name="picId" class="mt-2 w-full">
+                                <option value="">Select…</option>
                             </select>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Optional: link this user to a PIC once they have an account.</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block mt-1">Tick the box and select which PIC to link. Tick both boxes if user is both.</span>
                         </div>
                     </div>
                     </div>
@@ -258,7 +251,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- Scripts -->
     <script src="shared-navigation.js?v=1750741456"></script>
@@ -313,8 +305,6 @@
             // Get user list and pending signups
             await fetchUsers();
             await fetchPendingUsers();
-            
-            // Setup event listeners
             setupEventListeners();
             
         } catch (error) {
@@ -336,7 +326,7 @@
             });
             const list = response.ok ? await response.json() : [];
             const currentValue = select.value;
-            select.innerHTML = '<option value="">— None —</option>' + (list || [])
+            select.innerHTML = '<option value="">Select…</option>' + (list || [])
                 .filter(am => am.is_active !== 0)
                 .map(am => `<option value="${am.id}">${escapeHtml(am.name)}${am.email ? ' (' + escapeHtml(am.email) + ')' : ''}</option>`)
                 .join('');
@@ -358,7 +348,7 @@
             });
             const list = response.ok ? await response.json() : [];
             const currentValue = select.value;
-            select.innerHTML = '<option value="">— None —</option>' + (list || [])
+            select.innerHTML = '<option value="">Select…</option>' + (list || [])
                 .filter(p => p.is_active !== 0)
                 .map(p => `<option value="${p.id}">${escapeHtml(p.name)}${p.email ? ' (' + escapeHtml(p.email) + ')' : ''}</option>`)
                 .join('');
@@ -366,6 +356,14 @@
         } catch (e) {
             console.warn('Could not load PICs:', e);
         }
+    }
+    function syncAccountMgrPicDropdowns() {
+        const amCb = document.getElementById('userIsAccountMgr');
+        const picCb = document.getElementById('userIsPic');
+        const amSelect = document.getElementById('accountManagerId');
+        const picSelect = document.getElementById('picId');
+        if (amSelect) amSelect.disabled = !(amCb && amCb.checked);
+        if (picSelect) picSelect.disabled = !(picCb && picCb.checked);
     }
     function escapeHtml(s) {
         if (s == null) return '';
@@ -396,7 +394,7 @@
             section.style.display = 'block';
             listEl.innerHTML = `
                 <table class="min-w-full text-sm">
-                    <thead><tr><th class="text-left py-1 pr-4 text-amber-800">Email</th><th class="text-left py-1 pr-4 text-amber-800">Name</th><th class="text-left py-1">Action</th></tr></thead>
+                    <thead><tr><th class="text-left py-1 pr-4 text-amber-800 dark:text-amber-300">Email</th><th class="text-left py-1 pr-4 text-amber-800 dark:text-amber-300">Name</th><th class="text-left py-1">Action</th></tr></thead>
                     <tbody>
                         ${pending.map(p => `
                             <tr>
@@ -468,7 +466,20 @@
                 });
             });
             
-            populateUserTable(users);
+            let accountManagersList = [];
+            let picsList = [];
+            try {
+                const authToken = localStorage.getItem('authToken');
+                if (authToken) {
+                    const [amRes, picRes] = await Promise.all([
+                        fetch(getApiUrl('/api/account-managers'), { headers: { 'Authorization': 'Bearer ' + authToken } }),
+                        fetch(getApiUrl('/api/pics'), { headers: { 'Authorization': 'Bearer ' + authToken } })
+                    ]);
+                    if (amRes.ok) accountManagersList = await amRes.json();
+                    if (picRes.ok) picsList = await picRes.json();
+                }
+            } catch (e) { console.warn('Could not load account managers/PICs for table:', e); }
+            populateUserTable(users, accountManagersList, picsList);
             updateRowCount(users.length);
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -481,8 +492,49 @@
         }
     }
 
-    // Populate user table
-    function populateUserTable(users) {
+    // Update one user from table (account type, account mgr, or PIC change)
+    async function updateUserInTable(userId, patch) {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) return;
+        try {
+            const res = await fetch(getApiUrl('/api/users/' + userId), { method: 'GET', headers: { 'Authorization': 'Bearer ' + authToken } });
+            if (!res.ok) throw new Error('Failed to load user');
+            const user = await res.json();
+            // Ensure roles is a non-empty array (required by PUT validation)
+            let roles = patch.roles !== undefined ? patch.roles : user.roles;
+            if (!Array.isArray(roles) || roles.length === 0) {
+                if (typeof roles === 'string') { try { roles = JSON.parse(roles); } catch { roles = [roles]; } }
+                if (!Array.isArray(roles) || roles.length === 0) roles = ['User'];
+            }
+            const body = {
+                name: user.name,
+                email: user.email,
+                roles: roles,
+                accountType: patch.accountType !== undefined ? patch.accountType : (user.accountType || 'User'),
+                accountManagerId: patch.accountManagerId !== undefined ? patch.accountManagerId : (user.accountManagerId != null ? user.accountManagerId : null),
+                picId: patch.picId !== undefined ? patch.picId : (user.picId != null ? user.picId : null)
+            };
+            const putRes = await fetch(getApiUrl('/api/users/' + userId), {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!putRes.ok) {
+                const errBody = await putRes.json().catch(() => ({}));
+                console.error('PUT /api/users/' + userId, 'status:', putRes.status, 'body:', JSON.stringify(body), 'response:', errBody);
+                throw new Error(errBody.error || errBody.message || 'Update failed');
+            }
+            await fetchUsers();
+        } catch (e) {
+            console.error('Update user failed:', e);
+            alert('Failed to update: ' + (e.message || e));
+        }
+    }
+
+    // Populate user table (account type = dropdown; account mgr & PIC = checkboxes)
+    function populateUserTable(users, accountManagersList, picsList) {
+        accountManagersList = accountManagersList || [];
+        picsList = picsList || [];
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = '';
 
@@ -504,9 +556,10 @@
             console.log(`Processing user ${index + 1} (${username}) roles:`, user.roles, typeof user.roles); // Debug log
             
             if (user.roles !== null && user.roles !== undefined) {
+                const filterTechnical = (arr) => (arr || []).filter(r => r && String(r).toLowerCase() !== 'technical');
                 if (Array.isArray(user.roles)) {
-                    // Handle array format
-                    roles = user.roles.length > 0 ? user.roles.join(', ') : 'No Roles';
+                    const filtered = filterTechnical(user.roles);
+                    roles = filtered.length > 0 ? filtered.join(', ') : 'No Roles';
                     console.log(`Array roles for ${username}:`, roles);
                 } else if (typeof user.roles === 'string') {
                     // Handle string format (could be comma-separated)
@@ -514,10 +567,10 @@
                     if (trimmedRoles) {
                         // If it contains commas, split and rejoin for consistency
                         if (trimmedRoles.includes(',')) {
-                            const rolesArray = trimmedRoles.split(',').map(r => r.trim()).filter(r => r);
+                            const rolesArray = filterTechnical(trimmedRoles.split(',').map(r => r.trim()).filter(r => r));
                             roles = rolesArray.length > 0 ? rolesArray.join(', ') : 'No Roles';
                 } else {
-                            roles = trimmedRoles;
+                            roles = trimmedRoles.toLowerCase() === 'technical' ? 'No Roles' : trimmedRoles;
                         }
                     } else {
                         roles = 'No Roles';
@@ -528,7 +581,8 @@
                     try {
                         const rolesObj = typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles;
                         if (Array.isArray(rolesObj)) {
-                            roles = rolesObj.length > 0 ? rolesObj.join(', ') : 'No Roles';
+                            const filtered = filterTechnical(rolesObj);
+                            roles = filtered.length > 0 ? filtered.join(', ') : 'No Roles';
                         } else {
                             roles = JSON.stringify(rolesObj);
                         }
@@ -538,7 +592,8 @@
                         console.error(`Error parsing roles for ${username}:`, e);
                     }
                 } else {
-                    roles = String(user.roles);
+                    const s = String(user.roles);
+                    roles = s.toLowerCase() === 'technical' ? 'No Roles' : s;
                     console.log(`Other type roles for ${username}:`, roles);
                 }
         } else {
@@ -546,9 +601,9 @@
             }
             
             const accountType = user.accountType || user.account_type || 'User';
-            const accountMgrName = user.accountManagerName || user.account_manager_name || '—';
-            const picName = user.picName || user.pic_name || '—';
-            
+            const userRoles = Array.isArray(user.roles) ? user.roles : [];
+            const hasAccountMgr = userRoles.some(r => r === 'Account Manager');
+            const hasPic = userRoles.some(r => r === 'PIC');
             // Format last login date
             let lastLogin = 'Never';
             let timestamp = 'N/A';
@@ -584,14 +639,24 @@
             
             console.log(`Final display for ${username}: roles="${roles}", userId="${userId}", lastLogin="${lastLogin}", timestamp="${timestamp}"`); // Final debug log
             
-            // Create table row with proper data attributes
+            // Create table row: Account Type = dropdown (Admin/User); Account MGR & PIC = checkboxes (+ optional select when checked)
             tr.innerHTML = `
                 <td class="px-3 py-2">${username}</td>
                 <td class="px-3 py-2">${email}</td>
                 <td class="px-3 py-2"><strong>${roles}</strong></td>
-                <td class="px-3 py-2">${accountType}</td>
-                <td class="px-3 py-2">${accountMgrName}</td>
-                <td class="px-3 py-2">${picName}</td>
+                <td class="px-3 py-2">
+                    <select class="account-type-select w-full text-sm border rounded px-1 py-0.5" data-user-id="${userId}">
+                        <option value="User" ${accountType === 'User' ? 'selected' : ''}>User</option>
+                        <option value="Admin" ${accountType === 'Admin' ? 'selected' : ''}>Admin</option>
+                        <option value="System Admin" ${accountType === 'System Admin' ? 'selected' : ''}>System Admin</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <input type="checkbox" class="account-mgr-cb rounded" data-user-id="${userId}" ${hasAccountMgr ? 'checked' : ''}>
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <input type="checkbox" class="pic-cb rounded" data-user-id="${userId}" ${hasPic ? 'checked' : ''}>
+                </td>
                 <td class="px-3 py-2">${lastLogin}</td>
                 <td class="px-3 py-2">${timestamp}</td>
                 <td class="px-3 py-2">
@@ -606,6 +671,39 @@
                 </td>
             `;
             tbody.appendChild(tr);
+            // Attach change handlers for inline table edits
+            const row = tr;
+            row.querySelector('.account-type-select')?.addEventListener('change', function() {
+                updateUserInTable(this.dataset.userId, { accountType: this.value });
+            });
+            const amCb = row.querySelector('.account-mgr-cb');
+            if (amCb) {
+                amCb.addEventListener('change', function() {
+                    const uid = this.dataset.userId;
+                    const currentRoles = Array.isArray(user.roles) ? [...user.roles] : [];
+                    if (this.checked) {
+                        if (!currentRoles.includes('Account Manager')) currentRoles.push('Account Manager');
+                    } else {
+                        const idx = currentRoles.indexOf('Account Manager');
+                        if (idx !== -1) currentRoles.splice(idx, 1);
+                    }
+                    updateUserInTable(uid, { roles: currentRoles.length > 0 ? currentRoles : ['User'] });
+                });
+            }
+            const picCb = row.querySelector('.pic-cb');
+            if (picCb) {
+                picCb.addEventListener('change', function() {
+                    const uid = this.dataset.userId;
+                    const currentRoles = Array.isArray(user.roles) ? [...user.roles] : [];
+                    if (this.checked) {
+                        if (!currentRoles.includes('PIC')) currentRoles.push('PIC');
+                    } else {
+                        const idx = currentRoles.indexOf('PIC');
+                        if (idx !== -1) currentRoles.splice(idx, 1);
+                    }
+                    updateUserInTable(uid, { roles: currentRoles.length > 0 ? currentRoles : ['User'] });
+                });
+            }
         });
         
         console.log('Populated table with', users.length, 'users'); // Debug log
@@ -719,6 +817,16 @@
         // Setup resizable columns
         setupResizableColumns();
 
+        const userIsAccountMgrEl = document.getElementById('userIsAccountMgr');
+        const userIsPicEl = document.getElementById('userIsPic');
+        if (userIsAccountMgrEl) userIsAccountMgrEl.addEventListener('change', syncAccountMgrPicDropdowns);
+        if (userIsPicEl) userIsPicEl.addEventListener('change', syncAccountMgrPicDropdowns);
+        const roleSelectEl = document.getElementById('roleSelect');
+        const accountTypeEl = document.getElementById('accountType');
+        if (roleSelectEl && accountTypeEl) {
+            roleSelectEl.addEventListener('change', () => { accountTypeEl.value = roleSelectEl.value; });
+        }
+
         // Add user button
         const addUserButton = document.getElementById('addUserButton');
         if (addUserButton) {
@@ -731,6 +839,16 @@
             await loadPicsDropdown();
                 document.getElementById('accountManagerId').value = '';
                 document.getElementById('picId').value = '';
+                const roleSel = document.getElementById('roleSelect');
+                const acctType = document.getElementById('accountType');
+                if (roleSel) roleSel.value = 'User';
+                if (acctType) acctType.value = 'User';
+                const amCb = document.getElementById('userIsAccountMgr');
+                const picCb = document.getElementById('userIsPic');
+                if (amCb) amCb.checked = false;
+                if (picCb) picCb.checked = false;
+                syncAccountMgrPicDropdowns();
+                document.getElementById('accessInformationSection').style.display = '';
                 document.getElementById('userModalOverlay').classList.remove('hidden');
                 document.getElementById('userModal').classList.remove('hidden');
             });
@@ -781,30 +899,51 @@
         }
     }
 
+    let currentEditUser = null; // When editing, only name/email/password are editable; rest come from here
+
     // Handle user form submission
     async function handleUserFormSubmit(e) {
         try {
             const formData = new FormData(e.target);
             const userId = formData.get('userId');
-            const accountManagerIdVal = formData.get('accountManagerId');
-            const picIdVal = formData.get('picId');
-            const userData = {
-                name: formData.get('username'),
-                email: formData.get('email'),
-                roles: Array.from(formData.getAll('roles')),
-                accountType: formData.get('accountType'),
-                accountManagerId: accountManagerIdVal && accountManagerIdVal !== '' ? parseInt(accountManagerIdVal, 10) : null,
-                picId: picIdVal && picIdVal !== '' ? parseInt(picIdVal, 10) : null
-            };
-
-            // Validate required fields
-            if (!userData.name || !userData.email || !userData.accountType) {
-                alert('Please fill in all required fields');
-                return;
+            const isEditMode = !!userId;
+            let userData;
+            if (isEditMode && currentEditUser) {
+                // Edit: only send name, email, password (optional); preserve roles, accountType, accountManagerId, picId
+                userData = {
+                    name: formData.get('username'),
+                    email: formData.get('email'),
+                    roles: currentEditUser.roles || [],
+                    accountType: currentEditUser.accountType || 'User',
+                    accountManagerId: currentEditUser.accountManagerId != null && currentEditUser.accountManagerId !== '' ? parseInt(currentEditUser.accountManagerId, 10) : null,
+                    picId: currentEditUser.picId != null && currentEditUser.picId !== '' ? parseInt(currentEditUser.picId, 10) : null
+                };
+                const pwd = formData.get('password');
+                if (pwd && pwd.trim()) userData.password = pwd;
+            } else {
+                // Add new user: full form — Role dropdown sets User/Admin/System Admin (technical removed)
+                const roleVal = formData.get('roleSelect') || formData.get('accountType') || 'User';
+                const userIsAccountMgr = document.getElementById('userIsAccountMgr') && document.getElementById('userIsAccountMgr').checked;
+                const userIsPic = document.getElementById('userIsPic') && document.getElementById('userIsPic').checked;
+                const accountManagerIdVal = userIsAccountMgr ? formData.get('accountManagerId') : '';
+                const picIdVal = userIsPic ? formData.get('picId') : '';
+                userData = {
+                    name: formData.get('username'),
+                    email: formData.get('email'),
+                    roles: [roleVal],
+                    accountType: roleVal,
+                    accountManagerId: accountManagerIdVal && accountManagerIdVal !== '' ? parseInt(accountManagerIdVal, 10) : null,
+                    picId: picIdVal && picIdVal !== '' ? parseInt(picIdVal, 10) : null
+                };
             }
 
-            if (userData.roles.length === 0) {
-                alert('Please select at least one role');
+            // Validate required fields
+            if (!userData.name || !userData.email) {
+                alert('Please fill in name and email');
+                return;
+            }
+            if (!isEditMode && !userData.accountType) {
+                alert('Please select a role (User, Admin, or System Admin)');
                 return;
             }
             
@@ -840,13 +979,23 @@
             });
 
             if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(`Failed to ${userId ? 'update' : 'create'} user: ${response.status} - ${errorData}`);
+                let errorMsg;
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || errorData.message || JSON.stringify(errorData);
+                } catch (parseErr) {
+                    errorMsg = response.statusText;
+                }
+                if (response.status === 409) {
+                    throw new Error('This email is already registered. Please use a different email.');
+                }
+                throw new Error(`Failed to ${userId ? 'update' : 'create'} user: ${errorMsg}`);
             }
 
             // Refresh user list
             await fetchUsers();
-            
+            currentEditUser = null;
+            document.getElementById('accessInformationSection').style.display = '';
             // Close modal
             document.getElementById('userModalOverlay').classList.add('hidden');
             document.getElementById('userModal').classList.add('hidden');
@@ -893,29 +1042,25 @@
             await loadAccountManagersDropdown();
             await loadPicsDropdown();
             const amSelect = document.getElementById('accountManagerId');
-            if (amSelect) amSelect.value = (user.accountManagerId != null && user.accountManagerId !== '') ? String(user.accountManagerId) : '';
             const picSelect = document.getElementById('picId');
-            if (picSelect) picSelect.value = (user.picId != null && user.picId !== '') ? String(user.picId) : '';
+            const amCb = document.getElementById('userIsAccountMgr');
+            const picCb = document.getElementById('userIsPic');
+            const hasAm = user.accountManagerId != null && user.accountManagerId !== '';
+            const hasPic = user.picId != null && user.picId !== '';
+            if (amCb) amCb.checked = !!hasAm;
+            if (picCb) picCb.checked = !!hasPic;
+            if (amSelect) amSelect.value = hasAm ? String(user.accountManagerId) : '';
+            if (picSelect) picSelect.value = hasPic ? String(user.picId) : '';
+            syncAccountMgrPicDropdowns();
             
-            // Reset and set role checkboxes
-            const roleCheckboxes = document.querySelectorAll('#roleCheckboxes input[type="checkbox"]');
-            roleCheckboxes.forEach(cb => {
-                cb.checked = false; // Reset first
-                if (user.roles) {
-                    if (Array.isArray(user.roles)) {
-                        cb.checked = user.roles.includes(cb.value);
-                    } else if (typeof user.roles === 'string') {
-                        // Handle comma-separated string roles
-                        const rolesArray = user.roles.split(',').map(r => r.trim());
-                        cb.checked = rolesArray.includes(cb.value);
-                    }
-                }
-            });
+            // Role/Account Type not editable in edit mode (Access Information hidden)
 
             // Show modal
             document.getElementById('userModalOverlay').classList.remove('hidden');
             document.getElementById('userModal').classList.remove('hidden');
             document.getElementById('modalTitle').textContent = 'Edit User';
+            currentEditUser = user;
+            document.getElementById('accessInformationSection').style.display = 'none';
 
         } catch (error) {
             console.error('Error editing user:', error);
