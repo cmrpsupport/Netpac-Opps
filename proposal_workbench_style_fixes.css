@@ -2,6 +2,113 @@
 /* Applied: January 2025 */
 
 /* ================================
+   LIGHT MODE CONTENT READABILITY
+   ================================ */
+
+/* Override global .main-content (var(--bg-body) blue + white text) so content is readable in light mode */
+html:not(.dark) body .main-content,
+html:not(.dark) .main-content {
+    background-color: #f9fafb !important;
+    color: #111827 !important;
+}
+
+html:not(.dark) .main-content .main-container,
+html:not(.dark) .main-content main.main-container {
+    background-color: transparent !important;
+    color: #111827 !important;
+}
+
+/* Ensure all text and form elements in main content are dark in light mode */
+html:not(.dark) .main-content .text-gray-900,
+html:not(.dark) .main-content .text-gray-800,
+html:not(.dark) .main-content h2,
+html:not(.dark) .main-content h3,
+html:not(.dark) .main-content p,
+html:not(.dark) .main-content span {
+    color: inherit !important;
+}
+
+html:not(.dark) .main-content .kanban-column-header {
+    color: #374151 !important;
+}
+
+html:not(.dark) .main-content .proposal-card,
+html:not(.dark) .main-content .proposal-card h4,
+html:not(.dark) .main-content .proposal-card p,
+html:not(.dark) .main-content .proposal-card span {
+    color: #111827 !important;
+}
+
+html:not(.dark) .main-content .proposal-card .text-gray-500 {
+    color: #6b7280 !important;
+}
+
+html:not(.dark) .main-content .proposal-card .text-gray-800 {
+    color: #1f2937 !important;
+}
+
+/* Empty column placeholder text */
+html:not(.dark) .kanban-column-body:empty::before {
+    color: #6b7280 !important;
+}
+
+/* Kanban column containers - force light background in light mode so content is readable */
+html:not(.dark) .kanban-column,
+html:not(.dark) #notStartedColumn,
+html:not(.dark) #ongoingColumn,
+html:not(.dark) #forRevisionColumn,
+html:not(.dark) #forApprovalColumn,
+html:not(.dark) #submittedColumn {
+    background-color: #f3f4f6 !important;
+}
+
+html:not(.dark) #forRevisionColumn {
+    background-color: #fffbeb !important; /* keep slight orange tint */
+}
+
+/* Column body area - light background in light mode */
+html:not(.dark) .kanban-column-body,
+html:not(.dark) #notStartedBody,
+html:not(.dark) #ongoingBody,
+html:not(.dark) #forRevisionBody,
+html:not(.dark) #forApprovalBody,
+html:not(.dark) #submittedBody {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+}
+
+/* Proposal cards inside columns - white card with dark text in light mode */
+html:not(.dark) .proposal-card {
+    background-color: #ffffff !important;
+    border-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+html:not(.dark) .proposal-card h4,
+html:not(.dark) .proposal-card p,
+html:not(.dark) .proposal-card span,
+html:not(.dark) .proposal-card .text-gray-900,
+html:not(.dark) .proposal-card .text-gray-800,
+html:not(.dark) .proposal-card .text-gray-500 {
+    color: #111827 !important;
+}
+
+html:not(.dark) .proposal-card .text-gray-500 {
+    color: #6b7280 !important;
+}
+
+/* Proposal card buttons/icons - visible in light mode */
+html:not(.dark) .proposal-card .edit-proposal-btn,
+html:not(.dark) .proposal-card .material-icons {
+    color: #4b5563 !important;
+}
+
+html:not(.dark) .proposal-card .edit-proposal-btn:hover,
+html:not(.dark) .proposal-card .return-to-no-decision-btn:hover {
+    color: #4f46e5 !important;
+}
+
+/* ================================
    TOGGLE BUTTON FIXES (Dark Mode)
    ================================ */
 
@@ -383,19 +490,55 @@ main.main-container > div:first-child + div {
    KANBAN COLUMN HEADER FIXES
    ================================ */
 
-/* Fix kanban column headers in dark mode */
+/* Fix kanban column headers in dark mode - high contrast */
+html.dark .kanban-column-header,
+.dark .kanban-column-header,
+html.dark .kanban-column-header span,
+.dark .kanban-column-header span,
+html.dark .kanban-column-header label,
+.dark .kanban-column-header label,
+html.dark .kanban-column-header .material-icons,
+.dark .kanban-column-header .material-icons {
+    color: #f3f4f6 !important;
+}
+
 html.dark .kanban-column-header,
 .dark .kanban-column-header {
     background-color: #374151 !important;
-    color: #f3f4f6 !important;
     border-bottom-color: #4b5563 !important;
 }
 
-/* Light mode kanban column headers */
+/* Count badge in header - dark mode */
+html.dark .kanban-column-header .bg-gray-200.dark\:bg-gray-700,
+html.dark .kanban-column-header span.bg-gray-700,
+.dark .kanban-column-header span[id$="Count"] {
+    background-color: #4b5563 !important;
+    color: #f9fafb !important;
+}
+
+/* Light mode kanban column headers - dark text so it's readable */
+html:not(.dark) .kanban-column-header,
+html:not(.dark) .kanban-column-header span,
+html:not(.dark) .kanban-column-header label,
+html:not(.dark) .kanban-column-header .material-icons {
+    color: #1f2937 !important;
+}
+
 html:not(.dark) .kanban-column-header {
-    background-color: #f3f4f6 !important;
-    color: #374151 !important;
-    border-bottom-color: #e5e7eb !important;
+    background-color: #e5e7eb !important;
+    border-bottom-color: #d1d5db !important;
+}
+
+/* Count badge in header - light mode */
+html:not(.dark) .kanban-column-header .bg-gray-200,
+html:not(.dark) .kanban-column-header span[id$="Count"] {
+    background-color: #d1d5db !important;
+    color: #111827 !important;
+}
+
+/* For Revision header (orange) - keep white text in both modes */
+#forRevisionColumn .kanban-column-header .material-icons.text-orange-600 {
+    color: #ffffff !important;
 }
 
 /* For Revision column header - keep current styling in both light and dark mode */

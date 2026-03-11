@@ -112,15 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (e) {}
     })();
 
-    // Forgot password link
-    var forgotLink = document.getElementById('forgotPasswordLink');
-    if (forgotLink) {
-        forgotLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = 'update_password.html';
-        });
-    }
-
     // Password visibility toggle
     var passwordToggle = document.getElementById('loginPasswordToggle');
     if (passwordToggle && loginPassword) {

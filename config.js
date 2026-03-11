@@ -60,6 +60,21 @@ window.APP_CONFIG = config;
 (function checkSessionToken() {
     const token = localStorage.getItem('authToken');
     if (!token) return;
+
+    // Check if JWT has expired (decode payload and check exp claim)
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authRememberMe');
+            sessionStorage.removeItem('authSessionActive');
+            if (!window.location.pathname.endsWith('login.html') && !window.location.pathname.endsWith('/')) {
+                window.location.href = 'login.html';
+            }
+            return;
+        }
+    } catch (e) { /* malformed token — let server reject it */ }
+
     const rememberMe = localStorage.getItem('authRememberMe') === '1';
     const sessionActive = sessionStorage.getItem('authSessionActive') === '1';
     if (!rememberMe && !sessionActive) {

@@ -31,7 +31,11 @@ class SharedNavigation {
             'user_management.html': 'user_management',
             'csv_formatter.html': 'csv_formatter',
             'opps_monitoring_import_export.html': 'opps_monitoring_import_export',
-            'project-detail.html': 'index' // Project detail pages should highlight opportunities
+            'project-detail.html': 'index', // Project detail pages should highlight opportunities
+            'clients.html': 'clients',
+            'solutions.html': 'solutions',
+            'account-manager-dashboard.html': 'account_manager_dashboard',
+            'audit_trail.html': 'audit_trail'
         };
 
         return pageMap[filename] || 'index';
@@ -639,8 +643,28 @@ class SharedNavigation {
         // Update Audit Trail visibility
         this.updateAuditTrailNavVisibility();
 
+        // Update Change Password visibility (Admin only)
+        this.updateChangePasswordVisibility();
+
         // Update Import/Export visibility
         this.updateImportExportNavVisibility();
+    }
+
+    updateChangePasswordVisibility() {
+        const btn = document.getElementById('changePasswordBtn');
+        if (!btn) return;
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            btn.style.display = 'none';
+            return;
+        }
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const accountType = (payload.accountType || payload.account_type || '').toString();
+            btn.style.display = (accountType === 'Admin' || accountType === 'System Admin') ? '' : 'none';
+        } catch (e) {
+            btn.style.display = 'none';
+        }
     }
 
     updateUserMgmtNavVisibility() {

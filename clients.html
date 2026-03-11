@@ -93,20 +93,20 @@
                                 <input type="text" id="contactPerson" name="contact_person" />
                             </div>
                             <div class="enhanced-field">
-                                <label for="clientEmail">Email</label>
-                                <input type="email" id="clientEmail" name="email" />
+                                <label for="clientEmail">Email <span class="text-red-500">*</span></label>
+                                <input type="email" id="clientEmail" name="email" required />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="enhanced-field">
                                 <label for="contactNumber">Contact #</label>
-                                <input type="text" id="contactNumber" name="contact_number" />
+                                <input type="tel" id="contactNumber" name="contact_number" pattern="[0-9+\-\s()]*" title="Numbers, +, -, spaces, and parentheses only" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="enhanced-field">
-                                <label for="companyAddress">Company Address</label>
-                                <input type="text" id="companyAddress" name="company_address" />
+                                <label for="companyAddress">Company Address <span class="text-red-500">*</span></label>
+                                <input type="text" id="companyAddress" name="company_address" required />
                             </div>
                         </div>
                     </div>
@@ -237,6 +237,17 @@
                 company_address: document.getElementById('companyAddress').value.trim() || null
             };
             if (!data.company_name) { alert('Company name is required'); return; }
+            if (!data.email) { alert('Email is required'); return; }
+            if (!data.company_address) { alert('Company address is required'); return; }
+            // Validate contact number: only digits, +, -, spaces, parens
+            if (data.contact_number && !/^[0-9+\-\s()]*$/.test(data.contact_number)) {
+                alert('Contact # must contain only numbers, +, -, spaces, and parentheses'); return;
+            }
+            // Check for duplicate company name
+            const duplicate = allClients.find(c =>
+                c.company_name.toLowerCase() === data.company_name.toLowerCase() && String(c.id) !== String(id)
+            );
+            if (duplicate) { alert('A client with the company name "' + data.company_name + '" already exists.'); return; }
             const authToken = localStorage.getItem('authToken');
             const method = id ? 'PUT' : 'POST';
             const url = id ? getApiUrl('/api/clients/' + id) : getApiUrl('/api/clients');
