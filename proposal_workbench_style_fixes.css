@@ -211,21 +211,56 @@ html.dark #proposalViewBtn.bg-indigo-600:hover,
    FILTER LABEL FIXES (Dark Mode)
    ================================ */
 
-/* Fix filter labels in dark mode - comprehensive targeting */
+/* Fix filter labels in dark mode - comprehensive targeting (html.dark so it works without body.dark) */
 html.dark .filter-label,
-.dark .filter-label,
 html.dark label.filter-label,
-.dark label.filter-label,
 html.dark .text-gray-700.dark\:text-gray-300,
-.dark .text-gray-700.dark\:text-gray-300,
 html.dark label[for="picFilter"],
-.dark label[for="picFilter"],
 html.dark label[for="clientFilter"],
-.dark label[for="clientFilter"],
 html.dark label[for="accountManagerFilter"],
-.dark label[for="accountManagerFilter"] {
+html.dark label[for="solutionFilter"],
+html.dark #filterSection .filter-label,
+html.dark #filterSection label[for="picFilter"],
+html.dark #filterSection label[for="clientFilter"],
+html.dark #filterSection label[for="accountManagerFilter"],
+html.dark #filterSection label[for="solutionFilter"],
+.dark .filter-label,
+.dark label.filter-label,
+.dark label[for="picFilter"],
+.dark label[for="clientFilter"],
+.dark label[for="accountManagerFilter"],
+.dark label[for="solutionFilter"] {
     color: #e5e7eb !important; /* Light gray for dark mode */
     font-weight: 500 !important;
+}
+
+/* Filter section "Filter & customize your view" and all text in dark mode */
+html.dark #filterSection .text-gray-600,
+html.dark #filterSection .text-sm.text-gray-600,
+html.dark #filterSection .text-gray-400,
+.dark #filterSection .text-gray-600,
+.dark #filterSection .text-gray-400 {
+    color: #d1d5db !important;
+}
+
+/* Filter dropdowns (selects) - ensure readable text and background in dark mode */
+html.dark #filterSection select.filter-dropdown,
+html.dark #filterSection .filter-dropdown,
+html.dark #filterSection #picFilter,
+html.dark #filterSection #clientFilter,
+html.dark #filterSection #accountManagerFilter,
+html.dark #filterSection #solutionFilter,
+.dark #filterSection select,
+.dark #filterSection .filter-dropdown {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
+    border-color: #4b5563 !important;
+}
+
+html.dark #filterSection select option,
+.dark #filterSection select option {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
 }
 
 /* Light mode filter labels */
@@ -233,7 +268,8 @@ html:not(.dark) .filter-label,
 html:not(.dark) label.filter-label,
 html:not(.dark) label[for="picFilter"],
 html:not(.dark) label[for="clientFilter"],
-html:not(.dark) label[for="accountManagerFilter"] {
+html:not(.dark) label[for="accountManagerFilter"],
+html:not(.dark) label[for="solutionFilter"] {
     color: #374151 !important; /* Dark gray for light mode */
     font-weight: 500 !important;
 }

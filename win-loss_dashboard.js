@@ -82,6 +82,8 @@ function saveSettings() {
         currentAccountMgrFilter,
         currentClientFilter,
         activeQuarters,
+        selectedYear,
+        selectedMonth,
         currentTableStatusFilter,
         currentSort,
         theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
@@ -131,6 +133,8 @@ function loadSettings() {
                 console.log('🔧 [WIN-LOSS-DEBUG] Setting activeQuarters from', activeQuarters, 'to', settings.activeQuarters);
                 activeQuarters = settings.activeQuarters;
             }
+            if (settings.selectedYear !== undefined) selectedYear = settings.selectedYear;
+            if (settings.selectedMonth !== undefined) selectedMonth = settings.selectedMonth;
             if (settings.currentTableStatusFilter !== undefined) {
                 console.log('🔧 [WIN-LOSS-DEBUG] Setting currentTableStatusFilter from', currentTableStatusFilter, 'to', settings.currentTableStatusFilter);
                 currentTableStatusFilter = settings.currentTableStatusFilter;
@@ -200,6 +204,11 @@ function restoreUIState() {
         }
     }
     
+    const yearDropdown = document.getElementById('yearFilter');
+    if (yearDropdown && selectedYear) yearDropdown.value = String(selectedYear);
+    const monthDropdown = document.getElementById('monthFilter');
+    if (monthDropdown) monthDropdown.value = selectedMonth === null ? 'all' : String(selectedMonth);
+    
     // Restore quarter button states
     console.log('[SETTINGS] Restoring quarter button states:', activeQuarters);
     updateQuarterButtonStates();
@@ -257,6 +266,8 @@ function initializeActiveQuarters() {
 }
 
 let activeQuarters = initializeActiveQuarters(); // Initialize based on current date
+let selectedYear = new Date().getFullYear();
+let selectedMonth = null; // null = All (per month), 0-11 = specific month
 let currentTableStatusFilter = 'OP100'; // Default to OP100 only
 let currentSort = { col: null, dir: 1 };
 // ...existing code for all helper functions, rendering, filters, etc...
@@ -541,21 +552,22 @@ function renderWinLossCharts(data) {
     let chartLabels = [];
     let monthIndices = []; // 0-11, stores indices of months to display
 
-    // Build labels based on active quarters
-    console.log('📊 Chart rendering - activeQuarters:', activeQuarters);
-    if (activeQuarters['1']) { chartLabels.push('Jan','Feb','Mar'); monthIndices.push(0,1,2); }
-    if (activeQuarters['2']) { chartLabels.push('Apr','May','Jun'); monthIndices.push(3,4,5); }
-    if (activeQuarters['3']) { chartLabels.push('Jul','Aug','Sep'); monthIndices.push(6,7,8); }
-    if (activeQuarters['4']) { chartLabels.push('Oct','Nov','Dec'); monthIndices.push(9,10,11); }
-    
-    // If no quarters selected, default to all months
-    if (chartLabels.length === 0) {
-        chartLabels = allMonthsLabels;
-        monthIndices = Array.from({length: 12}, (_, i) => i);
+    // Build labels: single month if selected, else by active quarters within selected year
+    console.log('📊 Chart rendering - activeQuarters:', activeQuarters, 'selectedYear:', selectedYear, 'selectedMonth:', selectedMonth);
+    if (selectedMonth !== null) {
+        chartLabels = [allMonthsLabels[selectedMonth]];
+        monthIndices = [selectedMonth];
+    } else {
+        if (activeQuarters['1']) { chartLabels.push('Jan','Feb','Mar'); monthIndices.push(0,1,2); }
+        if (activeQuarters['2']) { chartLabels.push('Apr','May','Jun'); monthIndices.push(3,4,5); }
+        if (activeQuarters['3']) { chartLabels.push('Jul','Aug','Sep'); monthIndices.push(6,7,8); }
+        if (activeQuarters['4']) { chartLabels.push('Oct','Nov','Dec'); monthIndices.push(9,10,11); }
+        if (chartLabels.length === 0) {
+            chartLabels = allMonthsLabels;
+            monthIndices = Array.from({length: 12}, (_, i) => i);
+        }
     }
-    
-    console.log('📊 Chart labels:', chartLabels);
-    console.log('📊 Month indices:', monthIndices);
+    console.log('📊 Chart labels:', chartLabels, 'Month indices:', monthIndices);
 
     // Initialize arrays for monthly data
     let winMonthlyAmount = Array(12).fill(0);
@@ -563,10 +575,10 @@ function renderWinLossCharts(data) {
     let lossMonthlyAmount = Array(12).fill(0);
     let lossMonthlyCount = Array(12).fill(0);
 
-    // Process data
+    // Process data (only selected year, and months in monthIndices)
     data.forEach(item => {
         const date = robustParseDate(item.date_awarded || item.date_awarded_lost);
-        if (date && !isNaN(date)) {
+        if (date && !isNaN(date) && date.getFullYear() === selectedYear) {
             const month = date.getMonth();
             if (monthIndices.includes(month)) {
                 if (item.opp_status === 'OP100') {
@@ -825,14 +837,18 @@ function getFilteredTableData(opportunities) {
         if (currentClientFilter !== 'all' && item.client !== currentClientFilter) {
             return false;
         }
-        // Apply quarter filter
+        // Apply year/month filter
         const date = robustParseDate(item.date_awarded || item.date_awarded_lost);
         if (date && !isNaN(date)) {
+            if (date.getFullYear() !== selectedYear) return false;
+            if (selectedMonth !== null && date.getMonth() !== selectedMonth) return false;
             const month = date.getMonth();
             const quarter = Math.floor(month / 3) + 1;
             if (!activeQuarters[quarter]) {
                 return false;
             }
+        } else {
+            return false;
         }
         return true;
     });
@@ -873,14 +889,20 @@ function renderDashboard(data) {
         if (currentClientFilter !== 'all' && item.client !== currentClientFilter) {
             return false;
         }
-        // Apply quarter filter based on date_awarded_lost
+        // Apply year filter
         const date = robustParseDate(item.date_awarded || item.date_awarded_lost);
         if (date && !isNaN(date)) {
+            if (date.getFullYear() !== selectedYear) return false;
+            // Apply month filter (selectedMonth null = all months)
+            if (selectedMonth !== null && date.getMonth() !== selectedMonth) return false;
+            // Apply quarter filter
             const month = date.getMonth();
             const quarter = Math.floor(month / 3) + 1;
             if (!activeQuarters[quarter]) {
                 return false;
             }
+        } else {
+            return false; // exclude items with no valid date when year/month filter is on
         }
         return true;
     });
@@ -1135,6 +1157,39 @@ function populateDropdowns(data) {
         
         clientDropdown.onchange = function() {
             currentClientFilter = this.value;
+            saveSettings();
+            renderDashboard(dashboardDataCache);
+        };
+    }
+    // Year
+    const yearDropdown = document.getElementById('yearFilter');
+    if (yearDropdown) {
+        const yearsFromData = new Set();
+        data.forEach(opp => {
+            const d = robustParseDate(opp.date_awarded || opp.date_awarded_lost);
+            if (d && !isNaN(d)) yearsFromData.add(d.getFullYear());
+        });
+        const currentY = new Date().getFullYear();
+        const yearSet = new Set([currentY, currentY - 1, currentY - 2, currentY - 3, currentY - 4, ...yearsFromData]);
+        const years = Array.from(yearSet).sort((a, b) => b - a);
+        yearDropdown.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        yearDropdown.value = String(selectedYear);
+        if (!years.includes(selectedYear)) {
+            selectedYear = currentY;
+            yearDropdown.value = String(selectedYear);
+        }
+        yearDropdown.onchange = function() {
+            selectedYear = parseInt(this.value, 10);
+            saveSettings();
+            renderDashboard(dashboardDataCache);
+        };
+    }
+    // Month
+    const monthDropdown = document.getElementById('monthFilter');
+    if (monthDropdown) {
+        monthDropdown.value = selectedMonth === null ? 'all' : String(selectedMonth);
+        monthDropdown.onchange = function() {
+            selectedMonth = this.value === 'all' ? null : parseInt(this.value, 10);
             saveSettings();
             renderDashboard(dashboardDataCache);
         };

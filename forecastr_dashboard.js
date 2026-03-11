@@ -14,6 +14,8 @@ let showQuarters = { Q1: true, Q2: true, Q3: true, Q4: true };
 let currentSolutionFilter = 'all';
 let currentAccountMgrFilter = 'all';
 let currentClientFilter = 'all';
+let forecastSelectedYear = new Date().getFullYear();
+let forecastSelectedMonth = null; // null = All (per month), 0-11 = specific month
 
 // Chart display state
 let isMonthlyView = true;
@@ -173,6 +175,17 @@ function abbreviateMonthLabel(label) {
   const parts = label.split(' ');
   return monthMap[parts[0]] || parts[0];
 }
+// Parse "MonthName YYYY" (e.g. "March 2025") to { year, monthIndex } or null
+function parseMonthYear(monthYear) {
+  if (!monthYear || typeof monthYear !== 'string') return null;
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const parts = monthYear.trim().split(/\s+/);
+  if (parts.length < 2) return null;
+  const monthIndex = monthNames.indexOf(parts[0]);
+  const year = parseInt(parts[1], 10);
+  if (monthIndex === -1 || isNaN(year)) return null;
+  return { year, monthIndex };
+}
 function renderForecastDashboard(data, statusFilter = 'all') {
     if (!data || !data.projectDetails) {
         console.error('No data available for rendering dashboard');
@@ -196,6 +209,14 @@ function renderForecastDashboard(data, statusFilter = 'all') {
         }
         // Apply Client filter
         if (currentClientFilter !== 'all' && project.client !== currentClientFilter) {
+            return false;
+        }
+        // Apply year/month filter
+        const parsed = parseMonthYear(project.forecastMonth);
+        if (parsed) {
+            if (parsed.year !== forecastSelectedYear) return false;
+            if (forecastSelectedMonth !== null && parsed.monthIndex !== forecastSelectedMonth) return false;
+        } else {
             return false;
         }
         return true;
@@ -247,6 +268,15 @@ function renderForecastDashboard(data, statusFilter = 'all') {
             totalAmount: monthlyData[item.monthYear]?.totalAmount || 0
         }));
     }
+
+    // Filter by selected year and month
+    monthlySummary = monthlySummary.filter(item => {
+        const parsed = parseMonthYear(item.monthYear);
+        if (!parsed) return false;
+        if (parsed.year !== forecastSelectedYear) return false;
+        if (forecastSelectedMonth !== null && parsed.monthIndex !== forecastSelectedMonth) return false;
+        return true;
+    });
 
     // Prepare data for chart
     let chartLabels = monthlySummary.map(item => abbreviateMonthLabel(item.monthYear));
@@ -1725,6 +1755,37 @@ function populateDropdowns(data) {
         clientDropdown.value = currentClientFilter;
         clientDropdown.onchange = function() {
             currentClientFilter = this.value;
+            refreshForecastDashboard();
+        };
+    }
+
+    // Year
+    const yearDropdown = document.getElementById('yearFilter');
+    if (yearDropdown) {
+        const yearsFromData = new Set();
+        (data.forecastMonthlySummary || []).forEach(item => {
+            const p = parseMonthYear(item.monthYear);
+            if (p) yearsFromData.add(p.year);
+        });
+        const currentY = new Date().getFullYear();
+        const years = Array.from(new Set([currentY, currentY + 1, currentY - 1, currentY - 2, ...yearsFromData])).sort((a, b) => b - a);
+        yearDropdown.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        yearDropdown.value = String(forecastSelectedYear);
+        if (!years.includes(forecastSelectedYear)) {
+            forecastSelectedYear = currentY;
+            yearDropdown.value = String(forecastSelectedYear);
+        }
+        yearDropdown.onchange = function() {
+            forecastSelectedYear = parseInt(this.value, 10);
+            refreshForecastDashboard();
+        };
+    }
+    // Month
+    const monthDropdown = document.getElementById('monthFilter');
+    if (monthDropdown) {
+        monthDropdown.value = forecastSelectedMonth === null ? 'all' : String(forecastSelectedMonth);
+        monthDropdown.onchange = function() {
+            forecastSelectedMonth = this.value === 'all' ? null : parseInt(this.value, 10);
             refreshForecastDashboard();
         };
     }

@@ -188,8 +188,9 @@ class SharedNavigation {
                 
                 isToggling = true;
                 
-                // Toggle theme class on html element
+                // Toggle theme class on html and body so pages using body.dark (e.g. account manager) stay in sync
                 document.documentElement.classList.toggle('dark');
+                document.body.classList.toggle('dark');
                 
                 // Update localStorage
                 const isDark = document.documentElement.classList.contains('dark');
@@ -269,21 +270,22 @@ class SharedNavigation {
     }
     
     initializeTheme() {
-        // Load saved theme or use system preference as fallback
+        // Load saved theme; default to light so all pages match (no need to set light on opportunities first)
         const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const shouldBeDark = savedTheme === 'dark' || (savedTheme === null && prefersDark);
+        const shouldBeDark = savedTheme === 'dark';
         
-        // Apply theme
+        // Apply theme to both html and body so pages that use body.dark (e.g. account manager) stay in sync
         if (shouldBeDark) {
             document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
+            document.body.classList.remove('dark');
         }
         
-        // Update localStorage if not set
+        // Ensure localStorage has a value so other pages and future loads are consistent
         if (!savedTheme) {
-            localStorage.setItem('theme', shouldBeDark ? 'dark' : 'light');
+            localStorage.setItem('theme', 'light');
         }
         
         // Update theme toggle state
@@ -852,11 +854,13 @@ class SharedNavigation {
         const savedTheme = localStorage.getItem('theme');
         const shouldBeDark = savedTheme === 'dark';
         
-        // Ensure HTML element matches localStorage
-        if (shouldBeDark && !document.documentElement.classList.contains('dark')) {
+        // Ensure html and body match localStorage
+        if (shouldBeDark) {
             document.documentElement.classList.add('dark');
-        } else if (!shouldBeDark && document.documentElement.classList.contains('dark')) {
+            document.body.classList.add('dark');
+        } else {
             document.documentElement.classList.remove('dark');
+            document.body.classList.remove('dark');
         }
         
         // Update all theme-dependent elements
